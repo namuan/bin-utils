@@ -20,3 +20,7 @@ Converts a tweet in HTML to JSON.
 _download_html_to_file.py_
 
 Downloads Webpage from a URL to a file
+
+_generate_paypal_errors.py_
+
+Extract error codes from Paypal documentation webpage to JSON
