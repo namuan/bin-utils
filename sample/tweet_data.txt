@@ -1,0 +1,186 @@
+<div class="tweet js-stream-tweet js-actionable-tweet js-profile-popup-actionable dismissible-content
+       original-tweet js-original-tweet
+
+       has-cards cards-forward
+" data-tweet-id="839322084278943745" data-item-id="839322084278943745" data-permalink-path="/fullwebio/status/839322084278943745" data-conversation-id="839322084278943745" data-tweet-nonce="839322084278943745-4b4c3ed1-b7b2-4401-b7b0-c2fb8070e947" data-tweet-stat-initialized="true" data-screen-name="fullwebio" data-name="Fullweb" data-user-id="310305621" data-you-follow="false" data-follows-you="false" data-you-block="false" data-reply-to-users-json="[{&quot;id_str&quot;:&quot;310305621&quot;,&quot;screen_name&quot;:&quot;fullwebio&quot;,&quot;name&quot;:&quot;Fullweb&quot;,&quot;emojified_name&quot;:{&quot;text&quot;:&quot;Fullweb&quot;,&quot;emojified_text_as_html&quot;:&quot;Fullweb&quot;}}]" data-disclosure-type="" data-card2-type="summary_large_image" data-has-cards="true">
+
+    <div class="context">
+
+
+    </div>
+
+    <div class="content">
+
+
+
+
+
+      <div class="stream-item-header">
+          <a class="account-group js-account-group js-action-profile js-user-profile-link js-nav" href="/fullwebio" data-user-id="310305621">
+    <img class="avatar js-action-profile-avatar" src="https://pbs.twimg.com/profile_images/615817493337083904/AM2_7Ic7_bigger.png" alt="">
+    <span class="FullNameGroup">
+      <strong class="fullname show-popup-with-id " data-aria-label-part="">Fullweb</strong><span>‏</span><span class="UserBadges"></span><span class="UserNameBreak">&nbsp;</span></span><span class="username u-dir" dir="ltr" data-aria-label-part="">@<b>fullwebio</b></span></a>
+
+
+        <small class="time">
+  <a href="/fullwebio/status/839322084278943745" class="tweet-timestamp js-permalink js-nav js-tooltip" title="7:49 PM - 7 Mar 2017" data-conversation-id="839322084278943745"><span class="_timestamp js-short-timestamp " data-aria-label-part="last" data-time="1488944953" data-time-ms="1488944953000" data-long-form="true">Mar 7</span></a>
+</small>
+
+          <div class="ProfileTweet-action ProfileTweet-action--more js-more-ProfileTweet-actions">
+    <div class="dropdown">
+  <button class="ProfileTweet-actionButton u-textUserColorHover dropdown-toggle js-dropdown-toggle" type="button" aria-haspopup="true">
+      <div class="IconContainer js-tooltip" title="More">
+        <span class="Icon Icon--caretDownLight Icon--smallest"></span>
+        <span class="u-hiddenVisually">More</span>
+      </div>
+  </button>
+  <div class="dropdown-menu is-autoCentered">
+  <div class="dropdown-caret">
+    <div class="caret-outer"></div>
+    <div class="caret-inner"></div>
+  </div>
+  <ul>
+
+      <li class="copy-link-to-tweet js-actionCopyLinkToTweet">
+        <button type="button" class="dropdown-link">Copy link to Tweet</button>
+      </li>
+      <li class="embed-link js-actionEmbedTweet" data-nav="embed_tweet">
+        <button type="button" class="dropdown-link">Embed Tweet</button>
+      </li>
+  </ul>
+</div>
+</div>
+  </div>
+
+      </div>
+
+
+
+
+
+        <div class="js-tweet-text-container">
+  <p class="TweetTextSize TweetTextSize--normal js-tweet-text tweet-text" lang="en" data-aria-label-part="0">Issue #90: How to split a file into smaller chunks? -<a href="https://t.co/U6l5ixhvRk" rel="nofollow noopener" dir="ltr" data-expanded-url="http://eepurl.com/cFmiSX" class="twitter-timeline-link u-hidden" target="_blank" title="http://eepurl.com/cFmiSX"><span class="tco-ellipsis"></span><span class="invisible">http://</span><span class="js-display-url">eepurl.com/cFmiSX</span><span class="invisible"></span><span class="tco-ellipsis"><span class="invisible">&nbsp;</span></span></a></p>
+</div>
+
+
+
+
+
+
+
+
+
+          <div class="card2 js-media-container
+    " data-card2-name="summary_large_image">
+    <div class="js-macaw-cards-iframe-container card-type-summary_large_image" data-src="/i/cards/tfw/v1/839322084278943745?cardname=summary_large_image&amp;autoplay_disabled=true&amp;forward=true&amp;earned=true&amp;lang=en" data-card-name="summary_large_image" data-card-url="https://t.co/U6l5ixhvRk" data-publisher-id="" data-creator-id="" data-amplify-content-id="" data-amplify-playlist-url="" data-full-card-iframe-url="/i/cards/tfw/v1/839322084278943745?cardname=summary_large_image&amp;autoplay_disabled=true&amp;earned=true&amp;lang=en" data-has-autoplayable-media="false" data-watched="true">
+<iframe id="xdm_default7590_provider" height="344" frameborder="0" scrolling="no" width="100%" src="https://twitter.com/i/cards/tfw/v1/839322084278943745?cardname=summary_large_image&amp;autoplay_disabled=true&amp;forward=true&amp;earned=true&amp;lang=en&amp;card_height=344&amp;scribe_context=%7B%22client%22%3A%22web%22%2C%22page%22%3A%22profile%22%2C%22section%22%3A%22profile%22%2C%22component%22%3A%22tweet%22%7D#xdm_e=https%3A%2F%2Ftwitter.com&amp;xdm_c=default7590&amp;xdm_p=1" allowfullscreen="" style="display: block; margin: 0px; padding: 0px; border: 0px;"></iframe></div>
+
+</div>
+
+
+
+
+      <div class="stream-item-footer">
+
+      <div class="ProfileTweet-actionCountList u-hiddenVisually">
+
+
+    <span class="ProfileTweet-action--reply u-hiddenVisually">
+      <span class="ProfileTweet-actionCount" aria-hidden="true" data-tweet-stat-count="0">
+        <span class="ProfileTweet-actionCountForAria">0 replies</span>
+      </span>
+    </span>
+    <span class="ProfileTweet-action--retweet u-hiddenVisually">
+      <span class="ProfileTweet-actionCount" aria-hidden="true" data-tweet-stat-count="0">
+        <span class="ProfileTweet-actionCountForAria">0 retweets</span>
+      </span>
+    </span>
+    <span class="ProfileTweet-action--favorite u-hiddenVisually">
+      <span class="ProfileTweet-actionCount" data-tweet-stat-count="1">
+        <span class="ProfileTweet-actionCountForAria" data-aria-label-part="">1 like</span>
+      </span>
+    </span>
+  </div>
+
+  <div class="ProfileTweet-actionList js-actions" role="group" aria-label="Tweet actions">
+    <div class="ProfileTweet-action ProfileTweet-action--reply">
+  <button class="ProfileTweet-actionButton js-actionButton js-actionReply" data-modal="ProfileTweet-reply" type="button">
+    <div class="IconContainer js-tooltip" title="Reply">
+      <span class="Icon Icon--reply"></span>
+      <span class="u-hiddenVisually">Reply</span>
+    </div>
+      <div class="IconTextContainer">
+        <span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero ">
+          <span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
+        </span>
+      </div>
+  </button>
+</div>
+    <div class="ProfileTweet-action ProfileTweet-action--retweet js-toggleState js-toggleRt">
+  <button class="ProfileTweet-actionButton  js-actionButton js-actionRetweet" data-modal="ProfileTweet-retweet" type="button">
+    <div class="IconContainer js-tooltip" title="Retweet">
+      <span class="Icon Icon--retweet"></span>
+      <span class="u-hiddenVisually">Retweet</span>
+    </div>
+      <div class="IconTextContainer">
+        <span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero">
+          <span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
+        </span>
+      </div>
+  </button><button class="ProfileTweet-actionButtonUndo js-actionButton js-actionRetweet" data-modal="ProfileTweet-retweet" type="button">
+    <div class="IconContainer js-tooltip" title="Undo retweet">
+      <span class="Icon Icon--retweet"></span>
+      <span class="u-hiddenVisually">Retweeted</span>
+    </div>
+      <div class="IconTextContainer">
+        <span class="ProfileTweet-actionCount ProfileTweet-actionCount--isZero">
+          <span class="ProfileTweet-actionCountForPresentation" aria-hidden="true"></span>
+        </span>
+      </div>
+  </button>
+</div>
+
+    <div class="ProfileTweet-action ProfileTweet-action--favorite js-toggleState">
+  <button class="ProfileTweet-actionButton js-actionButton js-actionFavorite" type="button">
+    <div class="IconContainer js-tooltip" title="Like">
+      <div class="HeartAnimationContainer">
+        <div class="HeartAnimation"></div>
+      </div>
+      <span class="u-hiddenVisually">Like</span>
+    </div>
+      <div class="IconTextContainer">
+        <span class="ProfileTweet-actionCount">
+          <span class="ProfileTweet-actionCountForPresentation" aria-hidden="true">1</span>
+        </span>
+      </div>
+  </button><button class="ProfileTweet-actionButtonUndo u-linkClean js-actionButton js-actionFavorite" type="button">
+    <div class="IconContainer js-tooltip" title="Undo like">
+      <div class="HeartAnimationContainer">
+        <div class="HeartAnimation"></div>
+      </div>
+      <span class="u-hiddenVisually">Liked</span>
+    </div>
+      <div class="IconTextContainer">
+        <span class="ProfileTweet-actionCount">
+          <span class="ProfileTweet-actionCountForPresentation" aria-hidden="true">1</span>
+        </span>
+      </div>
+  </button>
+</div>
+
+
+
+
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+    </div>
+  </div>
