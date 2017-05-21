@@ -24,3 +24,7 @@ Downloads Webpage from a URL to a file
 _generate_paypal_errors.py_
 
 Extract error codes from Paypal documentation webpage to JSON
+
+_twitter_scrapy.py_
+
+Scrapes tweets from twitter and writes out html as individual files to the output directory
