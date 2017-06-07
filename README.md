@@ -1,5 +1,5 @@
 #### bin-utils
-Collection of helpful scripts and apps
+Collection of helpful scripts and apps.
 
 ###### Setting up python3 with VirtualEnv
 
