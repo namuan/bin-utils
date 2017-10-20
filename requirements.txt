@@ -1,4 +1,6 @@
 requests
 beautifulsoup4
 selenium
+bson
+
 logzero
