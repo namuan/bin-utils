@@ -10,7 +10,6 @@ from argparse import ArgumentParser
 
 from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
-from selenium.webdriver.firefox.webdriver import WebDriver
 from slug import slug
 
 from common_utils import create_dir
@@ -128,7 +127,7 @@ class ScrapePages(object):
             text_file.write(file_content)
 
     def run(self, context):
-        browser: WebDriver = context["browser"]
+        browser = context["browser"]
         total_pages = context["total_pages"]
         all_posts = []
         for i in range(total_pages):
@@ -211,7 +210,7 @@ class OpenHtmlPage(object):
         complete_html_page = context["complete_html_page"]
         output_folder = context["output_folder"]
         subprocess.call(
-            'open -a "Firefox.app" {}/{}'.format(output_folder, complete_html_page),
+            'open {}/{}'.format(output_folder, complete_html_page),
             shell=True,
         )
 
