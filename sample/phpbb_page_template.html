@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en-us">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{{ thread_topic }}</title>
+
+    <link rel="canonical" href="https://www.bogleheads.org/forum/viewtopic.php?t=344667">
+
+    <link href="https://www.bogleheads.org/forum/assets/css/font-awesome.min.css?assets_version=279" rel="stylesheet">
+    <link href="https://www.bogleheads.org/forum/styles/prosilver/theme/stylesheet.css?assets_version=279" rel="stylesheet">
+
+    <link href="https://www.bogleheads.org/forum/ext/phpbb/collapsiblecategories/styles/all/theme/collapsiblecategories.css?assets_version=279" rel="stylesheet" media="screen" />
+
+
+
+</head>
+<body id="phpbb" class="nojs notouch section-viewtopic ltr ">
+
+
+<div id="wrap" class="wrap">
+    <a id="top" class="top-anchor" accesskey="t"></a>
+
+    <a id="start_here" class="anchor"></a>
+    <div id="page-body" class="page-body" role="main">
+
+
+        <h2 class="topic-title"><a href="https://www.bogleheads.org/forum/viewtopic.php?f=10&amp;t=344667">{{ thread_topic }}</a></h2>
+
+<!-- All posts should go here -->
+
+        {% for p in all_posts %}
+        <hr/>
+        <br/>
+        <div class="postbody">
+            <div>
+                <p class="author">
+                    <span class="responsive-hide">by <strong>{{ p.username }}</strong> » </span>
+                    <span>{{ p.time }}</span>
+                </p>
+                {{ p.content }}
+            </div>
+        </div>
+        <br/>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+</body>
+</html>
