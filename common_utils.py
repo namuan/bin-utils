@@ -4,12 +4,12 @@ from pathlib import Path
 import shutil
 
 
-def create_dir(output_dir):
+def create_dir(output_dir, delete_existing=False):
     path = Path(output_dir)
-    if path.exists():
+    if path.exists() and delete_existing:
         shutil.rmtree(output_dir)
-
-    path.mkdir()
+    elif not path.exists():
+        path.mkdir()
 
 
 def random_string(length):

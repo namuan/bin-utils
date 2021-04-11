@@ -11,3 +11,4 @@ schedule
 feedparser
 python-telegram-bot
 finviz
+jinja2

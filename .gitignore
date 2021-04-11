@@ -91,3 +91,4 @@ ENV/
 pyenv/*
 .idea
 charts/
+generated/
