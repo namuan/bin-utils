@@ -7,7 +7,7 @@ setup: ## Setup Virtual Env
 	./venv/bin/pip3 install -r requirements.txt
 
 deps: ## Install dependencies
-	./venv/bin/pip3 install -r requirements.txt
+	./venv/bin/pip3 install -r requirements/dev.txt
 
 lint: ## Runs black for code formatting
 	./venv/bin/black . --exclude venv

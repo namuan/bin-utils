@@ -1,0 +1,13 @@
+requests
+beautifulsoup4
+selenium
+bson
+boto3
+logzero
+pyppeteer
+slug
+python-dotenv
+schedule
+feedparser
+python-telegram-bot
+finviz

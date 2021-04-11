@@ -10,23 +10,25 @@ import json
 import sys
 from itertools import chain
 
-ENCODE_IN = 'utf-8'
-ENCODE_OUT = 'utf-8'
+ENCODE_IN = "utf-8"
+ENCODE_OUT = "utf-8"
 
 
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-i', '--infile',
-                        type=lambda x: open(x, encoding=ENCODE_IN),
-                        default=io.TextIOWrapper(
-                            sys.stdin.buffer, encoding=ENCODE_IN)
-                        )
-    parser.add_argument('-o', '--outfile',
-                        type=lambda x: open(x, 'w', encoding=ENCODE_OUT),
-                        default=io.TextIOWrapper(
-                            sys.stdout.buffer, encoding=ENCODE_OUT)
-                        )
+    parser.add_argument(
+        "-i",
+        "--infile",
+        type=lambda x: open(x, encoding=ENCODE_IN),
+        default=io.TextIOWrapper(sys.stdin.buffer, encoding=ENCODE_IN),
+    )
+    parser.add_argument(
+        "-o",
+        "--outfile",
+        type=lambda x: open(x, "w", encoding=ENCODE_OUT),
+        default=io.TextIOWrapper(sys.stdout.buffer, encoding=ENCODE_OUT),
+    )
     return parser.parse_args()
 
 
@@ -39,7 +41,7 @@ def flatten(nested_list):
 
 
 def extract_endpoint(api_node):
-    return flatten([method.get('path') for method in api_node.get('methods')])
+    return flatten([method.get("path") for method in api_node.get("methods")])
 
 
 def extract_methods(api_node):
@@ -47,7 +49,7 @@ def extract_methods(api_node):
 
 
 def manipulate_data(data):
-    return flatten([extract_methods(v) for k, v in data.get('apis').items()])
+    return flatten([extract_methods(v) for k, v in data.get("apis").items()])
 
 
 def main():
@@ -57,5 +59,5 @@ def main():
     args.outfile.write(json.dumps(results))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -13,8 +13,10 @@ def create_dir(output_dir):
 
 
 def random_string(length):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(length))
+    return "".join(
+        random.choice(string.ascii_uppercase + string.digits) for _ in range(length)
+    )
 
 
 def job_hash(job):
-    return random_string(len(job.get('q')))
+    return random_string(len(job.get("q")))
