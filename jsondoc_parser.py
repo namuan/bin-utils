@@ -8,6 +8,7 @@ import argparse
 import io
 import json
 import sys
+from itertools import chain
 
 ENCODE_IN = 'utf-8'
 ENCODE_OUT = 'utf-8'
@@ -33,12 +34,20 @@ def read_instream(in_stream):
     return json.loads(in_stream.read())
 
 
+def flatten(nested_list):
+    return list(chain.from_iterable(nested_list))
+
+
 def extract_endpoint(api_node):
-    return next(method.get('path') for method in api_node.get('methods'))
+    return flatten([method.get('path') for method in api_node.get('methods')])
+
+
+def extract_methods(api_node):
+    return flatten([extract_endpoint(api) for api in api_node])
 
 
 def manipulate_data(data):
-    return [extract_endpoint(api) for api in data.get('apis')]
+    return flatten([extract_methods(v) for k, v in data.get('apis').items()])
 
 
 def main():

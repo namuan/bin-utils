@@ -90,3 +90,4 @@ ENV/
 
 pyenv/*
 .idea
+charts/
