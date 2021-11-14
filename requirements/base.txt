@@ -12,3 +12,4 @@ feedparser
 python-telegram-bot
 finviz
 jinja2
+GitPython
