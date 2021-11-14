@@ -92,3 +92,4 @@ pyenv/*
 .idea
 charts/
 generated/
+*.db
