@@ -28,17 +28,17 @@ Copy the output and paste it into the email
         print(context)
 
 
-def parse_args():
-    parser = ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-u", "--username", type=str, required=True, help="User name")
-    return parser.parse_args()
-
-
 def run_step(step, context):
     print(step.__class__.__name__)
     print(step.__doc__)
     step.run(context)
     print("-" * 100)
+
+
+def parse_args():
+    parser = ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("-u", "--username", type=str, required=True, help="User name")
+    return parser.parse_args()
 
 
 def main(args):
