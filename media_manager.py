@@ -16,6 +16,16 @@ from pathlib import Path
 from exif import Image
 from plum.exceptions import UnpackError
 
+logging.basicConfig(
+    handlers=[
+        logging.StreamHandler(),
+    ],
+    format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
+logging.captureWarnings(capture=True)
+
 
 @dataclass
 class PhotoMetadata:
@@ -181,6 +191,7 @@ def main(args):
     for idx, media_file in enumerate(media_files):
         source_file = Path(media_file)
         try:
+            logging.info(f"⏳ Processing {source_file}")
             target_file = process_media(source_file, target_directory)
             logging.info(f"📓 [{idx}] {source_file} => {target_file}")
         except UnpackError:
