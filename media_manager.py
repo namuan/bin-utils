@@ -184,7 +184,7 @@ def main(args):
         raise ValueError("Only one of source_file or source_directory can be specified")
 
     media_files = collect_media_files_from(args)
-    print(f"📂 {len(media_files)} files found")
+    logging.info(f"📂 {len(media_files)} files found")
     target_directory = Path(args.target_directory).expanduser()
     create_required_directories(target_directory)
 
@@ -199,7 +199,7 @@ def main(args):
                 f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} "
             )
             process_later(source_file, target_directory)
-    print("Done.")
+    logging.info("Done.")
 
 
 if __name__ == "__main__":
