@@ -6,6 +6,7 @@ TODO:
 Handle ignored files
 """
 import json
+import logging
 import shutil
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from dataclasses import dataclass
@@ -95,34 +96,38 @@ def get_photo_metadata(file_path):
 
 def move_to_target_directory(file_path, target_directory, photo_metadata):
     target_folder = (
-        target_directory
-        / photo_metadata.year
-        / photo_metadata.month
-        / photo_metadata.day
+            target_directory
+            / photo_metadata.year
+            / photo_metadata.month
+            / photo_metadata.day
     )
     target_folder.mkdir(parents=True, exist_ok=True)
     if not file_path.suffix:
         target_folder = target_directory / "ToSort"
 
-    target_file = target_folder / "{}_{}_{}_{}{}".format(
+    target_file = target_folder / "{}_{}_{}_{}_{}{}".format(
         photo_metadata.year,
         photo_metadata.month,
         photo_metadata.day,
         photo_metadata.time,
-        file_path.suffix,
+        file_path.stem.lower(),
+        file_path.suffix.lower(),
     )
 
-    print(f"📓 {file_path} => {target_file}")
     if not target_file.exists():
         shutil.copy2(file_path, target_file)
+
+    return target_file
 
 
 def valid_file(file_path):
     invalid_file_extensions = [".json", ".ini", ".zip"]
+    invalid_names = [".ds_store"]
     return (
-        file_path.exists()
-        and not file_path.is_dir()
-        and file_path.suffix.lower() not in invalid_file_extensions
+            file_path.exists()
+            and not file_path.is_dir()
+            and file_path.suffix.lower() not in invalid_file_extensions
+            and file_path.name.lower() not in invalid_names
     )
 
 
@@ -133,15 +138,12 @@ def process_later(file_path, target_directory):
 
 
 def process_media(file_path, target_directory):
-    try:
-        photo_metadata = get_photo_metadata(file_path)
-        if photo_metadata is None:
-            return
+    photo_metadata = get_photo_metadata(file_path)
+    if photo_metadata is None:
+        return
 
-        move_to_target_directory(file_path, target_directory, photo_metadata)
-    except UnpackError as e:
-        print(f"❌ Unable to process {file_path} 🗄 Moving to process later.")
-        process_later(file_path, target_directory)
+    target_file = move_to_target_directory(file_path, target_directory, photo_metadata)
+    return target_file
 
 
 def create_required_directories(target_directory):
@@ -155,8 +157,13 @@ def collect_media_files_from(args):
         media_files = [source_file]
     else:
         source_directory = Path(args.source_directory).expanduser()
-        media_files = source_directory.glob("**/*")
-    return media_files
+        media_files = (
+            p.resolve()
+            for p in source_directory.glob("**/*")
+            if p.is_file() and valid_file(p)
+        )
+
+    return list(media_files)
 
 
 def main(args):
@@ -167,19 +174,18 @@ def main(args):
         raise ValueError("Only one of source_file or source_directory can be specified")
 
     media_files = collect_media_files_from(args)
-
+    print(f"📂 {len(media_files)} files found")
     target_directory = Path(args.target_directory).expanduser()
     create_required_directories(target_directory)
 
-    for media_file in media_files:
+    for idx, media_file in enumerate(media_files):
+        source_file = Path(media_file)
         try:
-            source_file = Path(media_file)
-            if valid_file(source_file):
-                print(f"⏳ Processing {media_file}")
-                process_media(source_file, target_directory)
-        except Exception as e:
-            print(f"❌ Unable to process {media_file}")
-            raise e
+            target_file = process_media(source_file, target_directory)
+            logging.info(f"📓 [{idx}] {source_file} => {target_file}")
+        except UnpackError:
+            logging.warning(f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} ")
+            process_later(source_file, target_directory)
     print("Done.")
 
 
