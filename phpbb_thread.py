@@ -210,7 +210,7 @@ class OpenHtmlPage(object):
         complete_html_page = context["complete_html_page"]
         output_folder = context["output_folder"]
         subprocess.call(
-            'open {}/{}'.format(output_folder, complete_html_page),
+            "open {}/{}".format(output_folder, complete_html_page),
             shell=True,
         )
 

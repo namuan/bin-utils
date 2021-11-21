@@ -26,15 +26,19 @@ class PhotoMetadata:
 
 
 def parse_args():
-    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser = ArgumentParser(
+        description=__doc__, formatter_class=RawDescriptionHelpFormatter
+    )
     parser.add_argument("-f", "--source-file", type=str, help="Source file")
     parser.add_argument("-s", "--source-directory", type=str, help="Source directory")
-    parser.add_argument("-t", "--target-directory", type=str, required=True, help="Target directory")
+    parser.add_argument(
+        "-t", "--target-directory", type=str, required=True, help="Target directory"
+    )
     return parser.parse_args()
 
 
 def get_datetime_from_exif(file_path, image):
-    datetime_to_parse = image.get('datetime_original', image.get('datetime'))
+    datetime_to_parse = image.get("datetime_original", image.get("datetime"))
     if not datetime_to_parse:
         file_directory = file_path.parent
         json_file = file_directory / (file_path.name + ".json")
@@ -64,7 +68,9 @@ def get_datetime_from_exif(file_path, image):
             pass
 
     if not datetime_from_exif:
-        raise Exception(f"Unable to parse date time from exif data: {dir(image)} , formats: {formats_to_try}")
+        raise Exception(
+            f"Unable to parse date time from exif data: {dir(image)} , formats: {formats_to_try}"
+        )
 
     return datetime_from_exif
 
@@ -79,19 +85,21 @@ def get_photo_metadata(file_path):
     year = "{:04d}".format(media_created_date_time.year)
     month = "{:02d}".format(media_created_date_time.month)
     day = "{:02d}".format(media_created_date_time.day)
-    time = "{:02d}{:02d}".format(media_created_date_time.time().hour,
-                                 media_created_date_time.time().minute)
+    time = "{:02d}{:02d}".format(
+        media_created_date_time.time().hour, media_created_date_time.time().minute
+    )
     return PhotoMetadata(
-        has_metadata=image.has_exif,
-        year=year,
-        month=month,
-        day=day,
-        time=time
+        has_metadata=image.has_exif, year=year, month=month, day=day, time=time
     )
 
 
 def move_to_target_directory(file_path, target_directory, photo_metadata):
-    target_folder = target_directory / photo_metadata.year / photo_metadata.month / photo_metadata.day
+    target_folder = (
+        target_directory
+        / photo_metadata.year
+        / photo_metadata.month
+        / photo_metadata.day
+    )
     target_folder.mkdir(parents=True, exist_ok=True)
     if not file_path.suffix:
         target_folder = target_directory / "ToSort"
@@ -101,7 +109,7 @@ def move_to_target_directory(file_path, target_directory, photo_metadata):
         photo_metadata.month,
         photo_metadata.day,
         photo_metadata.time,
-        file_path.suffix
+        file_path.suffix,
     )
 
     print(f"📓 {file_path} => {target_file}")
@@ -111,7 +119,11 @@ def move_to_target_directory(file_path, target_directory, photo_metadata):
 
 def valid_file(file_path):
     invalid_file_extensions = [".json", ".ini", ".zip"]
-    return file_path.exists() and not file_path.is_dir() and file_path.suffix.lower() not in invalid_file_extensions
+    return (
+        file_path.exists()
+        and not file_path.is_dir()
+        and file_path.suffix.lower() not in invalid_file_extensions
+    )
 
 
 def process_later(file_path, target_directory):

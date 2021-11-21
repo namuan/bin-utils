@@ -18,10 +18,10 @@ def wait_for_enter():
 
 class DoSomething(object):
     """
-Go to this page
-Copy the command
-Run the command
-Copy the output and paste it into the email
+    Go to this page
+    Copy the command
+    Run the command
+    Copy the output and paste it into the email
     """
 
     def run(self, context):
@@ -36,7 +36,9 @@ def run_step(step, context):
 
 
 def parse_args():
-    parser = ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("-u", "--username", type=str, required=True, help="User name")
     return parser.parse_args()
 
