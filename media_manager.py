@@ -96,10 +96,10 @@ def get_photo_metadata(file_path):
 
 def move_to_target_directory(file_path, target_directory, photo_metadata):
     target_folder = (
-            target_directory
-            / photo_metadata.year
-            / photo_metadata.month
-            / photo_metadata.day
+        target_directory
+        / photo_metadata.year
+        / photo_metadata.month
+        / photo_metadata.day
     )
     target_folder.mkdir(parents=True, exist_ok=True)
     if not file_path.suffix:
@@ -124,10 +124,10 @@ def valid_file(file_path):
     invalid_file_extensions = [".json", ".ini", ".zip"]
     invalid_names = [".ds_store"]
     return (
-            file_path.exists()
-            and not file_path.is_dir()
-            and file_path.suffix.lower() not in invalid_file_extensions
-            and file_path.name.lower() not in invalid_names
+        file_path.exists()
+        and not file_path.is_dir()
+        and file_path.suffix.lower() not in invalid_file_extensions
+        and file_path.name.lower() not in invalid_names
     )
 
 
@@ -184,7 +184,9 @@ def main(args):
             target_file = process_media(source_file, target_directory)
             logging.info(f"📓 [{idx}] {source_file} => {target_file}")
         except UnpackError:
-            logging.warning(f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} ")
+            logging.warning(
+                f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} "
+            )
             process_later(source_file, target_directory)
     print("Done.")
 
