@@ -93,3 +93,4 @@ pyenv/*
 charts/
 generated/
 *.db
+fireprofile
