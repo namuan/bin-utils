@@ -1,3 +1,5 @@
 -r base.txt
 black
 bpython
+pre-commit
+flake8
