@@ -111,13 +111,13 @@ def get_photo_metadata(file_path):
     )
 
 
-def move_to_target_directory(file_path, target_directory, metadata):
+def build_target_file_path(file_path, target_directory, metadata):
     target_folder = target_directory / metadata.year / metadata.month / metadata.day
     target_folder.mkdir(parents=True, exist_ok=True)
     if not file_path.suffix:
         target_folder = target_directory / "ToSort"
 
-    target_file = target_folder / "{}_{}_{}_{}_{}{}".format(
+    return target_folder / "{}_{}_{}_{}_{}{}".format(
         metadata.year,
         metadata.month,
         metadata.day,
@@ -125,8 +125,6 @@ def move_to_target_directory(file_path, target_directory, metadata):
         file_path.stem.lower(),
         file_path.suffix.lower(),
     )
-
-    return target_file
 
 
 def valid_file(file_path):
@@ -171,7 +169,7 @@ def process_media(file_path, target_directory):
     if metadata is None:
         return
 
-    target_file = move_to_target_directory(file_path, target_directory, metadata)
+    target_file = build_target_file_path(file_path, target_directory, metadata)
     if not target_file.exists():
         shutil.copy2(file_path, target_file)
 
