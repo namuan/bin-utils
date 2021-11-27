@@ -28,7 +28,7 @@ logging.captureWarnings(capture=True)
 
 
 @dataclass
-class PhotoMetadata:
+class MediaMetadata:
     has_metadata: bool
     year: str
     month: str
@@ -44,6 +44,13 @@ def parse_args():
     parser.add_argument("-s", "--source-directory", type=str, help="Source directory")
     parser.add_argument(
         "-t", "--target-directory", type=str, required=True, help="Target directory"
+    )
+    parser.add_argument(
+        "-r",
+        "--remove-source",
+        action="store_true",
+        default=False,
+        help="Remove source file",
     )
     return parser.parse_args()
 
@@ -99,33 +106,25 @@ def get_photo_metadata(file_path):
     time = "{:02d}{:02d}".format(
         media_created_date_time.time().hour, media_created_date_time.time().minute
     )
-    return PhotoMetadata(
+    return MediaMetadata(
         has_metadata=image.has_exif, year=year, month=month, day=day, time=time
     )
 
 
-def move_to_target_directory(file_path, target_directory, photo_metadata):
-    target_folder = (
-        target_directory
-        / photo_metadata.year
-        / photo_metadata.month
-        / photo_metadata.day
-    )
+def move_to_target_directory(file_path, target_directory, metadata):
+    target_folder = target_directory / metadata.year / metadata.month / metadata.day
     target_folder.mkdir(parents=True, exist_ok=True)
     if not file_path.suffix:
         target_folder = target_directory / "ToSort"
 
     target_file = target_folder / "{}_{}_{}_{}_{}{}".format(
-        photo_metadata.year,
-        photo_metadata.month,
-        photo_metadata.day,
-        photo_metadata.time,
+        metadata.year,
+        metadata.month,
+        metadata.day,
+        metadata.time,
         file_path.stem.lower(),
         file_path.suffix.lower(),
     )
-
-    if not target_file.exists():
-        shutil.copy2(file_path, target_file)
 
     return target_file
 
@@ -147,12 +146,35 @@ def process_later(file_path, target_directory):
         shutil.copyfile(file_path, target_file)
 
 
+def is_video_file(file_path):
+    return file_path.suffix.lower() in [".mp4", ".mov", ".m4v", ".avi", ".3gp", ".flv"]
+
+
+def get_video_metadata(file_path):
+    media_created_date_time = datetime.fromtimestamp(file_path.stat().st_birthtime)
+
+    year = "{:04d}".format(media_created_date_time.year)
+    month = "{:02d}".format(media_created_date_time.month)
+    day = "{:02d}".format(media_created_date_time.day)
+    time = "{:02d}{:02d}".format(
+        media_created_date_time.time().hour, media_created_date_time.time().minute
+    )
+    return MediaMetadata(has_metadata=False, year=year, month=month, day=day, time=time)
+
+
 def process_media(file_path, target_directory):
-    photo_metadata = get_photo_metadata(file_path)
-    if photo_metadata is None:
+    if is_video_file(file_path):
+        metadata = get_video_metadata(file_path)
+    else:
+        metadata = get_photo_metadata(file_path)
+
+    if metadata is None:
         return
 
-    target_file = move_to_target_directory(file_path, target_directory, photo_metadata)
+    target_file = move_to_target_directory(file_path, target_directory, metadata)
+    if not target_file.exists():
+        shutil.copy2(file_path, target_file)
+
     return target_file
 
 
@@ -193,6 +215,10 @@ def main(args):
         try:
             logging.info(f"⏳ Processing {source_file}")
             target_file = process_media(source_file, target_directory)
+            if args.remove_source:
+                source_file.unlink()
+                logging.info(f"🗑 Removing source file: {source_file}")
+
             logging.info(f"📓 [{idx}] {source_file} => {target_file}")
         except UnpackError:
             logging.warning(
