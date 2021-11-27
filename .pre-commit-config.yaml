@@ -1,9 +1,13 @@
 repos:
-  - repo: https://github.com/ambv/black
-    rev: stable
+  - repo: local
     hooks:
       - id: black
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.7.9
-    hooks:
+        name: black
+        entry: black
+        language: system
+        types: [ python ]
       - id: flake8
+        name: flake8
+        entry: flake8
+        language: system
+        types: [ python ]
