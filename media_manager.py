@@ -167,7 +167,7 @@ def process_media(file_path, target_directory):
         metadata = get_photo_metadata(file_path)
 
     if metadata is None:
-        return
+        raise ValueError(f"Unable to parse metadata for {file_path}")
 
     target_file = build_target_file_path(file_path, target_directory, metadata)
     if not target_file.exists():
@@ -218,9 +218,9 @@ def main(args):
                 logging.info(f"🗑 Removing source file: {source_file}")
 
             logging.info(f"📓 [{idx}] {source_file} => {target_file}")
-        except UnpackError:
+        except UnpackError as e:
             logging.warning(
-                f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} "
+                f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} ERROR: {e}"
             )
             process_later(source_file, target_directory)
     logging.info("Done.")
