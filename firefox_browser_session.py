@@ -7,7 +7,7 @@ https://github.com/mozilla/geckodriver/releases/
 ```
 - Create symlink for firefox profile
 ```
-ln -s ~/Library/Application\ Support/Firefox/Profiles/65h6sl1r.default-release $(pwd)/fireprofile
+ln -s "~/Library/Application Support/Firefox/Profiles/65h6sl1r.default-release" $(pwd)/fireprofile
 ```
 """
 import fire
@@ -51,11 +51,17 @@ def main(browser_profile: str = None):
 
     # wait for an element to present
     wait = WebDriverWait(current_session, 10)
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//*[text()='https://www.deskriders.dev']")))
+    wait.until(
+        EC.visibility_of_element_located(
+            (By.XPATH, "//*[text()='https://www.deskriders.dev']")
+        )
+    )
 
-    current_session.find_element(By.XPATH, "//*[text()='https://www.deskriders.dev']").click()
+    current_session.find_element(
+        By.XPATH, "//*[text()='https://www.deskriders.dev']"
+    ).click()
     session.stop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     fire.Fire(main)
