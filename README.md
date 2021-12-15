@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 _tweet_parser.py_
 
-Converts a tweet in HTML to JSON. 
+Converts a tweet in HTML to JSON.
 
 _download_html_to_file.py_
 

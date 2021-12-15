@@ -16,6 +16,10 @@ clean: ## Clean package
 	find . -type d -name '__pycache__' | xargs rm -rf
 	rm -rf build dist
 
+pre-commit: ## Manually run all precommit hooks
+	pre-commit install
+	pre-commit run --all-files
+
 deploy: clean ## Copies any changed file to the server
 	ssh ${PROJECTNAME} -C 'bash -l -c "mkdir -vp ./${PROJECTNAME}"'
 	rsync -avzr \

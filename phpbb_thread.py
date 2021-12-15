@@ -234,7 +234,7 @@ def main():
         logging.debug(context)
         step.run(context)
 
-    logging.info(f"<-- Done -->")
+    logging.info("<-- Done -->")
 
 
 if __name__ == "__main__":
