@@ -26,9 +26,7 @@ class CopyImageFiles(object):
 
     def image_path_in_vnote(self, note_path, image):
         note = Path(note_path)
-        return (
-            note / ".." / "vx_images" / image
-        ).resolve()  # ".joinpath("..", image).resolve()
+        return (note / ".." / "vx_images" / image).resolve()
 
     def image_path_in_blog(self, blog_root, image):
         blog = Path(blog_root)
