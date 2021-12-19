@@ -21,7 +21,7 @@ class CopyImageFiles(object):
 
     def image_tags_from_note(self, note_path):
         return self.rgx_find_all(
-            Path(note_path).read_text(), "!\[\]\(vx_images\/(.*)\)"  # noqa: W605
+            Path(note_path).read_text(), "!\[.*\]\(vx_images\/(.*)\)"  # noqa: W605
         )
 
     def image_path_in_vnote(self, note_path, image):
@@ -30,13 +30,19 @@ class CopyImageFiles(object):
 
     def image_path_in_blog(self, blog_root, image):
         blog = Path(blog_root)
-        return blog.joinpath("static", image).resolve()
+        now = datetime.now()
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        target_image_dir = blog / "static" / "images" / year / month
+        target_image_dir.mkdir(parents=True, exist_ok=True)
+        return (target_image_dir / image).resolve()
 
     def run(self, context):
         note_path = context["vnote"]
         blog_root = context["blog"]
 
         images = self.image_tags_from_note(note_path)
+        print(f"Found {len(images)} images in {note_path}")
         for image in images:
             source_full_path = self.image_path_in_vnote(note_path, image)
             target_full_path = self.image_path_in_blog(blog_root, image)
@@ -54,16 +60,22 @@ class ReplaceImageLinks(object):
 
     def run(self, context):
         blog_page = context["blog_page"]
-        self.replace_string_in_file(blog_page, "vx_images/", "/images/")
+        now = datetime.now()
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        self.replace_string_in_file(blog_page, "vx_images/", f"/images/{year}/{month}/")
         print("Replace all images in Blog Post {}".format(blog_page))
 
 
-class ServeSite(object):
+class OpenInEditor(object):
     def run(self, context):
+        open_in_editor = context["open_in_editor"]
+        if not open_in_editor:
+            return
         blog_root = context["blog"]
+        print(f"Serving site from {blog_root}")
         os.chdir(blog_root)
-        subprocess.call('open -a "iTerm.app" {}'.format(blog_root), shell=True)
-        print("Serving site ...")
+        subprocess.call("idea .", cwd=blog_root, shell=True)
 
 
 class AddHugoHeader:
@@ -106,7 +118,11 @@ class WriteHugoPost:
 
 
 def main(args):
-    context = {"blog": args.blog_directory, "vnote": args.vnote_file_path}
+    context = {
+        "blog": args.blog_directory,
+        "vnote": args.vnote_file_path,
+        "open_in_editor": args.open_in_editor,
+    }
 
     context["file_name"] = Path(context["vnote"]).name
 
@@ -116,7 +132,7 @@ def main(args):
         WriteHugoPost(),
         CopyImageFiles(),
         ReplaceImageLinks(),
-        ServeSite(),
+        OpenInEditor(),
     ]
     for step in procedure:
         print("==" * 50)
@@ -131,6 +147,13 @@ def parse_args():
     parser.add_argument("-b", "--blog-directory", type=str, help="Blog directory")
     parser.add_argument(
         "-n", "--vnote-file-path", type=str, required=True, help="vNote file path"
+    )
+    parser.add_argument(
+        "-e",
+        "--open-in-editor",
+        action="store_true",
+        default=False,
+        help="Open blog site in editor",
     )
     return parser.parse_args()
 
