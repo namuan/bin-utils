@@ -9,9 +9,6 @@ setup: ## Setup Virtual Env
 deps: ## Install dependencies
 	./venv/bin/pip3 install -r requirements/dev.txt
 
-lint: ## Runs black for code formatting
-	./venv/bin/black . --exclude venv
-
 clean: ## Clean package
 	find . -type d -name '__pycache__' | xargs rm -rf
 	rm -rf build dist
