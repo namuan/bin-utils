@@ -16,3 +16,4 @@ GitPython
 exif
 fire
 pyperclip
+helium
