@@ -73,9 +73,9 @@ class OpenInEditor(object):
         if not open_in_editor:
             return
         blog_root = context["blog"]
-        print(f"Serving site from {blog_root}")
-        os.chdir(blog_root)
-        subprocess.call("idea .", cwd=blog_root, shell=True)
+        editor = os.environ.get("EDITOR")
+        print(f"Opening {blog_root} in {editor}")
+        subprocess.call(f"{editor} {blog_root}", shell=True)
 
 
 class AddHugoHeader:
