@@ -13,9 +13,7 @@ from argparse import ArgumentParser
 import logging
 
 logging.basicConfig(
-    handlers=[
-        logging.StreamHandler(),
-    ],
+    handlers=[logging.StreamHandler()],
     format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO,
@@ -41,6 +39,8 @@ class DoSomething(object):
 
 def run_step(step, context):
     logging.info(step.__class__.__name__ + " ➡️ " + step.__doc__)
+    if context.get("verbose"):
+        logging.info(context)
     step.run(context)
     logging.info("-" * 100)
 
@@ -50,6 +50,14 @@ def parse_args():
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("-u", "--username", type=str, required=True, help="User name")
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        dest="verbose",
+        help="Display context variables at each step",
+    )
     return parser.parse_args()
 
 
