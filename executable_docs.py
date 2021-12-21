@@ -29,8 +29,7 @@ class DoSomething(object):
 
 
 def run_step(step, context):
-    print(step.__class__.__name__)
-    print(step.__doc__)
+    print(step.__class__.__name__ + " ➡️ " + step.__doc__)
     step.run(context)
     print("-" * 100)
 
@@ -45,9 +44,7 @@ def parse_args():
 
 def main(args):
     context = args.__dict__
-    procedure = [
-        DoSomething(),
-    ]
+    procedure = [DoSomething()]
     for step in procedure:
         run_step(step, context)
     print("Done.")
