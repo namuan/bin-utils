@@ -10,6 +10,17 @@ Usage:
 
 import argparse
 from argparse import ArgumentParser
+import logging
+
+logging.basicConfig(
+    handlers=[
+        logging.StreamHandler(),
+    ],
+    format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
+logging.captureWarnings(capture=True)
 
 
 def wait_for_enter():
@@ -25,13 +36,13 @@ class DoSomething(object):
     """
 
     def run(self, context):
-        print(context)
+        logging.info(context)
 
 
 def run_step(step, context):
-    print(step.__class__.__name__ + " ➡️ " + step.__doc__)
+    logging.info(step.__class__.__name__ + " ➡️ " + step.__doc__)
     step.run(context)
-    print("-" * 100)
+    logging.info("-" * 100)
 
 
 def parse_args():
@@ -47,7 +58,7 @@ def main(args):
     procedure = [DoSomething()]
     for step in procedure:
         run_step(step, context)
-    print("Done.")
+    logging.info("Done.")
 
 
 if __name__ == "__main__":
