@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import asyncio
@@ -18,10 +18,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-i", "--input-url", type=str, required=True, help="Web Url")
     parser.add_argument(
-        "-t", "--target-dir", type=str, required=True, help="Target directory"
+        "-o", "--output-file-path", type=str, required=True, help="Output file path"
     )
     parser.add_argument(
-        "-o", "--output-file-name", type=str, required=True, help="Output file name"
+        "-w",
+        "--wait-in-secs-before-capture",
+        type=int,
+        default=5,
+        help="Wait (in secs) before capturing screenshot",
     )
     return parser.parse_args()
 
@@ -36,31 +40,16 @@ async def open_site(browser, website_url, screenshot_dir):
     return browser, page
 
 
-def is_github_page(website_url):
-    return "github" in website_url
-
-
-github_signup_dismissed = False
-
-
-async def dismiss_signup(page):
-    global github_signup_dismissed
-    selector = "signup-prompt > div > div > button"
-    dismiss_button = await page.querySelector(selector)
-    await dismiss_button.click()
-    github_signup_dismissed = True
-
-
 async def main():
     args = parse_args()
     website_url = args.input_url
-    target_dir = args.target_dir
-    output_file_name = args.output_file_name
+    screen_shot_path = Path(args.output_file_path)
+    wait_in_secs_before_capture = args.wait_in_secs_before_capture
 
-    screenshots_dir = Path(target_dir)
+    screenshots_dir = screen_shot_path.parent
     screenshots_dir.mkdir(exist_ok=True)
+
     browser = await launch(headless=False, defaultViewport=None)
-    screen_shot_path = screenshots_dir.joinpath(output_file_name)
 
     if not screen_shot_path.exists():
         print("Processing {}".format(website_url))
@@ -68,11 +57,8 @@ async def main():
             browser, page = await open_site(
                 browser, website_url, screenshots_dir.as_posix()
             )
-            if not github_signup_dismissed and is_github_page(website_url):
-                await dismiss_signup(page)
-            time.sleep(
-                5
-            )  # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
+            # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
+            time.sleep(wait_in_secs_before_capture)
             await page.screenshot({"path": screen_shot_path.as_posix()})
             await page.close()
             print(f"📸 Thumbnail saved {screen_shot_path}")
