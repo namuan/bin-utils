@@ -2,10 +2,10 @@
 
 {{hn_link}}
 
-{% for post_title, post_link in links_with_titles %}
+{% for post_title, post_link, thumbnail_link in links_with_metadata %}
 ### {{ post_title }}
 {{ post_link }}
-![](/thumbnail.png)
+![]({{ thumbnail_link }})
 {% endfor %}
 
 Made with ❤️

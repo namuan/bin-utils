@@ -6,6 +6,7 @@ Usage: $ python hn-links.py -l https://news.ycombinator.com/item?id=25381191
 
 import logging
 import os
+import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -29,6 +30,11 @@ logging.basicConfig(
 logging.captureWarnings(capture=True)
 
 
+def run_command(command):
+    logging.info(f"⚡ {command}")
+    return subprocess.check_output(command, shell=True).decode("utf-8")
+
+
 def fetch_html(url, post_html_page_file):
     logging.info(f"Fetching HTML title for {url}")
     try:
@@ -41,10 +47,9 @@ def fetch_html(url, post_html_page_file):
         return page_html
     except HTTPError as err:
         logging.error(
-            "Unable to fetch URL %s - HTTP Code: %s - %s",
+            "Unable to fetch URL %s - HTTP: %s",
             url,
-            err.code,
-            err.reason,
+            err,
         )
     except Exception as err:
         logging.error("Unable to fetch URL %s - %s", url, err)
@@ -156,17 +161,34 @@ class GrabChildLinkTitle(object):
         valid_links = context["valid_links"]
         child_links_folder = context["child_links_folder"]
         links_with_titles = [
-            (self.page_title_from(child_links_folder, link), link)
+            (self.stripped(self.page_title_from(child_links_folder, link)), link)
             for link in valid_links
         ]
         context["links_with_titles"] = links_with_titles
 
+    def stripped(self, page_title: str):
+        return page_title.strip()
 
-class GrabLinkTitleAndThumbnail(object):
-    """For each link, get HTML title and save thumbnail"""
+
+class GrabScreenThumbnail(object):
+    """For each link, get screen thumbnail"""
+
+    def thumbnail(self, thumbnails_folder, page_link):
+        page_slug = slug(page_link)
+        target_path = thumbnails_folder / f"{page_slug}.png"
+        cmd = f"./thumbnail_generator.py -i {page_link} -o {target_path}"
+        run_command(cmd)
+        return target_path
 
     def run(self, context):
-        pass
+        links_with_titles = context.get("links_with_titles")
+        thumbnails_folder = context.get("thumbnails_folder")
+
+        links_with_metadata = [
+            (page_title, page_link, self.thumbnail(thumbnails_folder, page_link))
+            for page_title, page_link in links_with_titles
+        ]
+        context["links_with_metadata"] = links_with_metadata
 
 
 class GenerateMarkdown(object):
@@ -227,7 +249,7 @@ def main(args):
         ExtractAllLinksFromPost(),
         KeepValidLinks(),
         GrabChildLinkTitle(),
-        GrabLinkTitleAndThumbnail(),
+        GrabScreenThumbnail(),
         GenerateMarkdown(),
         SaveMarkdown(),
     ]
