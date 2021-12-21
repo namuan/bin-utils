@@ -14,6 +14,7 @@ import requests
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 from requests import HTTPError
+from slug import slug
 
 UTF_ENCODING = "utf-8"
 
@@ -28,6 +29,41 @@ logging.basicConfig(
 logging.captureWarnings(capture=True)
 
 
+def fetch_html(url, post_html_page_file):
+    logging.info(f"Fetching HTML title for {url}")
+    try:
+        user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+        headers = {"User-Agent": user_agent}
+        page = requests.get(url, headers=headers)
+        page_html = page.text
+        logging.info(f"Caching page {post_html_page_file}")
+        post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
+        return page_html
+    except HTTPError as err:
+        logging.error(
+            "Unable to fetch URL %s - HTTP Code: %s - %s",
+            url,
+            err.code,
+            err.reason,
+        )
+    except Exception as err:
+        logging.error("Unable to fetch URL %s - %s", url, err)
+
+    return None
+
+
+def load_from_cache(post_html_page_file):
+    if post_html_page_file.exists():
+        logging.info(f"Loading page from cache {post_html_page_file}")
+        return post_html_page_file.read_text(encoding=UTF_ENCODING)
+    else:
+        return None
+
+
+def html_parser_from(page_html):
+    return BeautifulSoup(page_html, "html.parser")
+
+
 class CreateOutputFolder(object):
     """Create output folder using Post id in the temporary folder"""
 
@@ -35,62 +71,37 @@ class CreateOutputFolder(object):
         download_folder = context["download_folder"]
         hn_post_id = context["hn_post_id"]
         target_folder = Path(download_folder) / hn_post_id
-        target_folder.mkdir(parents=True, exist_ok=True)
+        child_links_folder = target_folder / "links"
+        thumbnails_folder = target_folder / "thumbnails"
+
+        for f in [target_folder, child_links_folder, thumbnails_folder]:
+            f.mkdir(parents=True, exist_ok=True)
+
         context["target_folder"] = target_folder.as_posix()
+        context["child_links_folder"] = child_links_folder
+        context["thumbnails_folder"] = thumbnails_folder
 
 
 class GrabPostHtml(object):
     """Use requests to download HTML using a browser user agent"""
-
-    def fetch_html(self, url, post_html_page_file):
-        logging.info(f"Fetching HTML title for {url}")
-        try:
-            user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
-            headers = {"User-Agent": user_agent}
-            page = requests.get(url, headers=headers)
-            page_html = page.text
-            logging.info(f"Caching page {post_html_page_file}")
-            post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
-            return page_html
-        except HTTPError as err:
-            logging.error(
-                "Unable to fetch URL %s - HTTP Code: %s - %s",
-                url,
-                err.code,
-                err.reason,
-            )
-        except Exception as err:
-            logging.error("Unable to fetch URL %s - %s", url, err)
-
-        return None
-
-    def load_from_cache(self, post_html_page_file):
-        if post_html_page_file.exists():
-            logging.info(f"Loading page from cache {post_html_page_file}")
-            return post_html_page_file.read_text(encoding=UTF_ENCODING)
-        else:
-            return None
 
     def run(self, context):
         hn_link = context.get("hn_link")
         target_folder = context.get("target_folder")
         hn_post_id = context.get("hn_post_id")
         post_html_page_file = Path(target_folder) / f"{hn_post_id}.html"
-
-        page_html = self.load_from_cache(post_html_page_file) or self.fetch_html(
+        page_html = load_from_cache(post_html_page_file) or fetch_html(
             hn_link, post_html_page_file
         )
-        bs = BeautifulSoup(page_html, "html.parser")
-        context["bs"] = bs
+        context["page_html"] = page_html
 
 
 class ParsePostHtml(object):
     """Create BeautifulSoap parser from html"""
 
     def run(self, context):
-        bs = context["bs"]
-        page_title = bs.title.string
-        context["page_title"] = page_title
+        page_html = context["page_html"]
+        context["bs"] = html_parser_from(page_html)
 
 
 class GrabPostTitle(object):
@@ -98,7 +109,7 @@ class GrabPostTitle(object):
 
     def run(self, context):
         bs = context["bs"]
-        context["post_title"] = bs.title.string
+        context["hn_post_title"] = bs.title.string
 
 
 class ExtractAllLinksFromPost(object):
@@ -127,6 +138,30 @@ class KeepValidLinks(object):
         context["valid_links"] = valid_links
 
 
+class GrabChildLinkTitle(object):
+    """Get page title for each valid link"""
+
+    def page_title_from(self, target_folder, link_in_comment):
+        page_slug = slug(link_in_comment)
+        page_path = f"{page_slug}.html"
+
+        post_html_page_file = Path(target_folder) / page_path
+        page_html = load_from_cache(post_html_page_file) or fetch_html(
+            link_in_comment, post_html_page_file
+        )
+        bs = html_parser_from(page_html)
+        return bs.title.string if bs.title else link_in_comment
+
+    def run(self, context):
+        valid_links = context["valid_links"]
+        child_links_folder = context["child_links_folder"]
+        links_with_titles = [
+            (self.page_title_from(child_links_folder, link), link)
+            for link in valid_links
+        ]
+        context["links_with_titles"] = links_with_titles
+
+
 class GrabLinkTitleAndThumbnail(object):
     """For each link, get HTML title and save thumbnail"""
 
@@ -147,6 +182,7 @@ class GenerateMarkdown(object):
         )
 
     def render_markdown(self, context):
+        print(context.keys())
         rendered = self.jinja_env.get_template("hn_post_links.md.j2").render(context)
         return rendered
 
@@ -190,6 +226,7 @@ def main(args):
         GrabPostTitle(),
         ExtractAllLinksFromPost(),
         KeepValidLinks(),
+        GrabChildLinkTitle(),
         GrabLinkTitleAndThumbnail(),
         GenerateMarkdown(),
         SaveMarkdown(),

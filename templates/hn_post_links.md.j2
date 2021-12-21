@@ -1,12 +1,11 @@
-## [Links] {hn_page_title}
+## [Links] {{hn_post_title}}
 
-{hn_link}
+{{hn_link}}
 
-{for post_link in valid_links}
-### {Post page title}
-{post_link}
+{% for post_title, post_link in links_with_titles %}
+### {{ post_title }}
+{{ post_link }}
 ![](/thumbnail.png)
-{endfor}
-
+{% endfor %}
 
 Made with ❤️
