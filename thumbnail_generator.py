@@ -5,6 +5,7 @@ import asyncio
 import os
 import time
 from pathlib import Path
+import logging
 
 from pyppeteer import launch
 
@@ -50,20 +51,18 @@ async def main():
     screenshots_dir.mkdir(exist_ok=True)
 
     browser = await launch(headless=False, defaultViewport=None)
-
-    if not screen_shot_path.exists():
-        print("Processing {}".format(website_url))
-        try:
-            browser, page = await open_site(
-                browser, website_url, screenshots_dir.as_posix()
-            )
-            # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
-            time.sleep(wait_in_secs_before_capture)
-            await page.screenshot({"path": screen_shot_path.as_posix()})
-            await page.close()
-            print(f"📸 Thumbnail saved {screen_shot_path}")
-        except Exception as e:
-            print("Error processing: {} - {}".format(website_url, str(e)))
+    print("Processing {}".format(website_url))
+    try:
+        browser, page = await open_site(
+            browser, website_url, screenshots_dir.as_posix()
+        )
+        # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
+        time.sleep(wait_in_secs_before_capture)
+        await page.screenshot({"path": screen_shot_path.as_posix()})
+        await page.close()
+        print(f"📸 Thumbnail saved {screen_shot_path}")
+    except Exception as e:
+        print("Error processing: {} - {}".format(website_url, str(e)))
 
 
 if __name__ == "__main__":

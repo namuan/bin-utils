@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 Grab links from HN Post and generate Markdown post with image thumbnails
+* To regenerate thumbnail, just delete the image file under thumbnails folder inside the post directory.
+
 Usage: $ python hn-links.py -l https://news.ycombinator.com/item?id=25381191
 """
 
@@ -176,6 +178,12 @@ class GrabScreenThumbnail(object):
         page_slug = slug(page_link)
         target_path = thumbnails_folder / f"{page_slug}.png"
         cmd = f"./thumbnail_generator.py -i {page_link} -o {target_path}"
+        if target_path.exists():
+            logging.info(
+                f"Thumbnail already exists for {page_link}. Run {cmd} to update it"
+            )
+            return target_path.as_posix()
+
         run_command(cmd)
         return target_path
 
@@ -203,7 +211,6 @@ class GenerateMarkdown(object):
         )
 
     def render_markdown(self, context):
-        print(context.keys())
         rendered = self.jinja_env.get_template("hn_post_links.md.j2").render(context)
         return rendered
 
