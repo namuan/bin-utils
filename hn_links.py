@@ -73,8 +73,8 @@ class CreateOutputFolder(object):
     """Create output folder using Post id in the temporary folder"""
 
     def run(self, context):
-        download_folder = context["download_folder"]
-        hn_post_id = context["hn_post_id"]
+        download_folder = context.get("download_folder")
+        hn_post_id = context.get("hn_post_id")
         target_folder = Path(download_folder) / hn_post_id
         child_links_folder = target_folder / "links"
         thumbnails_folder = target_folder / "thumbnails"
@@ -93,8 +93,7 @@ class GrabPostHtml(object):
     def run(self, context):
         hn_link = context.get("hn_link")
         target_folder = context.get("target_folder")
-        hn_post_id = context.get("hn_post_id")
-        post_html_page_file = Path(target_folder) / f"{hn_post_id}.html"
+        post_html_page_file = Path(target_folder) / "hn_post.html"
         page_html = load_from_cache(post_html_page_file) or fetch_html(
             hn_link, post_html_page_file
         )
@@ -105,7 +104,7 @@ class ParsePostHtml(object):
     """Create BeautifulSoap parser from html"""
 
     def run(self, context):
-        page_html = context["page_html"]
+        page_html = context.get("page_html")
         context["bs"] = html_parser_from(page_html)
 
 
@@ -113,7 +112,7 @@ class GrabPostTitle(object):
     """Extract page title using BeautifulSoap HTML parser"""
 
     def run(self, context):
-        bs = context["bs"]
+        bs = context.get("bs")
         context["hn_post_title"] = bs.title.string
 
 
@@ -121,7 +120,7 @@ class ExtractAllLinksFromPost(object):
     """Extract all links"""
 
     def run(self, context):
-        bs = context["bs"]
+        bs = context.get("bs")
         all_links = [link.get("href") for link in bs.find_all("a", href=True)]
         context["all_links"] = all_links
 
@@ -138,7 +137,7 @@ class KeepValidLinks(object):
         return link.startswith("http") and not has_known_domain(link)
 
     def run(self, context):
-        all_links = context["all_links"]
+        all_links = context.get("all_links")
         valid_links = [link for link in all_links if self.is_valid_link(link)]
         context["valid_links"] = valid_links
 
@@ -158,8 +157,8 @@ class GrabChildLinkTitle(object):
         return bs.title.string if bs.title else link_in_comment
 
     def run(self, context):
-        valid_links = context["valid_links"]
-        child_links_folder = context["child_links_folder"]
+        valid_links = context.get("valid_links")
+        child_links_folder = context.get("child_links_folder")
         links_with_titles = [
             (self.stripped(self.page_title_from(child_links_folder, link)), link)
             for link in valid_links
@@ -217,10 +216,9 @@ class SaveMarkdown(object):
     """Save generated Markdown in a target document"""
 
     def run(self, context):
-        markdown_text = context["markdown_text"]
-        target_folder = context["target_folder"]
-        hn_post_id = context["hn_post_id"]
-        markdown_file_path = Path(target_folder) / f"{hn_post_id}.md"
+        markdown_text = context.get("markdown_text")
+        target_folder = context.get("target_folder")
+        markdown_file_path = Path(target_folder) / "hn_links.md"
         markdown_file_path.write_text(markdown_text, encoding=UTF_ENCODING)
 
 
