@@ -48,6 +48,10 @@ logging.captureWarnings(capture=True)
 
 def fetch_html(url, post_html_page_file):
     logging.info(f"Fetching HTML title for {url}")
+    if post_html_page_file.exists():
+        logging.info(f"🌕 Loading page from cache {post_html_page_file}")
+        return post_html_page_file.read_text(encoding=UTF_ENCODING)
+
     try:
         user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
         headers = {"User-Agent": user_agent}
@@ -66,14 +70,6 @@ def fetch_html(url, post_html_page_file):
         logging.error("Unable to fetch URL %s - %s", url, err)
 
     return None
-
-
-def load_from_cache(post_html_page_file):
-    if post_html_page_file.exists():
-        logging.info(f"Loading page from cache {post_html_page_file}")
-        return post_html_page_file.read_text(encoding=UTF_ENCODING)
-    else:
-        return None
 
 
 def html_parser_from(page_html):
@@ -116,9 +112,7 @@ class GrabPostHtml:
         hn_link = context.get("hn_link")
         target_folder = context.get("target_folder")
         post_html_page_file = Path(target_folder) / "hn_post.html"
-        page_html = load_from_cache(post_html_page_file) or fetch_html(
-            hn_link, post_html_page_file
-        )
+        page_html = fetch_html(hn_link, post_html_page_file)
         context["page_html"] = page_html
 
 
@@ -150,8 +144,22 @@ class ExtractAllLinksFromPost:
 class KeepValidLinks:
     """Only keep interesting links"""
 
+    def accessible(self, link, target_folder):
+        page_slug = slug(link)
+        page_path = f"{page_slug}.html"
+        post_html_page_file = Path(target_folder) / page_path
+        if post_html_page_file.exists():
+            return True
+
+        maybe_html = fetch_html(link, post_html_page_file)
+
+        if not maybe_html:
+            return False
+
+        return True
+
     def is_valid_link(self, link):
-        known_domains = ["ycombinator", "algolia"]
+        known_domains = ["ycombinator", "algolia", "HackerNews"]
 
         def has_known_domain(post_link):
             return any(map(lambda l: l in post_link, known_domains))
@@ -160,7 +168,12 @@ class KeepValidLinks:
 
     def run(self, context):
         all_links = context.get("all_links")
-        valid_links = [link for link in all_links if self.is_valid_link(link)]
+        target_folder = context.get("child_links_folder")
+        valid_links = [
+            link
+            for link in all_links
+            if self.is_valid_link(link) and self.accessible(link, target_folder)
+        ]
         context["valid_links"] = valid_links
 
 
@@ -172,9 +185,7 @@ class GrabChildLinkTitle:
         page_path = f"{page_slug}.html"
 
         post_html_page_file = Path(target_folder) / page_path
-        page_html = load_from_cache(post_html_page_file) or fetch_html(
-            link_in_comment, post_html_page_file
-        )
+        page_html = fetch_html(link_in_comment, post_html_page_file)
         bs = html_parser_from(page_html)
         return bs.title.string if bs.title else link_in_comment
 
@@ -197,14 +208,21 @@ class GrabScreenThumbnail:
     def thumbnail(self, thumbnails_folder, page_link):
         page_slug = slug(page_link)
         target_path = thumbnails_folder / f"{page_slug}.png"
-        cmd = f"./thumbnail_generator.py -i {page_link} -o {target_path}"
+        cmd = f"./thumbnail_generator.py -i '{page_link}' -o {target_path}"
         if target_path.exists():
             logging.info(
-                f"Thumbnail already exists for {page_link}. Run {cmd} to update it"
+                f"🌕 Thumbnail already exists for {page_link}. Run {cmd} to update it"
             )
             return target_path.as_posix()
+        failed_commands = []
+        try:
+            run_command(cmd)
+        except:  # noqa: E722
+            failed_commands.append(cmd)
 
-        run_command(cmd)
+        for failed_command in failed_commands:
+            logging.info(f"❌ Command failed. Try running it again {failed_command}")
+
         return target_path
 
     def run(self, context):
@@ -239,33 +257,13 @@ class GenerateMarkdown:
         context["markdown_text"] = markdown_text
 
 
-class SaveMarkdown:
-    """Save generated Markdown in a target document"""
-
-    def run(self, context):
-        markdown_text = context.get("markdown_text")
-        target_folder = context.get("target_folder")
-        markdown_file_path = Path(target_folder) / "hn_links.md"
-        markdown_file_path.write_text(markdown_text, encoding=UTF_ENCODING)
-
-
-class LoadMarkdownFile:
-    """Load file from HN Post directory"""
-
-    def run(self, context):
-        target_folder = context.get("target_folder")
-        markdown_file = Path(target_folder) / "hn_links.md"
-        md_content = markdown_file.read_text()
-        context["md_content"] = md_content
-
-
 class AddHugoHeader:
     """Add blog header with metadata"""
 
     def run(self, context):
-        md_content = context["md_content"]
+        markdown_text = context["markdown_text"]
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        post_title = md_content.splitlines()[0].replace("#", "").strip()
+        post_title = markdown_text.splitlines()[0].replace("#", "").strip()
 
         post_header = f"""+++
     date = {post_date}
@@ -279,7 +277,7 @@ class AddHugoHeader:
 +++
 """
         post_with_header = (
-            post_header + os.linesep + os.linesep.join(md_content.splitlines()[2:])
+            post_header + os.linesep + os.linesep.join(markdown_text.splitlines()[2:])
         )
         context["post_with_header"] = post_with_header
         post_file_name = slug(post_title) + ".md"
@@ -327,13 +325,17 @@ class CompressImages:
                     blog_directory, relative_image_directory(), img_name
                 )
             )
+
+            cmd = f"convert {img_path} -resize 640x480 -quality 50% {target_path}"
+
             if target_path.exists():
+                logging.info(
+                    f"🌕 {img_name} already resized/compressed. Run this to re-convert {cmd}"
+                )
                 continue
 
             Path(target_path).parent.mkdir(parents=True, exist_ok=True)
-            run_command(
-                f"convert {img_path} -resize 640x480 -quality 50% {target_path}"
-            )
+            run_command(cmd)
 
 
 class OpenInEditor:
@@ -360,8 +362,6 @@ workflow_process = [
     GrabChildLinkTitle(),
     GrabScreenThumbnail(),
     GenerateMarkdown(),
-    SaveMarkdown(),
-    LoadMarkdownFile(),
     AddHugoHeader(),
     UpdateLinksInMarkdown(),
     WriteBlogPost(),
