@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
 from slug import slug
 
+from common.workflow import run_workflow
 from common_utils import create_dir
 
 
@@ -221,6 +222,7 @@ def main():
     InitScript().run(context)
 
     procedure = [
+        InitScript(),
         OpenBrowserSession(),
         ExtractThreadDetails(),
         ScrapePages(),
@@ -229,12 +231,7 @@ def main():
         JoinAllPages(),
         OpenHtmlPage(),
     ]
-    for step in procedure:
-        logging.info("==> Running step: {}".format(step.__class__.__name__))
-        logging.debug(context)
-        step.run(context)
-
-    logging.info("<-- Done -->")
+    run_workflow(context, procedure)
 
 
 if __name__ == "__main__":

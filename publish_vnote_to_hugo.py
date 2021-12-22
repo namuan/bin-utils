@@ -13,6 +13,8 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
+from common.workflow import run_workflow
+
 
 class CopyImageFiles(object):
     def rgx_find_all(self, document, search_query):
@@ -134,10 +136,7 @@ def main(args):
         ReplaceImageLinks(),
         OpenInEditor(),
     ]
-    for step in procedure:
-        print("==" * 50)
-        step.run(context)
-    print("Done.")
+    run_workflow(context, procedure)
 
 
 def parse_args():
