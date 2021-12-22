@@ -19,6 +19,8 @@ from jinja2 import Environment, FileSystemLoader
 from requests import HTTPError
 from slug import slug
 
+from common.workflow import run_command, run_step, run_workflow
+
 UTF_ENCODING = "utf-8"
 
 logging.basicConfig(
@@ -30,11 +32,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.captureWarnings(capture=True)
-
-
-def run_command(command):
-    logging.info(f"⚡ {command}")
-    return subprocess.check_output(command, shell=True).decode("utf-8")
 
 
 def fetch_html(url, post_html_page_file):
@@ -75,8 +72,10 @@ class CreateOutputFolder(object):
     """Create output folder using Post id in the temporary folder"""
 
     def run(self, context):
-        download_folder = context.get("download_folder")
-        hn_post_id = context.get("hn_post_id")
+        hn_link = context.get("hn_link")
+        hn_post_id = parse_qs(urlparse(hn_link).query).get("id")[0]
+        download_folder = f"{os.getcwd()}/.temp"
+
         target_folder = Path(download_folder) / hn_post_id
         child_links_folder = target_folder / "links"
         thumbnails_folder = target_folder / "thumbnails"
@@ -84,6 +83,7 @@ class CreateOutputFolder(object):
         for f in [target_folder, child_links_folder, thumbnails_folder]:
             f.mkdir(parents=True, exist_ok=True)
 
+        context["hn_post_id"] = hn_post_id
         context["target_folder"] = target_folder.as_posix()
         context["child_links_folder"] = child_links_folder
         context["thumbnails_folder"] = thumbnails_folder
@@ -229,38 +229,25 @@ class SaveMarkdown(object):
         markdown_file_path.write_text(markdown_text, encoding=UTF_ENCODING)
 
 
-def run_step(step, context):
-    logging.info(step.__class__.__name__ + " ➡️ " + step.__doc__)
-    if context.get("verbose"):
-        logging.info(context)
-    step.run(context)
-    logging.info("-" * 100)
+# Workflow definition
+workflow_process = [
+    CreateOutputFolder(),
+    GrabPostHtml(),
+    ParsePostHtml(),
+    GrabPostTitle(),
+    ExtractAllLinksFromPost(),
+    KeepValidLinks(),
+    GrabChildLinkTitle(),
+    GrabScreenThumbnail(),
+    GenerateMarkdown(),
+    SaveMarkdown(),
+]
 
 
+# Boilerplate -----------------------------------------------------------------
 def main(args):
     context = args.__dict__
-    hn_link = context.get("hn_link")
-    post_id = parse_qs(urlparse(hn_link).query).get("id")[0]
-    download_folder = f"{os.getcwd()}/.temp"
-
-    context["hn_post_id"] = post_id
-    context["download_folder"] = download_folder
-
-    procedure = [
-        CreateOutputFolder(),
-        GrabPostHtml(),
-        ParsePostHtml(),
-        GrabPostTitle(),
-        ExtractAllLinksFromPost(),
-        KeepValidLinks(),
-        GrabChildLinkTitle(),
-        GrabScreenThumbnail(),
-        GenerateMarkdown(),
-        SaveMarkdown(),
-    ]
-    for step in procedure:
-        run_step(step, context)
-    logging.info("Done.")
+    run_workflow(context, workflow_process)
 
 
 def parse_args():
