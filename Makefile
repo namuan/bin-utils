@@ -14,29 +14,8 @@ clean: ## Clean package
 	rm -rf build dist
 
 pre-commit: ## Manually run all precommit hooks
-	pre-commit install
-	pre-commit run --all-files
-
-deploy: clean ## Copies any changed file to the server
-	ssh ${PROJECTNAME} -C 'bash -l -c "mkdir -vp ./${PROJECTNAME}"'
-	rsync -avzr \
-		.env \
-		requirements.txt \
-		rss_to_telegram.py \
-		tele_stock_rider.py \
-		webpage_to_telegram.py \
-		webpages.txt \
-		scripts \
-		${PROJECTNAME}:./${PROJECTNAME}
-
-start: deploy ## Sets up a screen session on the server and start the app
-	ssh ${PROJECTNAME} -C 'bash -l -c "./${PROJECTNAME}/scripts/setup_jobs.sh"'
-
-stop: deploy ## Stop any running screen session on the server
-	ssh ${PROJECTNAME} -C 'bash -l -c "./${PROJECTNAME}/scripts/stop_jobs.sh"'
-
-ssh: ## SSH into the target VM
-	ssh ${PROJECTNAME}
+	./venv/bin/pre-commit install
+	./venv/bin/pre-commit run --all-files
 
 bpython: ## Runs bpython
 	./venv/bin/bpython
