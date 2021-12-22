@@ -11,8 +11,9 @@ Usage:
 import argparse
 import logging
 from argparse import ArgumentParser
+from dataclasses import dataclass
 
-from common.workflow import run_workflow
+from common.workflow2 import run_workflow2, WorkflowBase
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -23,7 +24,7 @@ logging.basicConfig(
 logging.captureWarnings(capture=True)
 
 
-class DoSomething(object):
+class DoSomething(WorkflowBase):
     """
     Go to this page
     Copy the command
@@ -31,8 +32,15 @@ class DoSomething(object):
     Copy the output and paste it into the email
     """
 
+    @dataclass
+    class Input:
+        username: str
+
     def run(self, context):
-        logging.info(context)
+        logging.info(f"Hello {self.input.username}")
+
+        # output
+        context["greetings"] = f"Hello {self.input.username}"
 
 
 def parse_args():
@@ -53,8 +61,8 @@ def parse_args():
 
 def main(args):
     context = args.__dict__
-    procedure = [DoSomething()]
-    run_workflow(context, procedure)
+    procedure = [DoSomething]
+    run_workflow2(context, procedure)
 
 
 if __name__ == "__main__":
