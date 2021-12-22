@@ -1,8 +1,6 @@
 import logging
 import subprocess
 
-import dacite
-
 
 def wait_for_enter():
     input("Press Enter to continue: ")
@@ -14,7 +12,7 @@ def run_command(command):
 
 
 def __run_step(step, context):
-    step_instance = step(context, step.Input)
+    step_instance = step(context, step)
     logging.info(step.__name__ + " ➡️ " + step_instance.__doc__)
     if context.get("verbose"):
         logging.info(context)
@@ -29,5 +27,16 @@ def run_workflow2(context: dict, workflow_process: list):
 
 
 class WorkflowBase:
-    def __init__(self, context, input_clazz):
-        self.input = dacite.from_dict(data_class=input_clazz, data=context)
+    def __init__(self, context, step):
+        step_vars = vars(step).get("__annotations__").keys()
+        try:
+            for step_var in step_vars:
+                setattr(self, step_var, context[step_var])
+        except KeyError as e:
+            logging.error(
+                "Unable to find variable: %s  in workflow class: %s",
+                str(e),
+                step.__name__,
+            )
+            logging.info("Available keys in context: %s", context.keys())
+            raise e

@@ -11,7 +11,6 @@ Usage:
 import argparse
 import logging
 from argparse import ArgumentParser
-from dataclasses import dataclass
 
 from common.workflow2 import run_workflow2, WorkflowBase
 
@@ -32,15 +31,13 @@ class DoSomething(WorkflowBase):
     Copy the output and paste it into the email
     """
 
-    @dataclass
-    class Input:
-        username: str
+    username: str
 
     def run(self, context):
-        logging.info(f"Hello {self.input.username}")
+        logging.info(f"Hello {self.username}")
 
         # output
-        context["greetings"] = f"Hello {self.input.username}"
+        context["greetings"] = f"Hello {self.username}"
 
 
 def parse_args():
