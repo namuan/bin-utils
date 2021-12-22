@@ -9,8 +9,10 @@ Usage:
 """
 
 import argparse
-from argparse import ArgumentParser
 import logging
+from argparse import ArgumentParser
+
+from common.workflow import run_workflow
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -19,10 +21,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.captureWarnings(capture=True)
-
-
-def wait_for_enter():
-    input("Press Enter to continue: ")
 
 
 class DoSomething(object):
@@ -35,14 +33,6 @@ class DoSomething(object):
 
     def run(self, context):
         logging.info(context)
-
-
-def run_step(step, context):
-    logging.info(step.__class__.__name__ + " ➡️ " + step.__doc__)
-    if context.get("verbose"):
-        logging.info(context)
-    step.run(context)
-    logging.info("-" * 100)
 
 
 def parse_args():
@@ -64,9 +54,7 @@ def parse_args():
 def main(args):
     context = args.__dict__
     procedure = [DoSomething()]
-    for step in procedure:
-        run_step(step, context)
-    logging.info("Done.")
+    run_workflow(context, procedure)
 
 
 if __name__ == "__main__":
