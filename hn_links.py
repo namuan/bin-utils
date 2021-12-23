@@ -31,8 +31,7 @@ from jinja2 import Environment, FileSystemLoader
 from requests import HTTPError
 from slug import slug
 
-from common.workflow import run_command
-from common.workflow2 import run_workflow2, WorkflowBase
+from common.workflow import run_workflow, WorkflowBase, run_command
 
 UTF_ENCODING = "utf-8"
 
@@ -240,7 +239,7 @@ class GrabScreenThumbnail(WorkflowBase):
 class GenerateMarkdown(WorkflowBase):
     """Generate Markdown using the data in context"""
 
-    def __init__(self):
+    def setup_template_env(self):
         template_folder = "templates"
         template_dir = (
             os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
@@ -254,6 +253,7 @@ class GenerateMarkdown(WorkflowBase):
         return rendered
 
     def run(self, context):
+        self.setup_template_env()
         markdown_text = self.render_markdown(context)
         context["markdown_text"] = markdown_text
 
@@ -374,7 +374,7 @@ workflow_process = [
 # Boilerplate -----------------------------------------------------------------
 def main(args):
     context = args.__dict__
-    run_workflow2(context, workflow_process)
+    run_workflow(context, workflow_process)
 
 
 def parse_args():
