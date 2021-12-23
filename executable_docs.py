@@ -37,7 +37,7 @@ class DoSomething(WorkflowBase):
         logging.info(f"Hello {self.username}")
 
         # output
-        context["greetings"] = f"Hello {self.username}"
+        context["greetings"] = f"Hello {context['username']}"
 
 
 def parse_args():

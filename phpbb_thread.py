@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
 from slug import slug
 
-from common.workflow import run_workflow
+from common.workflow2 import run_workflow2
 from common_utils import create_dir
 
 
@@ -222,16 +222,16 @@ def main():
     InitScript().run(context)
 
     procedure = [
-        InitScript(),
-        OpenBrowserSession(),
-        ExtractThreadDetails(),
-        ScrapePages(),
-        CleanUpPosts(),
-        CloseBrowserSession(),
-        JoinAllPages(),
-        OpenHtmlPage(),
+        InitScript,
+        OpenBrowserSession,
+        ExtractThreadDetails,
+        ScrapePages,
+        CleanUpPosts,
+        CloseBrowserSession,
+        JoinAllPages,
+        OpenHtmlPage,
     ]
-    run_workflow(context, procedure)
+    run_workflow2(context, procedure)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
-from common.workflow import run_workflow
+from common.workflow2 import run_workflow2
 
 
 class CopyImageFiles(object):
@@ -129,14 +129,14 @@ def main(args):
     context["file_name"] = Path(context["vnote"]).name
 
     procedure = [
-        LoadVNotePost(),
-        AddHugoHeader(),
-        WriteHugoPost(),
-        CopyImageFiles(),
-        ReplaceImageLinks(),
-        OpenInEditor(),
+        LoadVNotePost,
+        AddHugoHeader,
+        WriteHugoPost,
+        CopyImageFiles,
+        ReplaceImageLinks,
+        OpenInEditor,
     ]
-    run_workflow(context, procedure)
+    run_workflow2(context, procedure)
 
 
 def parse_args():

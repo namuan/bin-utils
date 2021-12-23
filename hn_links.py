@@ -31,7 +31,8 @@ from jinja2 import Environment, FileSystemLoader
 from requests import HTTPError
 from slug import slug
 
-from common.workflow import run_command, run_workflow
+from common.workflow import run_command
+from common.workflow2 import run_workflow2
 
 UTF_ENCODING = "utf-8"
 
@@ -353,27 +354,27 @@ class OpenInEditor:
 
 # Workflow definition
 workflow_process = [
-    CreateOutputFolder(),
-    GrabPostHtml(),
-    ParsePostHtml(),
-    GrabPostTitle(),
-    ExtractAllLinksFromPost(),
-    KeepValidLinks(),
-    GrabChildLinkTitle(),
-    GrabScreenThumbnail(),
-    GenerateMarkdown(),
-    AddHugoHeader(),
-    UpdateLinksInMarkdown(),
-    WriteBlogPost(),
-    CompressImages(),
-    OpenInEditor(),
+    CreateOutputFolder,
+    GrabPostHtml,
+    ParsePostHtml,
+    GrabPostTitle,
+    ExtractAllLinksFromPost,
+    KeepValidLinks,
+    GrabChildLinkTitle,
+    GrabScreenThumbnail,
+    GenerateMarkdown,
+    AddHugoHeader,
+    UpdateLinksInMarkdown,
+    WriteBlogPost,
+    CompressImages,
+    OpenInEditor,
 ]
 
 
 # Boilerplate -----------------------------------------------------------------
 def main(args):
     context = args.__dict__
-    run_workflow(context, workflow_process)
+    run_workflow2(context, workflow_process)
 
 
 def parse_args():
