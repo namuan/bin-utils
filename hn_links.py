@@ -87,9 +87,10 @@ def relative_image_directory():
 class CreateOutputFolder(WorkflowBase):
     """Create output folder using Post id in the temporary folder"""
 
+    hn_link: str
+
     def run(self, context):
-        hn_link = context.get("hn_link")
-        hn_post_id = parse_qs(urlparse(hn_link).query).get("id")[0]
+        hn_post_id = parse_qs(urlparse(self.hn_link).query).get("id")[0]
         download_folder = f"{os.getcwd()}/.temp"
 
         target_folder = Path(download_folder) / hn_post_id
@@ -99,8 +100,9 @@ class CreateOutputFolder(WorkflowBase):
         for f in [target_folder, child_links_folder, thumbnails_folder]:
             f.mkdir(parents=True, exist_ok=True)
 
+        # output
         context["hn_post_id"] = hn_post_id
-        context["target_folder"] = target_folder.as_posix()
+        context["target_folder"] = target_folder
         context["child_links_folder"] = child_links_folder
         context["thumbnails_folder"] = thumbnails_folder
 
@@ -108,46 +110,59 @@ class CreateOutputFolder(WorkflowBase):
 class GrabPostHtml(WorkflowBase):
     """Use requests to download HTML using a browser user agent"""
 
+    hn_link: str
+    target_folder: str
+
     def run(self, context):
-        hn_link = context.get("hn_link")
-        target_folder = context.get("target_folder")
-        post_html_page_file = Path(target_folder) / "hn_post.html"
-        page_html = fetch_html(hn_link, post_html_page_file)
+        post_html_page_file = Path(self.target_folder) / "hn_post.html"
+        page_html = fetch_html(self.hn_link, post_html_page_file)
+
+        # output
         context["page_html"] = page_html
 
 
 class ParsePostHtml(WorkflowBase):
     """Create BeautifulSoap parser from html"""
 
+    page_html: str
+
     def run(self, context):
-        page_html = context.get("page_html")
-        context["bs"] = html_parser_from(page_html)
+        # output
+        context["bs"] = html_parser_from(self.page_html)
 
 
 class GrabPostTitle(WorkflowBase):
     """Extract page title using BeautifulSoap HTML parser"""
 
+    bs: BeautifulSoup
+
     def run(self, context):
-        bs = context.get("bs")
-        context["hn_post_title"] = bs.title.string
+        # output
+        context["hn_post_title"] = self.bs.title.string
 
 
 class ExtractAllLinksFromPost(WorkflowBase):
     """Extract all links"""
 
+    bs: BeautifulSoup
+
     def run(self, context):
-        bs = context.get("bs")
-        all_links = [link.get("href") for link in bs.find_all("a", href=True)]
+        all_links = [link.get("href") for link in self.bs.find_all("a", href=True)]
+
+        # output
         context["all_links"] = all_links
 
 
 class KeepValidLinks(WorkflowBase):
     """Only keep interesting links"""
 
-    def accessible(self, link, target_folder):
+    all_links: list
+    child_links_folder: Path
+
+    def accessible(self, link, child_links_folder):
         page_slug = slug(link)
         page_path = f"{page_slug}.html"
-        post_html_page_file = Path(target_folder) / page_path
+        post_html_page_file = child_links_folder / page_path
         if post_html_page_file.exists():
             return True
 
@@ -167,43 +182,50 @@ class KeepValidLinks(WorkflowBase):
         return link.startswith("http") and not has_known_domain(link)
 
     def run(self, context):
-        all_links = context.get("all_links")
-        target_folder = context.get("child_links_folder")
         valid_links = [
             link
-            for link in all_links
-            if self.is_valid_link(link) and self.accessible(link, target_folder)
+            for link in self.all_links
+            if self.is_valid_link(link)
+            and self.accessible(link, self.child_links_folder)
         ]
+
+        # output
         context["valid_links"] = valid_links
 
 
 class GrabChildLinkTitle(WorkflowBase):
     """Get page title for each valid link"""
 
-    def page_title_from(self, target_folder, link_in_comment):
+    valid_links: list
+    child_links_folder: Path
+
+    def page_title_from(self, child_links_folder, link_in_comment):
         page_slug = slug(link_in_comment)
         page_path = f"{page_slug}.html"
 
-        post_html_page_file = Path(target_folder) / page_path
+        post_html_page_file = child_links_folder / page_path
         page_html = fetch_html(link_in_comment, post_html_page_file)
         bs = html_parser_from(page_html)
         return bs.title.string if bs.title else link_in_comment
 
-    def run(self, context):
-        valid_links = context.get("valid_links")
-        child_links_folder = context.get("child_links_folder")
-        links_with_titles = [
-            (self.stripped(self.page_title_from(child_links_folder, link)), link)
-            for link in valid_links
-        ]
-        context["links_with_titles"] = links_with_titles
-
     def stripped(self, page_title: str):
         return page_title.strip()
+
+    def run(self, context):
+        links_with_titles = [
+            (self.stripped(self.page_title_from(self.child_links_folder, link)), link)
+            for link in self.valid_links
+        ]
+
+        # output
+        context["links_with_titles"] = links_with_titles
 
 
 class GrabScreenThumbnail(WorkflowBase):
     """For each link, get screen thumbnail"""
+
+    links_with_titles: list
+    thumbnails_folder: Path
 
     def thumbnail(self, thumbnails_folder, page_link):
         page_slug = slug(page_link)
@@ -226,13 +248,12 @@ class GrabScreenThumbnail(WorkflowBase):
         return target_path
 
     def run(self, context):
-        links_with_titles = context.get("links_with_titles")
-        thumbnails_folder = context.get("thumbnails_folder")
-
         links_with_metadata = [
-            (page_title, page_link, self.thumbnail(thumbnails_folder, page_link))
-            for page_title, page_link in links_with_titles
+            (page_title, page_link, self.thumbnail(self.thumbnails_folder, page_link))
+            for page_title, page_link in self.links_with_titles
         ]
+
+        # output
         context["links_with_metadata"] = links_with_metadata
 
 
@@ -255,16 +276,19 @@ class GenerateMarkdown(WorkflowBase):
     def run(self, context):
         self.setup_template_env()
         markdown_text = self.render_markdown(context)
+
+        # output
         context["markdown_text"] = markdown_text
 
 
 class AddHugoHeader(WorkflowBase):
     """Add blog header with metadata"""
 
+    markdown_text: str
+
     def run(self, context):
-        markdown_text = context["markdown_text"]
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        post_title = markdown_text.splitlines()[0].replace("#", "").strip()
+        post_title = self.markdown_text.splitlines()[0].replace("#", "").strip()
 
         post_header = f"""+++
     date = {post_date}
@@ -278,52 +302,66 @@ class AddHugoHeader(WorkflowBase):
 +++
 """
         post_with_header = (
-            post_header + os.linesep + os.linesep.join(markdown_text.splitlines()[2:])
+            post_header
+            + os.linesep
+            + os.linesep.join(self.markdown_text.splitlines()[2:])
         )
-        context["post_with_header"] = post_with_header
+
+        # output
         post_file_name = slug(post_title) + ".md"
         context["post_file_name"] = post_file_name
+        context["post_with_header"] = post_with_header
 
 
 class UpdateLinksInMarkdown(WorkflowBase):
     """Use relative links in Markdown to point to images"""
 
+    post_with_header: str
+    target_folder: Path
+
     def run(self, context):
-        post_with_header = context["post_with_header"]
-        target_folder = context.get("target_folder")
-        thumbnails_directory = Path(target_folder) / "thumbnails"
+        thumbnails_directory = self.target_folder / "thumbnails"
         replace_from = f"![]({thumbnails_directory.as_posix()}"
         replace_with = f"![](/{relative_image_directory()}"
-        md_with_updated_links = post_with_header.replace(replace_from, replace_with)
+        md_with_updated_links = self.post_with_header.replace(
+            replace_from, replace_with
+        )
+
+        # output
         context["md_with_updated_links"] = md_with_updated_links
 
 
 class WriteBlogPost(WorkflowBase):
     """Write to blog directory with correct file name"""
 
+    md_with_updated_links: str
+    blog_directory: Path
+    post_file_name: str
+
     def run(self, context):
-        md_with_updated_links = context.get("md_with_updated_links")
-        blog_directory = context.get("blog_directory")
-        post_file_name = context["post_file_name"]
-        context["blog_page"] = "{}/content/posts/{}".format(
-            blog_directory, post_file_name
+        blog_page_path = "{}/content/posts/{}".format(
+            self.blog_directory, self.post_file_name
         )
-        Path(context["blog_page"]).write_text(md_with_updated_links)
-        print("Created note at {}".format(context["blog_page"]))
+        Path(blog_page_path).write_text(self.md_with_updated_links)
+        logging.info("📒 Created note at {}".format(blog_page_path))
+
+        # output
+        context["blog_page"] = blog_page_path
 
 
 class CompressImages(WorkflowBase):
     """Resize images and compress them"""
 
-    def run(self, context):
-        blog_directory = context.get("blog_directory")
-        target_folder = context.get("target_folder")
-        for img in Path(target_folder).glob("thumbnails/*"):
+    blog_directory: Path
+    target_folder: Path
+
+    def run(self, _):
+        for img in self.target_folder.glob("thumbnails/*"):
             img_name = img.name
             img_path = img.as_posix()
             target_path = Path(
                 "{}/static/{}/{}".format(
-                    blog_directory, relative_image_directory(), img_name
+                    self.blog_directory, relative_image_directory(), img_name
                 )
             )
 
@@ -342,39 +380,41 @@ class CompressImages(WorkflowBase):
 class OpenInEditor(WorkflowBase):
     """Open blog post in editor defined by the environment variable EDITOR"""
 
-    def run(self, context):
-        open_in_editor = context["open_in_editor"]
-        if not open_in_editor:
+    open_in_editor: bool
+    blog_directory: Path
+
+    def run(self, _):
+        if not self.open_in_editor:
             return
-        blog_directory = context.get("blog_directory")
         editor = os.environ.get("EDITOR")
-        print(f"Opening {blog_directory} in {editor}")
-        run_command(f"{editor} {blog_directory}")
+        print(f"Opening {self.blog_directory} in {editor}")
+        run_command(f"{editor} {self.blog_directory}")
 
 
 # Workflow definition
-workflow_process = [
-    CreateOutputFolder,
-    GrabPostHtml,
-    ParsePostHtml,
-    GrabPostTitle,
-    ExtractAllLinksFromPost,
-    KeepValidLinks,
-    GrabChildLinkTitle,
-    GrabScreenThumbnail,
-    GenerateMarkdown,
-    AddHugoHeader,
-    UpdateLinksInMarkdown,
-    WriteBlogPost,
-    CompressImages,
-    OpenInEditor,
-]
+def workflow_steps():
+    return [
+        CreateOutputFolder,
+        GrabPostHtml,
+        ParsePostHtml,
+        GrabPostTitle,
+        ExtractAllLinksFromPost,
+        KeepValidLinks,
+        GrabChildLinkTitle,
+        GrabScreenThumbnail,
+        GenerateMarkdown,
+        AddHugoHeader,
+        UpdateLinksInMarkdown,
+        WriteBlogPost,
+        CompressImages,
+        OpenInEditor,
+    ]
 
 
 # Boilerplate -----------------------------------------------------------------
 def main(args):
     context = args.__dict__
-    run_workflow(context, workflow_process)
+    run_workflow(context, workflow_steps())
 
 
 def parse_args():
