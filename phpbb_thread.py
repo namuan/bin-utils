@@ -12,8 +12,16 @@ from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
 from slug import slug
 
-from common.workflow2 import run_workflow2, WorkflowBase
+from common.workflow import run_workflow, WorkflowBase
 from common_utils import create_dir
+
+logging.basicConfig(
+    handlers=[logging.StreamHandler()],
+    format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO,
+)
+logging.captureWarnings(capture=True)
 
 
 def with_ignoring_errors(code_to_run, warning_msg):
@@ -24,7 +32,17 @@ def with_ignoring_errors(code_to_run, warning_msg):
         return "N/A"
 
 
+def parse_args():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-p", "--page-url", type=str, required=True, help="PhpBB Forum Page Url"
+    )
+    return parser.parse_args()
+
+
 class InitScript(WorkflowBase):
+    """Initialise environment"""
+
     def _init_script(self):
         handlers = [
             logging.StreamHandler(),
@@ -50,15 +68,9 @@ class InitScript(WorkflowBase):
         create_dir(output_folder, delete_existing=False)
 
 
-def parse_args():
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "-p", "--page-url", type=str, required=True, help="PhpBB Forum Page Url"
-    )
-    return parser.parse_args()
-
-
 class OpenBrowserSession(WorkflowBase):
+    """Open Browser Session"""
+
     def run(self, context):
         page_url = context["args"].page_url
         browser = webdriver.Firefox()
@@ -68,6 +80,8 @@ class OpenBrowserSession(WorkflowBase):
 
 
 class ExtractThreadDetails(WorkflowBase):
+    """Extract Thread Details"""
+
     def run(self, context):
         browser = context["browser"]
         context["thread_topic"] = browser.find_elements_by_css_selector(
@@ -85,6 +99,8 @@ class ExtractThreadDetails(WorkflowBase):
 
 
 class ScrapePages(WorkflowBase):
+    """Scrape Pages"""
+
     def _get_next_page_link(self, browser, current_page):
         pages_li_elements = browser.find_elements_by_css_selector("div.pagination")[
             0
@@ -163,6 +179,8 @@ class ScrapePages(WorkflowBase):
 
 
 class CleanUpPosts(WorkflowBase):
+    """Clean Up Posts"""
+
     def _clean(self, post, base_url):
         post_content = post["content"]
         post["content"] = (
@@ -177,12 +195,16 @@ class CleanUpPosts(WorkflowBase):
 
 
 class CloseBrowserSession(WorkflowBase):
+    """Close Browser Session"""
+
     def run(self, context):
         browser = context["browser"]
         browser.close()
 
 
 class JoinAllPages(WorkflowBase):
+    """Join All Pages"""
+
     def _jinja_transform_and_save(self, jinja_env, context, template_file, target_file):
         rendered = jinja_env.get_template(template_file).render(context)
         with open(target_file, "w") as text_file:
@@ -207,6 +229,8 @@ class JoinAllPages(WorkflowBase):
 
 
 class OpenHtmlPage(WorkflowBase):
+    """Open Html Page"""
+
     def run(self, context):
         complete_html_page = context["complete_html_page"]
         output_folder = context["output_folder"]
@@ -216,12 +240,8 @@ class OpenHtmlPage(WorkflowBase):
         )
 
 
-def main():
-    args = parse_args()
-    context = {"args": args}
-    InitScript().run(context)
-
-    procedure = [
+def workflow():
+    return [
         InitScript,
         OpenBrowserSession,
         ExtractThreadDetails,
@@ -231,7 +251,13 @@ def main():
         JoinAllPages,
         OpenHtmlPage,
     ]
-    run_workflow2(context, procedure)
+
+
+def main():
+    args = parse_args()
+    context = {"args": args}
+
+    run_workflow(context, workflow())
 
 
 if __name__ == "__main__":
