@@ -13,10 +13,10 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
-from common.workflow2 import run_workflow2
+from common.workflow2 import run_workflow2, WorkflowBase
 
 
-class CopyImageFiles(object):
+class CopyImageFiles(WorkflowBase):
     def rgx_find_all(self, document, search_query):
         compiled_rgx = re.compile(search_query, re.IGNORECASE)
         return compiled_rgx.findall(document)
@@ -52,7 +52,7 @@ class CopyImageFiles(object):
             print("Copied {}".format(image))
 
 
-class ReplaceImageLinks(object):
+class ReplaceImageLinks(WorkflowBase):
     def replace_string_in_file(self, f, from_string, to_string):
         print("Replacing {} in {} to {}".format(from_string, f, to_string))
 
@@ -69,7 +69,7 @@ class ReplaceImageLinks(object):
         print("Replace all images in Blog Post {}".format(blog_page))
 
 
-class OpenInEditor(object):
+class OpenInEditor(WorkflowBase):
     def run(self, context):
         open_in_editor = context["open_in_editor"]
         if not open_in_editor:
@@ -80,7 +80,7 @@ class OpenInEditor(object):
         subprocess.call(f"{editor} {blog_root}", shell=True)
 
 
-class AddHugoHeader:
+class AddHugoHeader(WorkflowBase):
     def run(self, context):
         vnote_post = context["vnote_post"]
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -102,14 +102,14 @@ series = []
         context["final_post"] = final_post
 
 
-class LoadVNotePost:
+class LoadVNotePost(WorkflowBase):
     def run(self, context):
         vnote = context["vnote"]
         vnote_post = Path(vnote).read_text()
         context["vnote_post"] = vnote_post
 
 
-class WriteHugoPost:
+class WriteHugoPost(WorkflowBase):
     def run(self, context):
         final_post = context["final_post"]
         blog_root = context["blog"]

@@ -32,7 +32,7 @@ from requests import HTTPError
 from slug import slug
 
 from common.workflow import run_command
-from common.workflow2 import run_workflow2
+from common.workflow2 import run_workflow2, WorkflowBase
 
 UTF_ENCODING = "utf-8"
 
@@ -85,7 +85,7 @@ def relative_image_directory():
     return f"images/{year}/{month}/{day}"
 
 
-class CreateOutputFolder:
+class CreateOutputFolder(WorkflowBase):
     """Create output folder using Post id in the temporary folder"""
 
     def run(self, context):
@@ -106,7 +106,7 @@ class CreateOutputFolder:
         context["thumbnails_folder"] = thumbnails_folder
 
 
-class GrabPostHtml:
+class GrabPostHtml(WorkflowBase):
     """Use requests to download HTML using a browser user agent"""
 
     def run(self, context):
@@ -117,7 +117,7 @@ class GrabPostHtml:
         context["page_html"] = page_html
 
 
-class ParsePostHtml:
+class ParsePostHtml(WorkflowBase):
     """Create BeautifulSoap parser from html"""
 
     def run(self, context):
@@ -125,7 +125,7 @@ class ParsePostHtml:
         context["bs"] = html_parser_from(page_html)
 
 
-class GrabPostTitle:
+class GrabPostTitle(WorkflowBase):
     """Extract page title using BeautifulSoap HTML parser"""
 
     def run(self, context):
@@ -133,7 +133,7 @@ class GrabPostTitle:
         context["hn_post_title"] = bs.title.string
 
 
-class ExtractAllLinksFromPost:
+class ExtractAllLinksFromPost(WorkflowBase):
     """Extract all links"""
 
     def run(self, context):
@@ -142,7 +142,7 @@ class ExtractAllLinksFromPost:
         context["all_links"] = all_links
 
 
-class KeepValidLinks:
+class KeepValidLinks(WorkflowBase):
     """Only keep interesting links"""
 
     def accessible(self, link, target_folder):
@@ -178,7 +178,7 @@ class KeepValidLinks:
         context["valid_links"] = valid_links
 
 
-class GrabChildLinkTitle:
+class GrabChildLinkTitle(WorkflowBase):
     """Get page title for each valid link"""
 
     def page_title_from(self, target_folder, link_in_comment):
@@ -203,7 +203,7 @@ class GrabChildLinkTitle:
         return page_title.strip()
 
 
-class GrabScreenThumbnail:
+class GrabScreenThumbnail(WorkflowBase):
     """For each link, get screen thumbnail"""
 
     def thumbnail(self, thumbnails_folder, page_link):
@@ -237,7 +237,7 @@ class GrabScreenThumbnail:
         context["links_with_metadata"] = links_with_metadata
 
 
-class GenerateMarkdown:
+class GenerateMarkdown(WorkflowBase):
     """Generate Markdown using the data in context"""
 
     def __init__(self):
@@ -258,7 +258,7 @@ class GenerateMarkdown:
         context["markdown_text"] = markdown_text
 
 
-class AddHugoHeader:
+class AddHugoHeader(WorkflowBase):
     """Add blog header with metadata"""
 
     def run(self, context):
@@ -285,7 +285,7 @@ class AddHugoHeader:
         context["post_file_name"] = post_file_name
 
 
-class UpdateLinksInMarkdown:
+class UpdateLinksInMarkdown(WorkflowBase):
     """Use relative links in Markdown to point to images"""
 
     def run(self, context):
@@ -298,7 +298,7 @@ class UpdateLinksInMarkdown:
         context["md_with_updated_links"] = md_with_updated_links
 
 
-class WriteBlogPost:
+class WriteBlogPost(WorkflowBase):
     """Write to blog directory with correct file name"""
 
     def run(self, context):
@@ -312,7 +312,7 @@ class WriteBlogPost:
         print("Created note at {}".format(context["blog_page"]))
 
 
-class CompressImages:
+class CompressImages(WorkflowBase):
     """Resize images and compress them"""
 
     def run(self, context):
@@ -339,7 +339,7 @@ class CompressImages:
             run_command(cmd)
 
 
-class OpenInEditor:
+class OpenInEditor(WorkflowBase):
     """Open blog post in editor defined by the environment variable EDITOR"""
 
     def run(self, context):

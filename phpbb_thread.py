@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
 from slug import slug
 
-from common.workflow2 import run_workflow2
+from common.workflow2 import run_workflow2, WorkflowBase
 from common_utils import create_dir
 
 
@@ -24,7 +24,7 @@ def with_ignoring_errors(code_to_run, warning_msg):
         return "N/A"
 
 
-class InitScript(object):
+class InitScript(WorkflowBase):
     def _init_script(self):
         handlers = [
             logging.StreamHandler(),
@@ -58,7 +58,7 @@ def parse_args():
     return parser.parse_args()
 
 
-class OpenBrowserSession(object):
+class OpenBrowserSession(WorkflowBase):
     def run(self, context):
         page_url = context["args"].page_url
         browser = webdriver.Firefox()
@@ -67,7 +67,7 @@ class OpenBrowserSession(object):
         context["base_url"] = os.path.dirname(page_url)
 
 
-class ExtractThreadDetails(object):
+class ExtractThreadDetails(WorkflowBase):
     def run(self, context):
         browser = context["browser"]
         context["thread_topic"] = browser.find_elements_by_css_selector(
@@ -84,7 +84,7 @@ class ExtractThreadDetails(object):
         context["total_pages"] = int(total_pages_elem.text)
 
 
-class ScrapePages(object):
+class ScrapePages(WorkflowBase):
     def _get_next_page_link(self, browser, current_page):
         pages_li_elements = browser.find_elements_by_css_selector("div.pagination")[
             0
@@ -162,7 +162,7 @@ class ScrapePages(object):
         context["all_posts"] = all_posts
 
 
-class CleanUpPosts(object):
+class CleanUpPosts(WorkflowBase):
     def _clean(self, post, base_url):
         post_content = post["content"]
         post["content"] = (
@@ -176,13 +176,13 @@ class CleanUpPosts(object):
         context["all_posts"] = [self._clean(post, base_url) for post in all_posts]
 
 
-class CloseBrowserSession(object):
+class CloseBrowserSession(WorkflowBase):
     def run(self, context):
         browser = context["browser"]
         browser.close()
 
 
-class JoinAllPages(object):
+class JoinAllPages(WorkflowBase):
     def _jinja_transform_and_save(self, jinja_env, context, template_file, target_file):
         rendered = jinja_env.get_template(template_file).render(context)
         with open(target_file, "w") as text_file:
@@ -206,7 +206,7 @@ class JoinAllPages(object):
         )
 
 
-class OpenHtmlPage(object):
+class OpenHtmlPage(WorkflowBase):
     def run(self, context):
         complete_html_page = context["complete_html_page"]
         output_folder = context["output_folder"]

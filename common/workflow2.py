@@ -28,15 +28,17 @@ def run_workflow2(context: dict, workflow_process: list):
 
 class WorkflowBase:
     def __init__(self, context, step):
-        step_vars = vars(step).get("__annotations__").keys()
-        try:
-            for step_var in step_vars:
-                setattr(self, step_var, context[step_var])
-        except KeyError as e:
-            logging.error(
-                "Unable to find variable: %s  in workflow class: %s",
-                str(e),
-                step.__name__,
-            )
-            logging.info("Available keys in context: %s", context.keys())
-            raise e
+        maybe_vars = vars(step).get("__annotations__")
+        if maybe_vars:
+            step_vars = maybe_vars.keys()
+            try:
+                for step_var in step_vars:
+                    setattr(self, step_var, context[step_var])
+            except KeyError as e:
+                logging.error(
+                    "Unable to find variable: %s  in workflow class: %s",
+                    str(e),
+                    step.__name__,
+                )
+                logging.info("Available keys in context: %s", context.keys())
+                raise e
