@@ -12,7 +12,7 @@ import argparse
 import logging
 from argparse import ArgumentParser
 
-from common.workflow2 import run_workflow2, WorkflowBase
+from common.workflow import run_workflow, WorkflowBase
 
 logging.basicConfig(
     handlers=[logging.StreamHandler()],
@@ -59,7 +59,7 @@ def parse_args():
 def main(args):
     context = args.__dict__
     procedure = [DoSomething]
-    run_workflow2(context, procedure)
+    run_workflow(context, procedure)
 
 
 if __name__ == "__main__":

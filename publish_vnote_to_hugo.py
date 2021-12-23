@@ -13,10 +13,12 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
-from common.workflow2 import run_workflow2, WorkflowBase
+from common.workflow import run_workflow, WorkflowBase
 
 
 class CopyImageFiles(WorkflowBase):
+    """Copy image files to blog directory"""
+
     def rgx_find_all(self, document, search_query):
         compiled_rgx = re.compile(search_query, re.IGNORECASE)
         return compiled_rgx.findall(document)
@@ -53,6 +55,8 @@ class CopyImageFiles(WorkflowBase):
 
 
 class ReplaceImageLinks(WorkflowBase):
+    """Replace image links from vNote format to Hugo format"""
+
     def replace_string_in_file(self, f, from_string, to_string):
         print("Replacing {} in {} to {}".format(from_string, f, to_string))
 
@@ -70,6 +74,8 @@ class ReplaceImageLinks(WorkflowBase):
 
 
 class OpenInEditor(WorkflowBase):
+    """Open blog in editor"""
+
     def run(self, context):
         open_in_editor = context["open_in_editor"]
         if not open_in_editor:
@@ -81,6 +87,8 @@ class OpenInEditor(WorkflowBase):
 
 
 class AddHugoHeader(WorkflowBase):
+    """Add Hugo header to blog post"""
+
     def run(self, context):
         vnote_post = context["vnote_post"]
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -103,6 +111,8 @@ series = []
 
 
 class LoadVNotePost(WorkflowBase):
+    """Load vNote post"""
+
     def run(self, context):
         vnote = context["vnote"]
         vnote_post = Path(vnote).read_text()
@@ -110,6 +120,8 @@ class LoadVNotePost(WorkflowBase):
 
 
 class WriteHugoPost(WorkflowBase):
+    """Write Hugo post in blog directory"""
+
     def run(self, context):
         final_post = context["final_post"]
         blog_root = context["blog"]
@@ -136,7 +148,7 @@ def main(args):
         ReplaceImageLinks,
         OpenInEditor,
     ]
-    run_workflow2(context, procedure)
+    run_workflow(context, procedure)
 
 
 def parse_args():

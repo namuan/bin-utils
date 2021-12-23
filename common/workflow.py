@@ -12,10 +12,11 @@ def run_command(command):
 
 
 def __run_step(step, context):
-    logging.info(step.__class__.__name__ + " ➡️ " + step.__doc__)
+    step_instance = step(context, step)
+    logging.info(step.__name__ + " ➡️ " + step_instance.__doc__)
     if context.get("verbose"):
         logging.info(context)
-    step.run(context)
+    step_instance.run(context)
     logging.info("-" * 100)
 
 
@@ -23,3 +24,21 @@ def run_workflow(context: dict, workflow_process: list):
     for step in workflow_process:
         __run_step(step, context)
     logging.info("Done.")
+
+
+class WorkflowBase:
+    def __init__(self, context, step):
+        maybe_vars = vars(step).get("__annotations__")
+        if maybe_vars:
+            step_vars = maybe_vars.keys()
+            try:
+                for step_var in step_vars:
+                    setattr(self, step_var, context[step_var])
+            except KeyError as e:
+                logging.error(
+                    "Unable to find variable: %s  in workflow class: %s",
+                    str(e),
+                    step.__name__,
+                )
+                logging.info("Available keys in context: %s", context.keys())
+                raise e
