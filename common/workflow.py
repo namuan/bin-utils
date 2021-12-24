@@ -1,5 +1,19 @@
 import logging
+import os
 import subprocess
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def notify_me(msg):
+    pushover_url = os.getenv("PUSHOVER_URL")
+    pushover_token = os.getenv("PUSHOVER_TOKEN")
+    pushover_user = os.getenv("PUSHOVER_USER")
+    if pushover_url and pushover_token and pushover_user:
+        run_command(
+            f"curl -s -F 'token={pushover_token}' -F 'user={pushover_user}' -F 'message={msg}' {pushover_url}"
+        )
 
 
 def wait_for_enter():
