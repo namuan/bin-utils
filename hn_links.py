@@ -28,7 +28,6 @@ from urllib.parse import urlparse, parse_qs
 import requests
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
-from requests import HTTPError
 from slug import slug
 
 from common.workflow import run_workflow, WorkflowBase, run_command
@@ -44,6 +43,9 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.captureWarnings(capture=True)
+
+
+# Common functions
 
 
 def fetch_html(url, post_html_page_file):
@@ -71,6 +73,9 @@ def relative_image_directory():
     month = now.strftime("%m")
     day = now.strftime("%d")
     return f"images/{year}/{month}/{day}"
+
+
+# Workflow steps
 
 
 class CreateOutputFolder(WorkflowBase):
@@ -136,7 +141,7 @@ class ExtractAllLinksFromPost(WorkflowBase):
     bs: BeautifulSoup
 
     def run(self, context):
-        all_links = [link.get("href") for link in self.bs.find_all("a", href=True)]
+        all_links = set([link.get("href") for link in self.bs.find_all("a", href=True)])
 
         # output
         context["all_links"] = all_links
@@ -382,6 +387,8 @@ class OpenInEditor(WorkflowBase):
 
 
 # Workflow definition
+
+
 def workflow_steps():
     return [
         CreateOutputFolder,
@@ -401,7 +408,9 @@ def workflow_steps():
     ]
 
 
-# Boilerplate -----------------------------------------------------------------
+# Boilerplate
+
+
 def main(args):
     context = args.__dict__
     run_workflow(context, workflow_steps())
