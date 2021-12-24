@@ -34,17 +34,6 @@ from common.workflow import run_workflow, WorkflowBase, run_command
 
 UTF_ENCODING = "utf-8"
 
-logging.basicConfig(
-    handlers=[
-        logging.StreamHandler(),
-    ],
-    format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
-)
-logging.captureWarnings(capture=True)
-
-
 # Common functions
 
 
@@ -169,10 +158,10 @@ class KeepValidLinks(WorkflowBase):
         return True
 
     def is_valid_link(self, link):
-        known_domains = ["ycombinator", "algolia", "HackerNews"]
+        known_domains = ["ycombinator", "algolia", "hackernews", "youtube"]
 
         def has_known_domain(post_link):
-            return any(map(lambda l: l in post_link, known_domains))
+            return any(map(lambda l: l in post_link.lower(), known_domains))
 
         return link.startswith("http") and not has_known_domain(link)
 
@@ -201,7 +190,7 @@ class GrabChildLinkTitle(WorkflowBase):
         post_html_page_file = child_links_folder / page_path
         page_html = fetch_html(link_in_comment, post_html_page_file)
         bs = html_parser_from(page_html)
-        return bs.title.string if bs.title else link_in_comment
+        return bs.title.string if bs.title and bs.title.string else link_in_comment
 
     def stripped(self, page_title: str):
         return page_title.strip()
@@ -411,6 +400,16 @@ def workflow_steps():
 # Boilerplate
 
 
+def setup_logging():
+    logging.basicConfig(
+        handlers=[logging.StreamHandler()],
+        format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=logging.INFO,
+    )
+    logging.captureWarnings(capture=True)
+
+
 def main(args):
     context = args.__dict__
     run_workflow(context, workflow_steps())
@@ -449,5 +448,6 @@ def parse_args():
 
 
 if __name__ == "__main__":
+    setup_logging()
     args = parse_args()
     main(args)
