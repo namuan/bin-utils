@@ -14,13 +14,10 @@ from argparse import ArgumentParser
 
 from common.workflow import run_workflow, WorkflowBase
 
-logging.basicConfig(
-    handlers=[logging.StreamHandler()],
-    format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO,
-)
-logging.captureWarnings(capture=True)
+
+# Common functions across steps
+
+# Workflow steps
 
 
 class DoSomething(WorkflowBase):
@@ -38,6 +35,28 @@ class DoSomething(WorkflowBase):
 
         # output
         context["greetings"] = f"Hello {context['username']}"
+
+
+# Workflow definition
+
+
+def workflow():
+    return [
+        DoSomething,
+    ]
+
+
+# Boilerplate
+
+
+def setup_logging():
+    logging.basicConfig(
+        handlers=[logging.StreamHandler()],
+        format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level=logging.INFO,
+    )
+    logging.captureWarnings(capture=True)
 
 
 def parse_args():
@@ -58,10 +77,10 @@ def parse_args():
 
 def main(args):
     context = args.__dict__
-    procedure = [DoSomething]
-    run_workflow(context, procedure)
+    run_workflow(context, workflow())
 
 
 if __name__ == "__main__":
+    setup_logging()
     args = parse_args()
     main(args)
