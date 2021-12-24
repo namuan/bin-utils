@@ -27,12 +27,11 @@ from urllib.parse import urlparse, parse_qs
 
 import requests
 from bs4 import BeautifulSoup
-from jinja2 import Environment, FileSystemLoader
-from slug import slug
 
 from common.workflow import run_workflow, WorkflowBase, run_command
 
 UTF_ENCODING = "utf-8"
+
 
 # Common functions
 
@@ -136,243 +135,28 @@ class ExtractAllLinksFromPost(WorkflowBase):
         context["all_links"] = all_links
 
 
-class KeepValidLinks(WorkflowBase):
-    """Only keep interesting links"""
+class WriteLinksToFile(WorkflowBase):
+    """Write all links to file so that the next script can read them"""
 
-    all_links: list
-    child_links_folder: Path
-
-    def accessible(self, link, child_links_folder):
-        page_slug = slug(link)
-        page_path = f"{page_slug}.html"
-        post_html_page_file = child_links_folder / page_path
-        try:
-            if post_html_page_file.exists():
-                return True
-
-            fetch_html(link, post_html_page_file)
-        except Exception as e:
-            logging.error(f"💥 {e}")
-            return False
-
-        return True
-
-    def is_valid_link(self, link):
-        known_domains = ["ycombinator", "algolia", "hackernews", "youtube"]
-
-        def has_known_domain(post_link):
-            return any(map(lambda l: l in post_link.lower(), known_domains))
-
-        return link.startswith("http") and not has_known_domain(link)
+    all_links: set
 
     def run(self, context):
-        valid_links = [
-            link
-            for link in self.all_links
-            if self.is_valid_link(link)
-            and self.accessible(link, self.child_links_folder)
-        ]
+        links_file = Path(context["target_folder"]) / "links.txt"
+        links_file.write_text("\n".join(self.all_links), encoding=UTF_ENCODING)
 
-        # output
-        context["valid_links"] = valid_links
+        context["links_file"] = links_file
 
 
-class GrabChildLinkTitle(WorkflowBase):
-    """Get page title for each valid link"""
+class CallLinksToHugoScript(WorkflowBase):
+    """Call other script to download thumbnails and generate Hugo post"""
 
-    valid_links: list
-    child_links_folder: Path
-
-    def page_title_from(self, child_links_folder, link_in_comment):
-        page_slug = slug(link_in_comment)
-        page_path = f"{page_slug}.html"
-
-        post_html_page_file = child_links_folder / page_path
-        page_html = fetch_html(link_in_comment, post_html_page_file)
-        bs = html_parser_from(page_html)
-        return bs.title.string if bs.title and bs.title.string else link_in_comment
-
-    def stripped(self, page_title: str):
-        return page_title.strip()
-
-    def run(self, context):
-        links_with_titles = [
-            (self.stripped(self.page_title_from(self.child_links_folder, link)), link)
-            for link in self.valid_links
-        ]
-
-        # output
-        context["links_with_titles"] = links_with_titles
-
-
-class GrabScreenThumbnail(WorkflowBase):
-    """For each link, get screen thumbnail"""
-
-    links_with_titles: list
-    thumbnails_folder: Path
-
-    def thumbnail(self, thumbnails_folder, page_link):
-        page_slug = slug(page_link)
-        target_path = thumbnails_folder / f"{page_slug}.png"
-        cmd = f"./thumbnail_generator.py -i '{page_link}' -o {target_path}"
-        if target_path.exists():
-            logging.info(
-                f"🌕 Thumbnail already exists for {page_link}. Run {cmd} to update it"
-            )
-            return target_path.as_posix()
-        failed_commands = []
-        try:
-            run_command(cmd)
-        except:  # noqa: E722
-            failed_commands.append(cmd)
-
-        for failed_command in failed_commands:
-            logging.info(f"❌ Command failed. Try running it again {failed_command}")
-
-        return target_path
-
-    def run(self, context):
-        links_with_metadata = [
-            (page_title, page_link, self.thumbnail(self.thumbnails_folder, page_link))
-            for page_title, page_link in self.links_with_titles
-        ]
-
-        # output
-        context["links_with_metadata"] = links_with_metadata
-
-
-class GenerateMarkdown(WorkflowBase):
-    """Generate Markdown using the data in context"""
-
-    def setup_template_env(self):
-        template_folder = "templates"
-        template_dir = (
-            os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
-        )
-        self.jinja_env = Environment(
-            loader=FileSystemLoader(template_dir), trim_blocks=True
-        )
-
-    def render_markdown(self, context):
-        rendered = self.jinja_env.get_template("hn_post_links.md.j2").render(context)
-        return rendered
-
-    def run(self, context):
-        self.setup_template_env()
-        markdown_text = self.render_markdown(context)
-
-        # output
-        context["markdown_text"] = markdown_text
-
-
-class AddHugoHeader(WorkflowBase):
-    """Add blog header with metadata"""
-
-    markdown_text: str
-
-    def run(self, context):
-        post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        post_title = self.markdown_text.splitlines()[0].replace("#", "").strip()
-
-        post_header = f"""+++
-    date = {post_date}
-    title = "{post_title}"
-    description = ""
-    slug = ""
-    tags = ["hacker-news-links"]
-    categories = []
-    externalLink = ""
-    series = []
-+++
-"""
-        post_with_header = (
-            post_header
-            + os.linesep
-            + os.linesep.join(self.markdown_text.splitlines()[2:])
-        )
-
-        # output
-        post_file_name = slug(post_title) + ".md"
-        context["post_file_name"] = post_file_name
-        context["post_with_header"] = post_with_header
-
-
-class UpdateLinksInMarkdown(WorkflowBase):
-    """Use relative links in Markdown to point to images"""
-
-    post_with_header: str
-    target_folder: Path
-
-    def run(self, context):
-        thumbnails_directory = self.target_folder / "thumbnails"
-        replace_from = f"![]({thumbnails_directory.as_posix()}"
-        replace_with = f"![](/{relative_image_directory()}"
-        md_with_updated_links = self.post_with_header.replace(
-            replace_from, replace_with
-        )
-
-        # output
-        context["md_with_updated_links"] = md_with_updated_links
-
-
-class WriteBlogPost(WorkflowBase):
-    """Write to blog directory with correct file name"""
-
-    md_with_updated_links: str
-    blog_directory: Path
-    post_file_name: str
-
-    def run(self, context):
-        blog_page_path = "{}/content/posts/{}".format(
-            self.blog_directory, self.post_file_name
-        )
-        Path(blog_page_path).write_text(self.md_with_updated_links)
-        logging.info("📒 Created note at {}".format(blog_page_path))
-
-        # output
-        context["blog_page"] = blog_page_path
-
-
-class CompressImages(WorkflowBase):
-    """Resize images and compress them"""
-
-    blog_directory: Path
-    target_folder: Path
+    links_file: Path
+    hn_post_title: str
+    blog_directory: str
 
     def run(self, _):
-        for img in self.target_folder.glob("thumbnails/*"):
-            img_name = img.name
-            img_path = img.as_posix()
-            target_path = Path(
-                "{}/static/{}/{}".format(
-                    self.blog_directory, relative_image_directory(), img_name
-                )
-            )
-
-            cmd = f"convert {img_path} -resize 640x480 -quality 50% {target_path}"
-
-            if target_path.exists():
-                logging.info(
-                    f"🌕 {img_name} already resized/compressed. Run this to re-convert {cmd}"
-                )
-                continue
-
-            Path(target_path).parent.mkdir(parents=True, exist_ok=True)
-            run_command(cmd)
-
-
-class OpenInEditor(WorkflowBase):
-    """Open blog post in editor defined by the environment variable EDITOR"""
-
-    open_in_editor: bool
-    blog_directory: Path
-
-    def run(self, _):
-        if not self.open_in_editor:
-            return
-        editor = os.environ.get("EDITOR")
-        print(f"Opening {self.blog_directory} in {editor}")
-        run_command(f"{editor} {self.blog_directory}")
+        cmd = f'./venv/bin/python3 links_to_hugo.py --links-file "{self.links_file}" --post-title "{self.hn_post_title}" --blog-directory "{self.blog_directory}"  --open-in-editor'
+        run_command(cmd)
 
 
 # Workflow definition
@@ -385,15 +169,8 @@ def workflow_steps():
         ParsePostHtml,
         GrabPostTitle,
         ExtractAllLinksFromPost,
-        KeepValidLinks,
-        GrabChildLinkTitle,
-        GrabScreenThumbnail,
-        GenerateMarkdown,
-        AddHugoHeader,
-        UpdateLinksInMarkdown,
-        WriteBlogPost,
-        CompressImages,
-        OpenInEditor,
+        WriteLinksToFile,
+        CallLinksToHugoScript,
     ]
 
 
@@ -428,13 +205,6 @@ def parse_args():
         type=str,
         required=True,
         help="Full path to blog directory",
-    )
-    parser.add_argument(
-        "-e",
-        "--open-in-editor",
-        action="store_true",
-        default=False,
-        help="Open blog site in editor",
     )
     parser.add_argument(
         "-v",
