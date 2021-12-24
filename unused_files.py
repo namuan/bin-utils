@@ -66,6 +66,8 @@ def main(args):
         if delete_file:
             unused_file.unlink()
 
+    logging.info(f"{len(unused_files)} files {'deleted' if delete_file else 'found'}")
+
 
 if __name__ == "__main__":
     args = parse_args()
