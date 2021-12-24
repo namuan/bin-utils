@@ -52,24 +52,13 @@ def fetch_html(url, post_html_page_file):
         logging.info(f"🌕 Loading page from cache {post_html_page_file}")
         return post_html_page_file.read_text(encoding=UTF_ENCODING)
 
-    try:
-        user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
-        headers = {"User-Agent": user_agent}
-        page = requests.get(url, headers=headers)
-        page_html = page.text
-        logging.info(f"Caching page {post_html_page_file}")
-        post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
-        return page_html
-    except HTTPError as err:
-        logging.error(
-            "Unable to fetch URL %s - HTTP: %s",
-            url,
-            err,
-        )
-    except Exception as err:
-        logging.error("Unable to fetch URL %s - %s", url, err)
-
-    return None
+    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+    headers = {"User-Agent": user_agent}
+    page = requests.get(url, headers=headers)
+    page_html = page.text
+    logging.info(f"Caching page {post_html_page_file}")
+    post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
+    return page_html
 
 
 def html_parser_from(page_html):
@@ -163,12 +152,13 @@ class KeepValidLinks(WorkflowBase):
         page_slug = slug(link)
         page_path = f"{page_slug}.html"
         post_html_page_file = child_links_folder / page_path
-        if post_html_page_file.exists():
-            return True
+        try:
+            if post_html_page_file.exists():
+                return True
 
-        maybe_html = fetch_html(link, post_html_page_file)
-
-        if not maybe_html:
+            fetch_html(link, post_html_page_file)
+        except Exception as e:
+            logging.error(f"💥 {e}")
             return False
 
         return True
