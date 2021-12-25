@@ -16,6 +16,20 @@ from pathlib import Path
 from py_executable_checklist.workflow import WorkflowBase, run_workflow
 
 
+# Common functions
+
+
+def replace_string_in_file(self, f, from_string, to_string):
+    print("Replacing {} in {} to {}".format(from_string, f, to_string))
+
+    with fileinput.FileInput(f, inplace=True) as file:
+        for line in file:
+            print(line.replace(from_string, to_string), end="")
+
+
+# Workflow steps
+
+
 class CopyImageFiles(WorkflowBase):
     """Copy image files to blog directory"""
 
@@ -57,19 +71,12 @@ class CopyImageFiles(WorkflowBase):
 class ReplaceImageLinks(WorkflowBase):
     """Replace image links from vNote format to Hugo format"""
 
-    def replace_string_in_file(self, f, from_string, to_string):
-        print("Replacing {} in {} to {}".format(from_string, f, to_string))
-
-        with fileinput.FileInput(f, inplace=True) as file:
-            for line in file:
-                print(line.replace(from_string, to_string), end="")
-
     def run(self, context):
         blog_page = context["blog_page"]
         now = datetime.now()
         year = now.strftime("%Y")
         month = now.strftime("%m")
-        self.replace_string_in_file(blog_page, "vx_images/", f"/images/{year}/{month}/")
+        replace_string_in_file(blog_page, "vx_images/", f"/images/{year}/{month}/")
         print("Replace all images in Blog Post {}".format(blog_page))
 
 
