@@ -18,3 +18,4 @@ fire
 pyperclip
 helium
 javalang
+py-executable-checklist==0.9.0

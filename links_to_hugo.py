@@ -47,9 +47,13 @@ from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
+from py_executable_checklist.workflow import (
+    WorkflowBase,
+    run_command,
+    notify_me,
+    run_workflow,
+)
 from slug import slug
-
-from common.workflow import run_workflow, WorkflowBase, run_command, notify_me
 
 UTF_ENCODING = "utf-8"
 
@@ -63,7 +67,10 @@ def fetch_html(url, post_html_page_file):
         logging.info(f"🌕 Loading page from cache {post_html_page_file}")
         return post_html_page_file.read_text(encoding=UTF_ENCODING)
 
-    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+    user_agent = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+    )
     headers = {"User-Agent": user_agent}
     page = requests.get(url, headers=headers)
     page_html = page.text
@@ -208,7 +215,7 @@ class GrabScreenThumbnail(WorkflowBase):
         failed_commands = []
         try:
             run_command(cmd)
-        except:  # noqa: E722
+        except:  # noqa: B001, E722
             failed_commands.append(cmd)
 
         for failed_command in failed_commands:
@@ -352,7 +359,12 @@ class NotifyMe(WorkflowBase):
     post_title: str
 
     def run(self, _):
-        notify_me(f"✅ {self.post_title} done!")
+        pushover_config = {
+            "pushover_url": os.getenv("PUSHOVER_URL"),
+            "pushover_token": os.getenv("PUSHOVER_TOKEN"),
+            "pushover_user": os.getenv("PUSHOVER_USER"),
+        }
+        notify_me(f"✅ {self.post_title} done!", pushover_config)
 
 
 class OpenInEditor(WorkflowBase):

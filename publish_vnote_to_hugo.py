@@ -13,7 +13,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
-from common.workflow import run_workflow, WorkflowBase
+from py_executable_checklist.workflow import WorkflowBase, run_workflow
 
 
 class CopyImageFiles(WorkflowBase):

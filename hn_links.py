@@ -27,8 +27,7 @@ from urllib.parse import urlparse, parse_qs
 
 import requests
 from bs4 import BeautifulSoup
-
-from common.workflow import run_workflow, WorkflowBase, run_command
+from py_executable_checklist.workflow import WorkflowBase, run_command, run_workflow
 
 UTF_ENCODING = "utf-8"
 
@@ -42,7 +41,10 @@ def fetch_html(url, post_html_page_file):
         logging.info(f"🌕 Loading page from cache {post_html_page_file}")
         return post_html_page_file.read_text(encoding=UTF_ENCODING)
 
-    user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+    user_agent = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
+    )
     headers = {"User-Agent": user_agent}
     page = requests.get(url, headers=headers)
     page_html = page.text
@@ -129,7 +131,7 @@ class ExtractAllLinksFromPost(WorkflowBase):
     bs: BeautifulSoup
 
     def run(self, context):
-        all_links = set([link.get("href") for link in self.bs.find_all("a", href=True)])
+        all_links = {link.get("href") for link in self.bs.find_all("a", href=True)}
 
         # output
         context["all_links"] = all_links
@@ -155,7 +157,13 @@ class CallLinksToHugoScript(WorkflowBase):
     blog_directory: str
 
     def run(self, _):
-        cmd = f'./venv/bin/python3 links_to_hugo.py --links-file "{self.links_file}" --post-title "{self.hn_post_title}" --blog-directory "{self.blog_directory}"  --open-in-editor'
+        cmd = (
+            f"./venv/bin/python3 links_to_hugo.py "
+            f'--links-file "{self.links_file}" '
+            f'--post-title "{self.hn_post_title}" '
+            f'--blog-directory "{self.blog_directory}"  '
+            f"--open-in-editor"
+        )
         run_command(cmd)
 
 
