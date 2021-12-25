@@ -216,10 +216,7 @@ class JoinAllPages(WorkflowBase):
         thread_topic = context["thread_topic"]
         complete_html_page = context["complete_html_page"]
         jinja_env = context["jinja_env"]
-        jinja_context = dict(
-            thread_topic=thread_topic,
-            all_posts=all_posts,
-        )
+        jinja_context = {"thread_topic": thread_topic, "all_posts": all_posts}
         self._jinja_transform_and_save(
             jinja_env,
             jinja_context,
