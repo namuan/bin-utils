@@ -19,7 +19,7 @@ from py_executable_checklist.workflow import WorkflowBase, run_workflow
 # Common functions
 
 
-def replace_string_in_file(self, f, from_string, to_string):
+def replace_string_in_file(f, from_string, to_string):
     print("Replacing {} in {} to {}".format(from_string, f, to_string))
 
     with fileinput.FileInput(f, inplace=True) as file:
@@ -30,8 +30,62 @@ def replace_string_in_file(self, f, from_string, to_string):
 # Workflow steps
 
 
+class LoadVNotePost(WorkflowBase):
+    """Load vNote post"""
+
+    vnote: str
+
+    def run(self, context):
+        vnote_post = Path(self.vnote).read_text()
+
+        context["vnote_post"] = vnote_post
+
+
+class AddHugoHeader(WorkflowBase):
+    """Add Hugo header to blog post"""
+
+    vnote_post: str
+
+    def run(self, context):
+        post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        post_title = self.vnote_post.splitlines()[0].replace("#", "").strip()
+        post_header = f"""+++
+date = {post_date}
+title = "{post_title}"
+description = ""
+slug = ""
+tags = []
+categories = []
+externalLink = ""
+series = []
++++
+        """
+        final_post = (
+            post_header + os.linesep + os.linesep.join(self.vnote_post.splitlines()[2:])
+        )
+        context["final_post"] = final_post
+
+
+class WriteHugoPost(WorkflowBase):
+    """Write Hugo post in blog directory"""
+
+    final_post: str
+    blog: str
+    file_name: str
+
+    def run(self, context):
+        blog_page = "{}/content/posts/{}".format(self.blog, self.file_name)
+        Path(blog_page).write_text(self.final_post)
+        print("Created note at {}".format(blog_page))
+
+        context["blog_page"] = blog_page
+
+
 class CopyImageFiles(WorkflowBase):
     """Copy image files to blog directory"""
+
+    vnote: str
+    blog: str
 
     def rgx_find_all(self, document, search_query):
         compiled_rgx = re.compile(search_query, re.IGNORECASE)
@@ -55,15 +109,12 @@ class CopyImageFiles(WorkflowBase):
         target_image_dir.mkdir(parents=True, exist_ok=True)
         return (target_image_dir / image).resolve()
 
-    def run(self, context):
-        note_path = context["vnote"]
-        blog_root = context["blog"]
-
-        images = self.image_tags_from_note(note_path)
-        print(f"Found {len(images)} images in {note_path}")
+    def run(self, _):
+        images = self.image_tags_from_note(self.vnote)
+        print(f"Found {len(images)} images in {self.vnote}")
         for image in images:
-            source_full_path = self.image_path_in_vnote(note_path, image)
-            target_full_path = self.image_path_in_blog(blog_root, image)
+            source_full_path = self.image_path_in_vnote(self.vnote, image)
+            target_full_path = self.image_path_in_blog(self.blog, image)
             shutil.copyfile(source_full_path, target_full_path)
             print("Copied {}".format(image))
 
@@ -71,71 +122,28 @@ class CopyImageFiles(WorkflowBase):
 class ReplaceImageLinks(WorkflowBase):
     """Replace image links from vNote format to Hugo format"""
 
+    blog_page: str
+
     def run(self, context):
-        blog_page = context["blog_page"]
         now = datetime.now()
         year = now.strftime("%Y")
         month = now.strftime("%m")
-        replace_string_in_file(blog_page, "vx_images/", f"/images/{year}/{month}/")
-        print("Replace all images in Blog Post {}".format(blog_page))
+        replace_string_in_file(self.blog_page, "vx_images/", f"/images/{year}/{month}/")
+        print("Replace all images in Blog Post {}".format(self.blog_page))
 
 
 class OpenInEditor(WorkflowBase):
     """Open blog in editor"""
 
+    open_in_editor: bool
+
     def run(self, context):
-        open_in_editor = context["open_in_editor"]
-        if not open_in_editor:
+        if not self.open_in_editor:
             return
         blog_root = context["blog"]
         editor = os.environ.get("EDITOR")
         print(f"Opening {blog_root} in {editor}")
         subprocess.call(f"{editor} {blog_root}", shell=True)
-
-
-class AddHugoHeader(WorkflowBase):
-    """Add Hugo header to blog post"""
-
-    def run(self, context):
-        vnote_post = context["vnote_post"]
-        post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        post_title = vnote_post.splitlines()[0].replace("#", "").strip()
-        post_header = f"""+++
-date = {post_date}
-title = "{post_title}"
-description = ""
-slug = ""
-tags = []
-categories = []
-externalLink = ""
-series = []
-+++
-        """
-        final_post = (
-            post_header + os.linesep + os.linesep.join(vnote_post.splitlines()[2:])
-        )
-        context["final_post"] = final_post
-
-
-class LoadVNotePost(WorkflowBase):
-    """Load vNote post"""
-
-    def run(self, context):
-        vnote = context["vnote"]
-        vnote_post = Path(vnote).read_text()
-        context["vnote_post"] = vnote_post
-
-
-class WriteHugoPost(WorkflowBase):
-    """Write Hugo post in blog directory"""
-
-    def run(self, context):
-        final_post = context["final_post"]
-        blog_root = context["blog"]
-        file_name = context["file_name"]
-        context["blog_page"] = "{}/content/posts/{}".format(blog_root, file_name)
-        Path(context["blog_page"]).write_text(final_post)
-        print("Created note at {}".format(context["blog_page"]))
 
 
 def workflow():
