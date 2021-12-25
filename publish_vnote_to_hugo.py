@@ -138,6 +138,17 @@ class WriteHugoPost(WorkflowBase):
         print("Created note at {}".format(context["blog_page"]))
 
 
+def workflow():
+    return [
+        LoadVNotePost,
+        AddHugoHeader,
+        WriteHugoPost,
+        CopyImageFiles,
+        ReplaceImageLinks,
+        OpenInEditor,
+    ]
+
+
 def main(args):
     context = {
         "blog": args.blog_directory,
@@ -147,15 +158,7 @@ def main(args):
 
     context["file_name"] = Path(context["vnote"]).name
 
-    procedure = [
-        LoadVNotePost,
-        AddHugoHeader,
-        WriteHugoPost,
-        CopyImageFiles,
-        ReplaceImageLinks,
-        OpenInEditor,
-    ]
-    run_workflow(context, procedure)
+    run_workflow(context, workflow())
 
 
 def parse_args():
