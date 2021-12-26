@@ -12,11 +12,20 @@ import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
+from tempfile import mktemp
 
-from py_executable_checklist.workflow import WorkflowBase, run_workflow
-
+from py_executable_checklist.workflow import WorkflowBase, run_workflow, run_command
+from slug import slug
 
 # Common functions
+
+
+def relative_image_directory():
+    now = datetime.now()
+    year = now.strftime("%Y")
+    month = now.strftime("%m")
+    day = now.strftime("%d")
+    return f"images/{year}/{month}/{day}"
 
 
 def replace_string_in_file(f, from_string, to_string):
@@ -66,6 +75,40 @@ series = []
         context["final_post"] = final_post
 
 
+class SwapPlantUmlWithImageTag(WorkflowBase):
+    """Swap PlantUML with image tag"""
+
+    final_post: str
+
+    def run(self, context):
+        puml_files = {}
+        modified_post = self.final_post
+        for m in re.finditer("```puml(.*?)```", self.final_post, re.DOTALL):
+            diagram = m.group(0)
+            title = self.find_title_in_puml(diagram)
+            temp_diagram = Path(mktemp(".puml", title))
+            temp_diagram.write_text(diagram)
+
+            image_directory = relative_image_directory()
+            image_path = f"{image_directory}/{temp_diagram.stem}.png"
+            image_tag = f"![{title}](/{image_path})"
+            modified_post = modified_post.replace(
+                diagram,
+                f"<!---{os.linesep}{diagram}{os.linesep}--->{os.linesep}{image_tag}",
+            )
+            puml_files[title] = temp_diagram
+
+        context["puml_files"] = puml_files
+        context["final_post"] = modified_post
+
+    def find_title_in_puml(self, diagram):
+        find_title_in_diagram = re.search("title:?(.*)", diagram)
+        if not find_title_in_diagram:
+            raise KeyError("Please provide a title for PlantUML diagram(s)")
+
+        return slug(find_title_in_diagram.group(1))
+
+
 class WriteHugoPost(WorkflowBase):
     """Write Hugo post in blog directory"""
 
@@ -79,6 +122,22 @@ class WriteHugoPost(WorkflowBase):
         print("Created note at {}".format(blog_page))
 
         context["blog_page"] = blog_page
+
+
+class ConvertPlantUmlToPng(WorkflowBase):
+    """Convert PlantUML diagram(s) to PNG"""
+
+    puml_files: dict
+    blog: str
+
+    def run(self, _):
+        plantuml_path = os.getenv("PLANTUML_PATH")
+        for title, puml_file in self.puml_files.items():
+            target_image_dir = Path(self.blog) / "static" / relative_image_directory()
+            target_image_dir.mkdir(parents=True, exist_ok=True)
+            print(f"Converting {title} PlantUML diagram {puml_file} to PNG")
+            cmd = f"java -DPLANTUML_LIMIT_SIZE=8192 -jar {plantuml_path} {puml_file} -o '{target_image_dir}' -tpng"
+            run_command(cmd)
 
 
 class CopyImageFiles(WorkflowBase):
@@ -102,10 +161,7 @@ class CopyImageFiles(WorkflowBase):
 
     def image_path_in_blog(self, blog_root, image):
         blog = Path(blog_root)
-        now = datetime.now()
-        year = now.strftime("%Y")
-        month = now.strftime("%m")
-        target_image_dir = blog / "static" / "images" / year / month
+        target_image_dir = blog / "static" / relative_image_directory()
         target_image_dir.mkdir(parents=True, exist_ok=True)
         return (target_image_dir / image).resolve()
 
@@ -124,11 +180,9 @@ class ReplaceImageLinks(WorkflowBase):
 
     blog_page: str
 
-    def run(self, context):
-        now = datetime.now()
-        year = now.strftime("%Y")
-        month = now.strftime("%m")
-        replace_string_in_file(self.blog_page, "vx_images/", f"/images/{year}/{month}/")
+    def run(self, _):
+        image_directory = relative_image_directory()
+        replace_string_in_file(self.blog_page, "vx_images/", f"/{image_directory}/")
         print("Replace all images in Blog Post {}".format(self.blog_page))
 
 
@@ -150,7 +204,9 @@ def workflow():
     return [
         LoadVNotePost,
         AddHugoHeader,
+        SwapPlantUmlWithImageTag,
         WriteHugoPost,
+        ConvertPlantUmlToPng,
         CopyImageFiles,
         ReplaceImageLinks,
         OpenInEditor,
