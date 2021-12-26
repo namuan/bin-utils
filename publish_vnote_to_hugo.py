@@ -81,22 +81,21 @@ class SwapPlantUmlWithImageTag(WorkflowBase):
     final_post: str
 
     def run(self, context):
-        puml_files = {}
+        puml_files = []
         modified_post = self.final_post
         for m in re.finditer("```puml(.*?)```", self.final_post, re.DOTALL):
             diagram = m.group(0)
-            title = self.find_title_in_puml(diagram)
-            temp_diagram = Path(mktemp(".puml", title))
+            temp_diagram = Path(mktemp(".puml"))
             temp_diagram.write_text(diagram)
 
             image_directory = relative_image_directory()
             image_path = f"{image_directory}/{temp_diagram.stem}.png"
-            image_tag = f"![{title}](/{image_path})"
+            image_tag = f"![](/{image_path})"
             modified_post = modified_post.replace(
                 diagram,
                 f"<!---{os.linesep}{diagram}{os.linesep}--->{os.linesep}{image_tag}",
             )
-            puml_files[title] = temp_diagram
+            puml_files.append(temp_diagram)
 
         context["puml_files"] = puml_files
         context["final_post"] = modified_post
@@ -132,10 +131,10 @@ class ConvertPlantUmlToPng(WorkflowBase):
 
     def run(self, _):
         plantuml_path = os.getenv("PLANTUML_PATH")
-        for title, puml_file in self.puml_files.items():
+        for puml_file in self.puml_files:
             target_image_dir = Path(self.blog) / "static" / relative_image_directory()
             target_image_dir.mkdir(parents=True, exist_ok=True)
-            print(f"Converting {title} PlantUML diagram {puml_file} to PNG")
+            print(f"Converting PlantUML diagram {puml_file} to PNG")
             cmd = f"java -DPLANTUML_LIMIT_SIZE=8192 -jar {plantuml_path} {puml_file} -o '{target_image_dir}' -tpng"
             run_command(cmd)
 
