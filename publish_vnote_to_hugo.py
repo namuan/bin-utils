@@ -64,7 +64,6 @@ title = "{post_title}"
 description = ""
 slug = ""
 tags = []
-categories = []
 externalLink = ""
 series = []
 +++
