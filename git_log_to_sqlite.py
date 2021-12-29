@@ -28,9 +28,7 @@ c.execute(
 repo = git.Repo("./")
 for commit in repo.iter_commits():
     # get the date of the commit
-    date = datetime.datetime.fromtimestamp(commit.committed_date).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    date = datetime.datetime.fromtimestamp(commit.committed_date).strftime("%Y-%m-%d %H:%M:%S")
     # get the author of the commit
     author = commit.author.name
     # get the message of the commit

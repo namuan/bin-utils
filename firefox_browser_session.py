@@ -51,15 +51,9 @@ def main(browser_profile: str = None):
 
     # wait for an element to present
     wait = WebDriverWait(current_session, 10)
-    wait.until(
-        EC.visibility_of_element_located(
-            (By.XPATH, "//*[text()='https://www.deskriders.dev']")
-        )
-    )
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//*[text()='https://www.deskriders.dev']")))
 
-    current_session.find_element(
-        By.XPATH, "//*[text()='https://www.deskriders.dev']"
-    ).click()
+    current_session.find_element(By.XPATH, "//*[text()='https://www.deskriders.dev']").click()
     session.stop()
 
 

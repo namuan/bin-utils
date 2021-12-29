@@ -29,6 +29,7 @@ class DoSomething(WorkflowBase):
     """
 
     username: str
+    missing_var: str
 
     def run(self, context):
         logging.info(f"Hello {self.username}")
@@ -60,9 +61,7 @@ def setup_logging():
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-u", "--username", type=str, required=True, help="User name")
     parser.add_argument(
         "-v",

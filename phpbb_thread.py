@@ -34,9 +34,7 @@ def with_ignoring_errors(code_to_run, warning_msg):
 
 def parse_args():
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "-p", "--page-url", type=str, required=True, help="PhpBB Forum Page Url"
-    )
+    parser.add_argument("-p", "--page-url", type=str, required=True, help="PhpBB Forum Page Url")
     return parser.parse_args()
 
 
@@ -59,10 +57,8 @@ class InitScript(WorkflowBase):
     def run(self, context):
         self._init_script()
         template_folder = "sample"
-        template_dir = (
-            os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
-        )
-        jinja_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
+        template_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
+        jinja_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, autoescape=True)
         context["jinja_env"] = jinja_env
         context["output_folder"] = output_folder = "generated"
         create_dir(output_folder, delete_existing=False)
@@ -84,17 +80,13 @@ class ExtractThreadDetails(WorkflowBase):
 
     def run(self, context):
         browser = context["browser"]
-        context["thread_topic"] = browser.find_elements_by_css_selector(
-            "h2.topic-title"
-        )[0].text
+        context["thread_topic"] = browser.find_elements_by_css_selector("h2.topic-title")[0].text
         context["slugged_thread_topic"] = slug(context["thread_topic"])
-        context["complete_html_page"] = "{}.html".format(
-            context["slugged_thread_topic"]
-        )
+        context["complete_html_page"] = "{}.html".format(context["slugged_thread_topic"])
         context["complete_pdf_page"] = context["slugged_thread_topic"] + ".pdf"
-        total_pages_elem = browser.find_elements_by_css_selector("div.pagination")[
-            0
-        ].find_elements_by_css_selector("li a")[-2]
+        total_pages_elem = browser.find_elements_by_css_selector("div.pagination")[0].find_elements_by_css_selector(
+            "li a"
+        )[-2]
         context["total_pages"] = int(total_pages_elem.text)
 
 
@@ -102,12 +94,10 @@ class ScrapePages(WorkflowBase):
     """Scrape Pages"""
 
     def _get_next_page_link(self, browser, current_page):
-        pages_li_elements = browser.find_elements_by_css_selector("div.pagination")[
-            0
-        ].find_elements_by_css_selector("li a")
-        next_page = next(
-            p for p in pages_li_elements if p.text == str(current_page + 1)
+        pages_li_elements = browser.find_elements_by_css_selector("div.pagination")[0].find_elements_by_css_selector(
+            "li a"
         )
+        next_page = next(p for p in pages_li_elements if p.text == str(current_page + 1))
         return next_page.get_attribute("href")
 
     def _extract_element_from_post(self, post_body, name, selector):
@@ -132,9 +122,7 @@ class ScrapePages(WorkflowBase):
             "Unable to find time",
         )
         post_data["content"] = with_ignoring_errors(
-            lambda: post_body.find_elements_by_css_selector("div.content")[
-                0
-            ].get_attribute("outerHTML"),
+            lambda: post_body.find_elements_by_css_selector("div.content")[0].get_attribute("outerHTML"),
             "Unable to find content",
         )
         return post_data
@@ -165,11 +153,7 @@ class ScrapePages(WorkflowBase):
                 all_posts.append(post_data)
 
             rand_sleep_time = random.randrange(5, 10)
-            logging.info(
-                "🚧 On page {}, 😴 Zzzz for {} seconds".format(
-                    current_page, rand_sleep_time
-                )
-            )
+            logging.info("🚧 On page {}, 😴 Zzzz for {} seconds".format(current_page, rand_sleep_time))
             time.sleep(rand_sleep_time)
             if current_page != total_pages:
                 next_page_link = self._get_next_page_link(browser, current_page)
@@ -183,9 +167,7 @@ class CleanUpPosts(WorkflowBase):
 
     def _clean(self, post, base_url):
         post_content = post["content"]
-        post["content"] = (
-            post_content.replace("./", f"{base_url}/") if post_content else ""
-        )
+        post["content"] = post_content.replace("./", f"{base_url}/") if post_content else ""
         return post
 
     def run(self, context):
@@ -231,8 +213,8 @@ class OpenHtmlPage(WorkflowBase):
     def run(self, context):
         complete_html_page = context["complete_html_page"]
         output_folder = context["output_folder"]
-        subprocess.call(
-            "open {}/{}".format(output_folder, complete_html_page),
+        subprocess.check_call(  # nosemgrep
+            f"open {output_folder}/{complete_html_page}",
             shell=True,
         )
 

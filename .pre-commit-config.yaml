@@ -1,3 +1,4 @@
+fail_fast: true
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
@@ -25,3 +26,10 @@ repos:
         entry: flake8
         language: system
         types: [ python ]
+  -   repo: https://github.com/returntocorp/semgrep
+      rev: 'v0.77.0'
+      hooks:
+        - id: semgrep
+          name: Semgrep Python / Bandit
+          types: [ python ]
+          args: [ '--config', 'p/python', '--config', 'p/bandit', '--error' ]

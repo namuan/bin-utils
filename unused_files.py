@@ -18,14 +18,10 @@ logging.captureWarnings(capture=True)
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-s", "--source", required=True, help="Source directory")
     parser.add_argument("-t", "--target", required=True, help="Target directory")
-    parser.add_argument(
-        "-d", "--delete", action="store_true", help="Delete unused files"
-    )
+    parser.add_argument("-d", "--delete", action="store_true", help="Delete unused files")
     parser.add_argument("-v", "--verbose", action="store_true")
     return parser.parse_args()
 
@@ -49,9 +45,7 @@ def main(args):
     source_dir = args["source"]
     target_dir = args["target"]
     delete_file = args["delete"]
-    logging.info(
-        f"Find/delete({'y' if delete_file else 'n'}) files in {source_dir} which are not used in {target_dir}"
-    )
+    logging.info(f"Find/delete({'y' if delete_file else 'n'}) files in {source_dir} which are not used in {target_dir}")
 
     files_in_source = Path(source_dir).glob("**/*")
     files_in_target = list(Path(target_dir).glob("**/*"))

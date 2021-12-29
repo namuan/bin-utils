@@ -34,13 +34,9 @@ def main(source_dir: str, target_dir: str):
                 .replace(")", "_")
                 .replace(".", "")
             )
-            norm_source_parent_path = norm_source_parent_path.replace(
-                source_dir_path.as_posix().replace("/", "_"), ""
-            )
+            norm_source_parent_path = norm_source_parent_path.replace(source_dir_path.as_posix().replace("/", "_"), "")
             target_file_path = target_dir_path / (
-                source_file_path.stem
-                + norm_source_parent_path
-                + source_file_path.suffix
+                source_file_path.stem + norm_source_parent_path + source_file_path.suffix
             )
             print(f"Copying {source_file_path} to {target_file_path}")
             shutil.copy2(source_file_path, target_file_path)

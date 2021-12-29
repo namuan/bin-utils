@@ -31,9 +31,7 @@ def scroll_to_last_page(full_url):
     max_tweet_count = 60
 
     while number_of_tweets <= max_tweet_count:
-        tweets_on_page = len(
-            browser.find_elements_by_css_selector("div.original-tweet")
-        )
+        tweets_on_page = len(browser.find_elements_by_css_selector("div.original-tweet"))
         print("Total number of tweets on screen: {}".format(tweets_on_page))
         if number_of_tweets == tweets_on_page:
             print("No more tweets probably?")
@@ -66,9 +64,7 @@ def create_dir_if_needed(output_dir):
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description="A simple script to scrape tweets and export to output directory"
-    )
+    parser = ArgumentParser(description="A simple script to scrape tweets and export to output directory")
     parser.add_argument(
         "-o",
         "--output",
@@ -76,12 +72,8 @@ def parse_args():
         help="Write tweets as individual files in this directory",
     )
     parser.add_argument("-f", "--account", type=str, help="Scrape tweets for account")
-    parser.add_argument(
-        "-s", "--since", type=str, help="Search from this date. Format YYYY-MM-DD"
-    )
-    parser.add_argument(
-        "-u", "--until", type=str, help="Search to this data. Format YYYY-MM-DD"
-    )
+    parser.add_argument("-s", "--since", type=str, help="Search from this date. Format YYYY-MM-DD")
+    parser.add_argument("-u", "--until", type=str, help="Search to this data. Format YYYY-MM-DD")
     return parser.parse_args()
 
 

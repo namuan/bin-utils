@@ -18,9 +18,7 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-i", "--input-url", type=str, required=True, help="Web Url")
-    parser.add_argument(
-        "-o", "--output-file-path", type=str, required=True, help="Output file path"
-    )
+    parser.add_argument("-o", "--output-file-path", type=str, required=True, help="Output file path")
     parser.add_argument(
         "-w",
         "--wait-in-secs-before-capture",
@@ -53,9 +51,7 @@ async def main():
     browser = await launch(headless=False, defaultViewport=None)
     print("Processing {}".format(website_url))
     try:
-        browser, page = await open_site(
-            browser, website_url, screenshots_dir.as_posix()
-        )
+        browser, page = await open_site(browser, website_url, screenshots_dir.as_posix())
         # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
         time.sleep(wait_in_secs_before_capture)
         await page.screenshot({"path": screen_shot_path.as_posix()})

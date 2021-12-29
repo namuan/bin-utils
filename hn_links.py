@@ -46,7 +46,7 @@ def fetch_html(url, post_html_page_file):
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
     )
     headers = {"User-Agent": user_agent}
-    page = requests.get(url, headers=headers)
+    page = requests.get(url, headers=headers, timeout=10)
     page_html = page.text
     logging.info(f"Caching page {post_html_page_file}")
     post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
@@ -201,12 +201,8 @@ def main(args):
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        "-l", "--hn-link", required=True, type=str, help="Link to HN Post"
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-l", "--hn-link", required=True, type=str, help="Link to HN Post")
     parser.add_argument(
         "-b",
         "--blog-directory",

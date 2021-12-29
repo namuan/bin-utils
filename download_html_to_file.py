@@ -10,7 +10,7 @@ import requests
 
 def download_html(url):
     print("Downloading webpage from {0}".format(url))
-    page = requests.get(url)
+    page = requests.get(url, timeout=10)
     return page.text
 
 
@@ -22,9 +22,7 @@ def write_html_to_disk(file_path, contents):
 def parse_args():
     parser = ArgumentParser(description="Download HTML page and save to disk")
     parser.add_argument("-p", "--page", type=str, help="HTML page to download")
-    parser.add_argument(
-        "-d", "--downloadfile", type=str, help="Name of the file to save"
-    )
+    parser.add_argument("-d", "--downloadfile", type=str, help="Name of the file to save")
     return parser.parse_args()
 
 

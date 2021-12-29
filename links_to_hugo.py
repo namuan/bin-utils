@@ -72,7 +72,7 @@ def fetch_html(url, post_html_page_file):
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
     )
     headers = {"User-Agent": user_agent}
-    page = requests.get(url, headers=headers)
+    page = requests.get(url, headers=headers, timeout=10)
     page_html = page.text
     logging.info(f"Caching page {post_html_page_file}")
     post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
@@ -161,8 +161,7 @@ class KeepValidLinks(WorkflowBase):
         valid_links = [
             link
             for link in self.all_links
-            if self.is_valid_link(link)
-            and self.accessible(link, self.child_links_folder)
+            if self.is_valid_link(link) and self.accessible(link, self.child_links_folder)
         ]
 
         # output
@@ -189,8 +188,7 @@ class GrabChildLinkTitle(WorkflowBase):
 
     def run(self, context):
         links_with_titles = [
-            (self.stripped(self.page_title_from(self.child_links_folder, link)), link)
-            for link in self.valid_links
+            (self.stripped(self.page_title_from(self.child_links_folder, link)), link) for link in self.valid_links
         ]
 
         # output
@@ -208,9 +206,7 @@ class GrabScreenThumbnail(WorkflowBase):
         target_path = thumbnails_folder / f"{page_slug}.png"
         cmd = f"./thumbnail_generator.py -i '{page_link}' -o {target_path}"
         if target_path.exists():
-            logging.info(
-                f"🌕 Thumbnail already exists for {page_link}. Run {cmd} to update it"
-            )
+            logging.info(f"🌕 Thumbnail already exists for {page_link}. Run {cmd} to update it")
             return target_path.as_posix()
         failed_commands = []
         try:
@@ -238,12 +234,8 @@ class GenerateMarkdown(WorkflowBase):
 
     def setup_template_env(self):
         template_folder = "templates"
-        template_dir = (
-            os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
-        )
-        self.jinja_env = Environment(
-            loader=FileSystemLoader(template_dir), trim_blocks=True
-        )
+        template_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + template_folder
+        self.jinja_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, autoescape=True)
 
     def render_markdown(self, context):
         rendered = self.jinja_env.get_template("hn_post_links.md.j2").render(context)
@@ -277,11 +269,7 @@ class AddHugoHeader(WorkflowBase):
     series = []
 +++
 """
-        post_with_header = (
-            post_header
-            + os.linesep
-            + os.linesep.join(self.markdown_text.splitlines()[2:])
-        )
+        post_with_header = post_header + os.linesep + os.linesep.join(self.markdown_text.splitlines()[2:])
 
         # output
         post_file_name = slug(post_title) + ".md"
@@ -299,9 +287,7 @@ class UpdateLinksInMarkdown(WorkflowBase):
         thumbnails_directory = self.target_folder / "thumbnails"
         replace_from = f"![]({thumbnails_directory.as_posix()}"
         replace_with = f"![](/{relative_image_directory()}"
-        md_with_updated_links = self.post_with_header.replace(
-            replace_from, replace_with
-        )
+        md_with_updated_links = self.post_with_header.replace(replace_from, replace_with)
 
         # output
         context["md_with_updated_links"] = md_with_updated_links
@@ -315,9 +301,7 @@ class WriteBlogPost(WorkflowBase):
     post_file_name: str
 
     def run(self, context):
-        blog_page_path = "{}/content/posts/{}".format(
-            self.blog_directory, self.post_file_name
-        )
+        blog_page_path = "{}/content/posts/{}".format(self.blog_directory, self.post_file_name)
         Path(blog_page_path).write_text(self.md_with_updated_links)
         logging.info("📒 Created note at {}".format(blog_page_path))
 
@@ -335,18 +319,12 @@ class CompressImages(WorkflowBase):
         for img in self.target_folder.glob("thumbnails/*"):
             img_name = img.name
             img_path = img.as_posix()
-            target_path = Path(
-                "{}/static/{}/{}".format(
-                    self.blog_directory, relative_image_directory(), img_name
-                )
-            )
+            target_path = Path("{}/static/{}/{}".format(self.blog_directory, relative_image_directory(), img_name))
 
             cmd = f"convert {img_path} -resize 640x480 -quality 50% {target_path}"
 
             if target_path.exists():
-                logging.info(
-                    f"🌕 {img_name} already resized/compressed. Run this to re-convert {cmd}"
-                )
+                logging.info(f"🌕 {img_name} already resized/compressed. Run this to re-convert {cmd}")
                 continue
 
             Path(target_path).parent.mkdir(parents=True, exist_ok=True)
@@ -420,15 +398,9 @@ def main(args):
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
-    parser.add_argument(
-        "-l", "--links-file", required=True, type=str, help="Path to links file"
-    )
-    parser.add_argument(
-        "-t", "--post-title", required=True, type=str, help="Blog post title"
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-l", "--links-file", required=True, type=str, help="Path to links file")
+    parser.add_argument("-t", "--post-title", required=True, type=str, help="Blog post title")
     parser.add_argument(
         "-b",
         "--blog-directory",

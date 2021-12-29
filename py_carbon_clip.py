@@ -21,7 +21,7 @@ async def preview_image(carbon_file_path):
     else:
         open_file_cmd = "xdg-open {}".format(carbon_file_path)
 
-    subprocess.call(open_file_cmd, shell=True)
+    subprocess.check_call(open_file_cmd, shell=True)  # nosemgrep
 
 
 async def copy_image_to_clip(carbon_file_path):
@@ -32,11 +32,9 @@ async def copy_image_to_clip(carbon_file_path):
     elif platform.system() == "Windows":
         copy_img_cmd = "nircmd clipboard copyimage {}".format(carbon_file_path)
     else:
-        copy_img_cmd = "xclip -selection clipboard -t image/png -i {}".format(
-            carbon_file_path
-        )
+        copy_img_cmd = "xclip -selection clipboard -t image/png -i {}".format(carbon_file_path)
 
-    subprocess.call(copy_img_cmd, shell=True)
+    subprocess.check_call(copy_img_cmd, shell=True)  # nosemrep
 
 
 async def download_image(page):

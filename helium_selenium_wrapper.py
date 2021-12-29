@@ -19,9 +19,7 @@ logging.captureWarnings(capture=True)
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     return parser.parse_args()
 
 

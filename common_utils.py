@@ -13,9 +13,7 @@ def create_dir(output_dir, delete_existing=False):
 
 
 def random_string(length):
-    return "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(length)
-    )
+    return "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(length))
 
 
 def job_hash(job):

@@ -12,7 +12,7 @@ import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
-from tempfile import mktemp
+from tempfile import mktemp, NamedTemporaryFile
 
 from py_executable_checklist.workflow import WorkflowBase, run_workflow, run_command
 from slug import slug
@@ -68,9 +68,7 @@ externalLink = ""
 series = []
 +++
         """
-        final_post = (
-            post_header + os.linesep + os.linesep.join(self.vnote_post.splitlines()[2:])
-        )
+        final_post = post_header + os.linesep + os.linesep.join(self.vnote_post.splitlines()[2:])
         context["final_post"] = final_post
 
 
@@ -84,7 +82,7 @@ class SwapPlantUmlWithImageTag(WorkflowBase):
         modified_post = self.final_post
         for m in re.finditer("```puml(.*?)```", self.final_post, re.DOTALL):
             diagram = m.group(0)
-            temp_diagram = Path(mktemp(".puml"))
+            temp_diagram = Path(NamedTemporaryFile(suffix=".puml"))
             temp_diagram.write_text(diagram)
 
             image_directory = relative_image_directory()
@@ -149,9 +147,7 @@ class CopyImageFiles(WorkflowBase):
         return compiled_rgx.findall(document)
 
     def image_tags_from_note(self, note_path):
-        return self.rgx_find_all(
-            Path(note_path).read_text(), "!\[.*\]\(vx_images\/(.*)\)"  # noqa: W605
-        )
+        return self.rgx_find_all(Path(note_path).read_text(), "!\[.*\]\(vx_images\/(.*)\)")  # noqa: W605
 
     def image_path_in_vnote(self, note_path, image):
         note = Path(note_path)
@@ -195,7 +191,7 @@ class OpenInEditor(WorkflowBase):
         blog_root = context["blog"]
         editor = os.environ.get("EDITOR")
         print(f"Opening {blog_root} in {editor}")
-        subprocess.call(f"{editor} {blog_root}", shell=True)
+        subprocess.check_call(f"{editor} {blog_root}", shell=True)  # nosemgrep
 
 
 def workflow():
@@ -224,13 +220,9 @@ def main(args):
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-b", "--blog-directory", type=str, help="Blog directory")
-    parser.add_argument(
-        "-n", "--vnote-file-path", type=str, required=True, help="vNote file path"
-    )
+    parser.add_argument("-n", "--vnote-file-path", type=str, required=True, help="vNote file path")
     parser.add_argument(
         "-e",
         "--open-in-editor",

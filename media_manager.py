@@ -37,14 +37,10 @@ class MediaMetadata:
 
 
 def parse_args():
-    parser = ArgumentParser(
-        description=__doc__, formatter_class=RawDescriptionHelpFormatter
-    )
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-f", "--source-file", type=str, help="Source file")
     parser.add_argument("-s", "--source-directory", type=str, help="Source directory")
-    parser.add_argument(
-        "-t", "--target-directory", type=str, required=True, help="Target directory"
-    )
+    parser.add_argument("-t", "--target-directory", type=str, required=True, help="Target directory")
     parser.add_argument(
         "-r",
         "--remove-source",
@@ -86,9 +82,7 @@ def get_datetime_from_exif(file_path, image):
             pass
 
     if not datetime_from_exif:
-        raise Exception(
-            f"Unable to parse date time from exif data: {dir(image)} , formats: {formats_to_try}"
-        )
+        raise Exception(f"Unable to parse date time from exif data: {dir(image)} , formats: {formats_to_try}")
 
     return datetime_from_exif
 
@@ -103,12 +97,8 @@ def get_photo_metadata(file_path):
     year = "{:04d}".format(media_created_date_time.year)
     month = "{:02d}".format(media_created_date_time.month)
     day = "{:02d}".format(media_created_date_time.day)
-    time = "{:02d}{:02d}".format(
-        media_created_date_time.time().hour, media_created_date_time.time().minute
-    )
-    return MediaMetadata(
-        has_metadata=image.has_exif, year=year, month=month, day=day, time=time
-    )
+    time = "{:02d}{:02d}".format(media_created_date_time.time().hour, media_created_date_time.time().minute)
+    return MediaMetadata(has_metadata=image.has_exif, year=year, month=month, day=day, time=time)
 
 
 def build_target_file_path(file_path, target_directory, metadata):
@@ -154,9 +144,7 @@ def get_video_metadata(file_path):
     year = "{:04d}".format(media_created_date_time.year)
     month = "{:02d}".format(media_created_date_time.month)
     day = "{:02d}".format(media_created_date_time.day)
-    time = "{:02d}{:02d}".format(
-        media_created_date_time.time().hour, media_created_date_time.time().minute
-    )
+    time = "{:02d}{:02d}".format(media_created_date_time.time().hour, media_created_date_time.time().minute)
     return MediaMetadata(has_metadata=False, year=year, month=month, day=day, time=time)
 
 
@@ -187,11 +175,7 @@ def collect_media_files_from(args):
         media_files = [source_file]
     else:
         source_directory = Path(args.source_directory).expanduser()
-        media_files = (
-            p.resolve()
-            for p in source_directory.glob("**/*")
-            if p.is_file() and valid_file(p)
-        )
+        media_files = (p.resolve() for p in source_directory.glob("**/*") if p.is_file() and valid_file(p))
 
     return list(media_files)
 
@@ -219,9 +203,7 @@ def main(args):
 
             logging.info(f"📓 [{idx}] {source_file} => {target_file}")
         except UnpackError as e:
-            logging.warning(
-                f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} ERROR: {e}"
-            )
+            logging.warning(f"❌ Unknown file format -> 🗄 Moving to process later: {source_file} ERROR: {e}")
             process_later(source_file, target_directory)
     logging.info("Done.")
 
