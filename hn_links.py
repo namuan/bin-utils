@@ -19,11 +19,10 @@ $ python hn-links.py -l https://news.ycombinator.com/item?id=25381191 -b <blog_d
 
 import logging
 import os
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup

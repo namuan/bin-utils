@@ -1,7 +1,8 @@
+import json
 from argparse import ArgumentParser
 from pathlib import Path
+
 from bs4 import BeautifulSoup
-import json
 
 # Arguments
 # correct: -f sample/paypal_general_errors.html -o errors_data.json

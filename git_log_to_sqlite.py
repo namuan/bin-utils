@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import git
-import sqlite3
-import os
-import sys
 import datetime
+import os
+import sqlite3
+import sys
+
+import git
 
 # check if the directory is a git repo
 if not os.path.isdir(".git"):

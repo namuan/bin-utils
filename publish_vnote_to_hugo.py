@@ -12,9 +12,9 @@ import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
-from tempfile import mktemp, NamedTemporaryFile
+from tempfile import NamedTemporaryFile
 
-from py_executable_checklist.workflow import WorkflowBase, run_workflow, run_command
+from py_executable_checklist.workflow import WorkflowBase, run_command, run_workflow
 from slug import slug
 
 # Common functions

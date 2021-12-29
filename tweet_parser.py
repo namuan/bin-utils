@@ -5,7 +5,6 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-
 # Usage
 # -i sample/tweet_sample.txt -o tweet_data.json
 

@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 from selenium import webdriver
 from slug import slug
 
-from common.workflow import run_workflow, WorkflowBase
+from common.workflow import WorkflowBase, run_workflow
 from common_utils import create_dir
 
 logging.basicConfig(

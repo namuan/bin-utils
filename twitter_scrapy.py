@@ -1,7 +1,8 @@
 import time
 from argparse import ArgumentParser
-from selenium import webdriver
 from pathlib import Path
+
+from selenium import webdriver
 
 
 def since_query_param(since):
@@ -20,7 +21,7 @@ def query_builder(from_account, since, until):
     s = since_query_param(since)
     u = until_query_param(until)
     f = from_account_query_param(from_account)
-    return u"https://twitter.com/search?l=&q={0}%20{1}%20{2}&src=typd".format(f, s, u)
+    return "https://twitter.com/search?l=&q={0}%20{1}%20{2}&src=typd".format(f, s, u)
 
 
 def scroll_to_last_page(full_url):

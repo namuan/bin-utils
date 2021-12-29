@@ -5,7 +5,6 @@ import asyncio
 import os
 import time
 from pathlib import Path
-import logging
 
 from pyppeteer import launch
 

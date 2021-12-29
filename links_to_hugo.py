@@ -39,8 +39,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d
 
 import logging
 import os
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
 from pathlib import Path
 
@@ -49,8 +48,8 @@ from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 from py_executable_checklist.workflow import (
     WorkflowBase,
-    run_command,
     notify_me,
+    run_command,
     run_workflow,
 )
 from slug import slug

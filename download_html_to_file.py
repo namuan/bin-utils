@@ -3,7 +3,6 @@ from pathlib import Path
 
 import requests
 
-
 # arguments
 # -d paypal_general_errors.html -p https://developer.paypal.com/docs/classic/api/errors/general/
 

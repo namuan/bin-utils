@@ -18,12 +18,12 @@ repos:
     hooks:
       - id: autoflake
         name: autoflake
-        entry: poetry run autoflake -r -i --remove-all-unused-imports --remove-unused-variables
+        entry: autoflake -r -i --remove-all-unused-imports --remove-unused-variables
         language: system
         types: [ python ]
       - id: isort
         name: isort
-        entry: poetry run isort
+        entry: isort
         language: system
         types: [ python ]
       - id: black

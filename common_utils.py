@@ -1,7 +1,7 @@
 import random
+import shutil
 import string
 from pathlib import Path
-import shutil
 
 
 def create_dir(output_dir, delete_existing=False):

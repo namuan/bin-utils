@@ -12,8 +12,7 @@ import argparse
 import logging
 from argparse import ArgumentParser
 
-from py_executable_checklist.workflow import run_command, WorkflowBase, run_workflow
-
+from py_executable_checklist.workflow import WorkflowBase, run_workflow
 
 # Common functions across steps
 
