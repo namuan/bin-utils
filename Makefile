@@ -20,6 +20,25 @@ pre-commit: ## Manually run all precommit hooks
 pre-commit-tool: ## Manually run a single pre-commit hook
 	./venv/bin/pre-commit run $(TOOL) --all-files
 
+deploy: clean ## Copies any changed file to the server
+	ssh ${PROJECTNAME} -C 'bash -l -c "mkdir -vp ./${PROJECTNAME}"'
+	rsync -avzr \
+		.env \
+		requirements \
+		rider_brain_bot.py \
+		webpage_to_pdf.py \
+		scripts \
+		${PROJECTNAME}:./${PROJECTNAME}
+
+start: deploy ## Sets up a screen session on the server and start the app
+	ssh ${PROJECTNAME} -C 'bash -l -c "./${PROJECTNAME}/scripts/setup_jobs.sh"'
+
+stop: deploy ## Stop any running screen session on the server
+	ssh ${PROJECTNAME} -C 'bash -l -c "./${PROJECTNAME}/scripts/stop_jobs.sh"'
+
+ssh: ## SSH into the target VM
+	ssh ${PROJECTNAME}
+
 bpython: ## Runs bpython
 	./venv/bin/bpython
 

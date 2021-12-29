@@ -1,2 +1,2 @@
 cd bin-utils || exit
-bash ./scripts/stop_screen.sh webpage-to-telegram
+bash ./scripts/stop_screen.sh rider-brain-bot
