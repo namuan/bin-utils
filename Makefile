@@ -17,6 +17,9 @@ pre-commit: ## Manually run all precommit hooks
 	./venv/bin/pre-commit install
 	./venv/bin/pre-commit run --all-files
 
+pre-commit-tool: ## Manually run a single pre-commit hook
+	./venv/bin/pre-commit run $(TOOL) --all-files
+
 bpython: ## Runs bpython
 	./venv/bin/bpython
 
