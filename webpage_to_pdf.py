@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import logging
 import os
+import platform
 import random
 import time
 from pathlib import Path
@@ -36,7 +37,8 @@ async def open_site(browser, website_url, output_dir):
         "Page.setDownloadBehavior",
         {"behavior": "allow", "downloadPath": output_dir},
     )
-    await page.goto(website_url)
+    await page.goto(website_url, {"waitUntil": "networkidle2"})
+    await page.emulateMedia("screen")
     return browser, page
 
 
@@ -63,8 +65,18 @@ async def main():
 
     output_dir = output_file_path.parent
     output_dir.mkdir(exist_ok=True)
+    launch_config = {
+        "headless": True,
+        "defaultViewport": None,
+    }
 
-    browser = await launch(headless=True, defaultViewport=None)
+    if platform.system().lower() == "linux":
+        if Path("/usr/bin/chromium-browser").is_file():
+            launch_config["executablePath"] = "/usr/bin/chromium-browser"
+        else:
+            logging.error("Chromium not found. Please install it and make it available in /usr/bin/chromium-browser")
+
+    browser = await launch(**launch_config)
     logging.info("Processing {}".format(website_url))
     try:
         browser, page = await open_site(browser, website_url, output_dir.as_posix())
@@ -86,7 +98,7 @@ async def main():
         await page.close()
         logging.info(f"📸 PDF saved {output_file_path}")
     except Exception:
-        logging.error("Error processing: {}".format(website_url))
+        logging.exception(f"Error while processing {website_url}")
 
 
 def setup_logging():
