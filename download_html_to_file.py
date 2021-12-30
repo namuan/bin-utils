@@ -8,14 +8,14 @@ import requests
 
 
 def download_html(url):
-    print("Downloading webpage from {}".format(url))
+    print(f"Downloading webpage from {url}")
     page = requests.get(url, timeout=10)
     return page.text
 
 
 def write_html_to_disk(file_path, contents):
     file_path.write_text(contents)
-    print("Finished writing file to {}".format(file_path))
+    print(f"Finished writing file to {file_path}")
 
 
 def parse_args():

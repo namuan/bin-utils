@@ -77,7 +77,7 @@ async def main():
             logging.error("Chromium not found. Please install it and make it available in /usr/bin/chromium-browser")
 
     browser = await launch(**launch_config)
-    logging.info("Processing {}".format(website_url))
+    logging.info(f"Processing {website_url}")
     try:
         browser, page = await open_site(browser, website_url, output_dir.as_posix())
         # gives us some time to dismiss cookie dialog etc. Also good for throttling requests

@@ -44,7 +44,7 @@ def _process_message(update: Update, context) -> None:
         logging.info(f"📡 Processing message: {update_message_text}")
         reply_message = bot.send_message(
             chat_id,
-            "Got {}. 👀 at 🌎".format(update_message_text),
+            f"Got {update_message_text}. 👀 at 🌎",
             disable_web_page_preview=True,
         )
         downloaded_file_path = _handle_web_page(update_message_text)

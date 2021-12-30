@@ -300,9 +300,9 @@ class WriteBlogPost(WorkflowBase):
     post_file_name: str
 
     def run(self, context):
-        blog_page_path = "{}/content/posts/{}".format(self.blog_directory, self.post_file_name)
+        blog_page_path = f"{self.blog_directory}/content/posts/{self.post_file_name}"
         Path(blog_page_path).write_text(self.md_with_updated_links)
-        logging.info("📒 Created note at {}".format(blog_page_path))
+        logging.info(f"📒 Created note at {blog_page_path}")
 
         # output
         context["blog_page"] = blog_page_path
@@ -318,7 +318,7 @@ class CompressImages(WorkflowBase):
         for img in self.target_folder.glob("thumbnails/*"):
             img_name = img.name
             img_path = img.as_posix()
-            target_path = Path("{}/static/{}/{}".format(self.blog_directory, relative_image_directory(), img_name))
+            target_path = Path(f"{self.blog_directory}/static/{relative_image_directory()}/{img_name}")
 
             cmd = f"convert {img_path} -resize 640x480 -quality 50% {target_path}"
 

@@ -57,7 +57,7 @@ def get_datetime_from_exif(file_path, image):
         file_directory = file_path.parent
         json_file = file_directory / (file_path.name + ".json")
         if json_file.exists():
-            with open(json_file, "r") as f:
+            with open(json_file) as f:
                 json_data = json.load(f)
                 datetime_to_parse = json_data["creationTime"]["timestamp"]
 
@@ -94,10 +94,10 @@ def get_photo_metadata(file_path):
     else:
         media_created_date_time = get_datetime_from_exif(file_path, image)
 
-    year = "{:04d}".format(media_created_date_time.year)
-    month = "{:02d}".format(media_created_date_time.month)
-    day = "{:02d}".format(media_created_date_time.day)
-    time = "{:02d}{:02d}".format(media_created_date_time.time().hour, media_created_date_time.time().minute)
+    year = f"{media_created_date_time.year:04d}"
+    month = f"{media_created_date_time.month:02d}"
+    day = f"{media_created_date_time.day:02d}"
+    time = f"{media_created_date_time.time().hour:02d}{media_created_date_time.time().minute:02d}"
     return MediaMetadata(has_metadata=image.has_exif, year=year, month=month, day=day, time=time)
 
 
@@ -141,10 +141,10 @@ def is_video_file(file_path):
 def get_video_metadata(file_path):
     media_created_date_time = datetime.fromtimestamp(file_path.stat().st_birthtime)
 
-    year = "{:04d}".format(media_created_date_time.year)
-    month = "{:02d}".format(media_created_date_time.month)
-    day = "{:02d}".format(media_created_date_time.day)
-    time = "{:02d}{:02d}".format(media_created_date_time.time().hour, media_created_date_time.time().minute)
+    year = f"{media_created_date_time.year:04d}"
+    month = f"{media_created_date_time.month:02d}"
+    day = f"{media_created_date_time.day:02d}"
+    time = f"{media_created_date_time.time().hour:02d}{media_created_date_time.time().minute:02d}"
     return MediaMetadata(has_metadata=False, year=year, month=month, day=day, time=time)
 
 

@@ -29,7 +29,7 @@ def relative_image_directory():
 
 
 def replace_string_in_file(f, from_string, to_string):
-    print("Replacing {} in {} to {}".format(from_string, f, to_string))
+    print(f"Replacing {from_string} in {f} to {to_string}")
 
     with fileinput.FileInput(f, inplace=True) as file:
         for line in file:
@@ -113,9 +113,9 @@ class WriteHugoPost(WorkflowBase):
     file_name: str
 
     def run(self, context):
-        blog_page = "{}/content/posts/{}".format(self.blog, self.file_name)
+        blog_page = f"{self.blog}/content/posts/{self.file_name}"
         Path(blog_page).write_text(self.final_post)
-        print("Created note at {}".format(blog_page))
+        print(f"Created note at {blog_page}")
 
         context["blog_page"] = blog_page
 
@@ -166,7 +166,7 @@ class CopyImageFiles(WorkflowBase):
             source_full_path = self.image_path_in_vnote(self.vnote, image)
             target_full_path = self.image_path_in_blog(self.blog, image)
             shutil.copyfile(source_full_path, target_full_path)
-            print("Copied {}".format(image))
+            print(f"Copied {image}")
 
 
 class ReplaceImageLinks(WorkflowBase):
@@ -177,7 +177,7 @@ class ReplaceImageLinks(WorkflowBase):
     def run(self, _):
         image_directory = relative_image_directory()
         replace_string_in_file(self.blog_page, "vx_images/", f"/{image_directory}/")
-        print("Replace all images in Blog Post {}".format(self.blog_page))
+        print(f"Replace all images in Blog Post {self.blog_page}")
 
 
 class OpenInEditor(WorkflowBase):

@@ -48,7 +48,7 @@ async def main():
     screenshots_dir.mkdir(exist_ok=True)
 
     browser = await launch(headless=False, defaultViewport=None)
-    print("Processing {}".format(website_url))
+    print(f"Processing {website_url}")
     try:
         browser, page = await open_site(browser, website_url, screenshots_dir.as_posix())
         # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
@@ -57,7 +57,7 @@ async def main():
         await page.close()
         print(f"📸 Thumbnail saved {screen_shot_path}")
     except Exception as e:
-        print("Error processing: {} - {}".format(website_url, str(e)))
+        print(f"Error processing: {website_url} - {str(e)}")
 
 
 if __name__ == "__main__":

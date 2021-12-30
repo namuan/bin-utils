@@ -15,11 +15,11 @@ DOWNLOAD_FOLDER = f"{CWD}/.temp"
 
 async def preview_image(carbon_file_path):
     if platform.system() == "Darwin":
-        open_file_cmd = "open {}".format(carbon_file_path)
+        open_file_cmd = f"open {carbon_file_path}"
     elif platform.system() == "Windows":
-        open_file_cmd = "start {}".format(carbon_file_path)
+        open_file_cmd = f"start {carbon_file_path}"
     else:
-        open_file_cmd = "xdg-open {}".format(carbon_file_path)
+        open_file_cmd = f"xdg-open {carbon_file_path}"
 
     subprocess.check_call(open_file_cmd, shell=True)  # nosemgrep
 
@@ -30,9 +30,9 @@ async def copy_image_to_clip(carbon_file_path):
             carbon_file_path
         )
     elif platform.system() == "Windows":
-        copy_img_cmd = "nircmd clipboard copyimage {}".format(carbon_file_path)
+        copy_img_cmd = f"nircmd clipboard copyimage {carbon_file_path}"
     else:
-        copy_img_cmd = "xclip -selection clipboard -t image/png -i {}".format(carbon_file_path)
+        copy_img_cmd = f"xclip -selection clipboard -t image/png -i {carbon_file_path}"
 
     subprocess.check_call(copy_img_cmd, shell=True)  # nosemrep
 

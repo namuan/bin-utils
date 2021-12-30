@@ -6,22 +6,22 @@ from selenium import webdriver
 
 
 def since_query_param(since):
-    return "since%3A{}".format(since)
+    return f"since%3A{since}"
 
 
 def until_query_param(until):
-    return "until%3A{}".format(until)
+    return f"until%3A{until}"
 
 
 def from_account_query_param(from_account):
-    return "from%3A{}".format(from_account)
+    return f"from%3A{from_account}"
 
 
 def query_builder(from_account, since, until):
     s = since_query_param(since)
     u = until_query_param(until)
     f = from_account_query_param(from_account)
-    return "https://twitter.com/search?l=&q={}%20{}%20{}&src=typd".format(f, s, u)
+    return f"https://twitter.com/search?l=&q={f}%20{s}%20{u}&src=typd"
 
 
 def scroll_to_last_page(full_url):
@@ -33,7 +33,7 @@ def scroll_to_last_page(full_url):
 
     while number_of_tweets <= max_tweet_count:
         tweets_on_page = len(browser.find_elements_by_css_selector("div.original-tweet"))
-        print("Total number of tweets on screen: {}".format(tweets_on_page))
+        print(f"Total number of tweets on screen: {tweets_on_page}")
         if number_of_tweets == tweets_on_page:
             print("No more tweets probably?")
             break
@@ -53,9 +53,9 @@ def write_tweets(tweets, output_dir):
         tweet_id = e.get_attribute("data-tweet-id")
         tweet_html = e.get_attribute("outerHTML")
 
-        print("Writing tweet id: {}".format(tweet_id))
+        print(f"Writing tweet id: {tweet_id}")
 
-        with open("{}/{}.txt".format(output_dir, tweet_id), "w") as f:
+        with open(f"{output_dir}/{tweet_id}.txt", "w") as f:
             f.write(tweet_html)
 
 

@@ -103,7 +103,7 @@ class ScrapePages(WorkflowBase):
     def _extract_element_from_post(self, post_body, name, selector):
         return with_ignoring_errors(
             lambda: post_body.find_elements_by_css_selector(selector)[0],
-            "Unable to find {}".format(name),
+            f"Unable to find {name}",
         )
 
     def _extract_post(self, post):
@@ -153,7 +153,7 @@ class ScrapePages(WorkflowBase):
                 all_posts.append(post_data)
 
             rand_sleep_time = random.randrange(5, 10)
-            logging.info("🚧 On page {}, 😴 Zzzz for {} seconds".format(current_page, rand_sleep_time))
+            logging.info(f"🚧 On page {current_page}, 😴 Zzzz for {rand_sleep_time} seconds")
             time.sleep(rand_sleep_time)
             if current_page != total_pages:
                 next_page_link = self._get_next_page_link(browser, current_page)
