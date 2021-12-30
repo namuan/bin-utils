@@ -41,6 +41,10 @@ repos:
     hooks:
       - id: commitizen
         stages: [ commit-msg ]
+  -   repo: https://github.com/asottile/pyupgrade
+      rev: v2.30.0
+      hooks:
+        -   id: pyupgrade
   -   repo: https://github.com/returntocorp/semgrep
       rev: 'v0.77.0'
       hooks:

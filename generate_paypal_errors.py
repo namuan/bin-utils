@@ -46,10 +46,10 @@ def main():
     json_file = Path(args.output)
 
     if not html_file.exists():
-        raise FileNotFoundError("Unable to find file: {0}".format(args.file))
+        raise FileNotFoundError("Unable to find file: {}".format(args.file))
     errors_json = extract_errors(html_file.read_text())
     json_file.write_text(errors_json)
-    print("Errors saved in {0}".format(json_file))
+    print("Errors saved in {}".format(json_file))
 
 
 if __name__ == "__main__":

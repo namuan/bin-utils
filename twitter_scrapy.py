@@ -21,7 +21,7 @@ def query_builder(from_account, since, until):
     s = since_query_param(since)
     u = until_query_param(until)
     f = from_account_query_param(from_account)
-    return "https://twitter.com/search?l=&q={0}%20{1}%20{2}&src=typd".format(f, s, u)
+    return "https://twitter.com/search?l=&q={}%20{}%20{}&src=typd".format(f, s, u)
 
 
 def scroll_to_last_page(full_url):
@@ -53,9 +53,9 @@ def write_tweets(tweets, output_dir):
         tweet_id = e.get_attribute("data-tweet-id")
         tweet_html = e.get_attribute("outerHTML")
 
-        print("Writing tweet id: {0}".format(tweet_id))
+        print("Writing tweet id: {}".format(tweet_id))
 
-        with open("{0}/{1}.txt".format(output_dir, tweet_id), "w") as f:
+        with open("{}/{}.txt".format(output_dir, tweet_id), "w") as f:
             f.write(tweet_html)
 
 
