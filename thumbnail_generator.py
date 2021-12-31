@@ -25,6 +25,13 @@ def parse_args():
         default=5,
         help="Wait (in secs) before capturing screenshot",
     )
+    parser.add_argument(
+        "-s",
+        "--headless",
+        action="store_true",
+        default=False,
+        help="Run headless (no browser window)",
+    )
     return parser.parse_args()
 
 
@@ -43,12 +50,13 @@ async def main():
     website_url = args.input_url
     screen_shot_path = Path(args.output_file_path)
     wait_in_secs_before_capture = args.wait_in_secs_before_capture
+    headless = args.headless
 
     screenshots_dir = screen_shot_path.parent
     screenshots_dir.mkdir(exist_ok=True)
 
-    browser = await launch(headless=False, defaultViewport=None)
-    print(f"Processing {website_url}")
+    print(f"Processing {website_url} in {headless=} mode")
+    browser = await launch(headless=headless, defaultViewport=None)
     try:
         browser, page = await open_site(browser, website_url, screenshots_dir.as_posix())
         # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
