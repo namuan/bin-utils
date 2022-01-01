@@ -24,6 +24,7 @@ deploy: clean ## Copies any changed file to the server
 	ssh ${PROJECTNAME} -C 'bash -l -c "mkdir -vp ./${PROJECTNAME}"'
 	rsync -avzr \
 		.env \
+		common_utils.py \
 		requirements \
 		rider_brain_bot.py \
 		webpage_to_pdf.py \

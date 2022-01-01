@@ -1,6 +1,9 @@
+import logging
 import random
 import shutil
 import string
+import time
+from functools import wraps
 from pathlib import Path
 
 import requests
@@ -35,3 +38,24 @@ def fetch_html_page(page_url):
 
 def html_parser_from(page_html):
     return BeautifulSoup(page_html, "html.parser")
+
+
+def retry(exceptions, tries=4, delay=3, back_off=2):
+    def deco_retry(f):
+        @wraps(f)
+        def f_retry(*args, **kwargs):
+            m_retries, m_delay = tries, delay
+            while m_retries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except exceptions as e:
+                    msg = f"{e}, Retrying in {m_delay} seconds..."
+                    logging.warning(msg)
+                    time.sleep(m_delay)
+                    m_retries -= 1
+                    m_delay *= back_off
+            return f(*args, **kwargs)
+
+        return f_retry  # true decorator
+
+    return deco_retry
