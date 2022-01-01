@@ -9,6 +9,9 @@ from slug import slug
 from telegram import Update
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
+from common_utils import fetch_html_page
+from hn_links import html_parser_from
+
 load_dotenv()
 
 OUTPUT_DIR = Path.cwd().joinpath("output_dir")
@@ -28,7 +31,10 @@ def help_command(update: Update, _):
 
 def _handle_web_page(web_page_url: str) -> str:
     slug_web_page_url = slug(web_page_url)
-    target_file = OUTPUT_DIR / f"{slug_web_page_url}.pdf"
+    page_html = fetch_html_page(web_page_url)
+    bs = html_parser_from(page_html)
+    web_page_title = bs.title.string if bs.title and bs.title.string else slug_web_page_url
+    target_file = OUTPUT_DIR / f"{web_page_title}.pdf"
     cmd = f'./webpage_to_pdf.py -i "{web_page_url}" -o "{target_file}"'
     py_executable_checklist.workflow.run_command(cmd)
     return target_file.as_posix()
@@ -50,8 +56,7 @@ def _process_message(update: Update, context) -> None:
         downloaded_file_path = _handle_web_page(update_message_text)
         bot.delete_message(chat_id, original_message_id)
         bot.delete_message(chat_id, reply_message.message_id)
-        bot.send_chat_action(chat_id, "upload_document")
-        bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
+        bot.send_message(chat_id, f"💾 Saved it here 👉 {downloaded_file_path}")
     else:
         logging.warning(f"🚫 Ignoring message: {update_message_text}")
 

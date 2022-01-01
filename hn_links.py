@@ -24,9 +24,10 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-import requests
 from bs4 import BeautifulSoup
 from py_executable_checklist.workflow import WorkflowBase, run_command, run_workflow
+
+from common_utils import fetch_html_page, html_parser_from
 
 UTF_ENCODING = "utf-8"
 
@@ -40,20 +41,10 @@ def fetch_html(url, post_html_page_file):
         logging.info(f"🌕 Loading page from cache {post_html_page_file}")
         return post_html_page_file.read_text(encoding=UTF_ENCODING)
 
-    user_agent = (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36"
-    )
-    headers = {"User-Agent": user_agent}
-    page = requests.get(url, headers=headers, timeout=10)
-    page_html = page.text
+    page_html = fetch_html_page(url)
     logging.info(f"Caching page {post_html_page_file}")
     post_html_page_file.write_text(page_html, encoding=UTF_ENCODING)
     return page_html
-
-
-def html_parser_from(page_html):
-    return BeautifulSoup(page_html, "html.parser")
 
 
 def relative_image_directory():
