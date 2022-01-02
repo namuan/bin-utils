@@ -4,16 +4,17 @@ import os
 from pathlib import Path
 
 import py_executable_checklist.workflow
+import telegram
 from dotenv import load_dotenv
 from slug import slug
 from telegram import Update
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from common_utils import fetch_html_page, html_parser_from
+from common_utils import fetch_html_page, html_parser_from, retry
 
 load_dotenv()
 
-OUTPUT_DIR = Path.cwd().joinpath("output_dir")
+OUTPUT_DIR = Path.home().joinpath("OutputDir", "web-to-pdf")
 
 
 def welcome(update: Update, _):
@@ -38,6 +39,7 @@ def _handle_web_page(web_page_url: str) -> str:
     return target_file.as_posix()
 
 
+@retry(telegram.error.TimedOut, tries=3)
 def _update_user(bot, chat_id, original_message_id, reply_message_id, downloaded_file_path):
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
@@ -61,6 +63,7 @@ def _process_message(update: Update, context) -> None:
         )
         downloaded_file_path = _handle_web_page(update_message_text)
         _update_user(bot, chat_id, original_message_id, reply_message.message_id, downloaded_file_path)
+        logging.info("✅ Document sent back to user")
     else:
         logging.warning(f"🚫 Ignoring message: {update_message_text}")
 
