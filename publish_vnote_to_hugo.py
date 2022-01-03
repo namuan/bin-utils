@@ -45,8 +45,13 @@ class LoadVNotePost(WorkflowBase):
     vnote: str
 
     def run(self, context):
-        vnote_post = Path(self.vnote).read_text()
+        vnote_post_path = Path(self.vnote)
+        vnote_post = vnote_post_path.read_text()
+        vnote_post_type = vnote_post_path.parent.name
+        target_file_name = vnote_post_path.name
 
+        context["vnote_post_type"] = vnote_post_type
+        context["file_name"] = target_file_name
         context["vnote_post"] = vnote_post
 
 
@@ -54,8 +59,13 @@ class AddHugoHeader(WorkflowBase):
     """Add Hugo header to blog post"""
 
     vnote_post: str
+    vnote_post_type: str
 
     def run(self, context):
+        if self.vnote_post_type == "notes":
+            context["final_post"] = self.vnote_post
+            return
+
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         post_title = self.vnote_post.splitlines()[0].replace("#", "").strip()
         post_header = f"""+++
@@ -82,7 +92,7 @@ class SwapPlantUmlWithImageTag(WorkflowBase):
         modified_post = self.final_post
         for m in re.finditer("```puml(.*?)```", self.final_post, re.DOTALL):
             diagram = m.group(0)
-            temp_diagram = Path(NamedTemporaryFile(suffix=".puml"))
+            temp_diagram = Path(NamedTemporaryFile(suffix=".puml").name)
             temp_diagram.write_text(diagram)
 
             image_directory = relative_image_directory()
@@ -111,9 +121,10 @@ class WriteHugoPost(WorkflowBase):
     final_post: str
     blog: str
     file_name: str
+    vnote_post_type: str
 
     def run(self, context):
-        blog_page = f"{self.blog}/content/posts/{self.file_name}"
+        blog_page = f"{self.blog}/content/{self.vnote_post_type}/{self.file_name}"
         Path(blog_page).write_text(self.final_post)
         print(f"Created note at {blog_page}")
 
@@ -213,8 +224,6 @@ def main(args):
         "vnote": args.vnote_file_path,
         "open_in_editor": args.open_in_editor,
     }
-
-    context["file_name"] = Path(context["vnote"]).name
 
     run_workflow(context, workflow())
 

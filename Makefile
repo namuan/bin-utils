@@ -20,6 +20,9 @@ pre-commit: ## Manually run all precommit hooks
 pre-commit-tool: ## Manually run a single pre-commit hook
 	./venv/bin/pre-commit run $(TOOL) --all-files
 
+build: clean pre-commit ## Build package
+	echo "✅ Done"
+
 deploy: clean ## Copies any changed file to the server
 	ssh ${PROJECTNAME} -C 'bash -l -c "mkdir -vp ./${PROJECTNAME}"'
 	rsync -avzr \
