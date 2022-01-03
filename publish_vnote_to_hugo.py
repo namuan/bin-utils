@@ -55,42 +55,15 @@ class LoadVNotePost(WorkflowBase):
         context["vnote_post"] = vnote_post
 
 
-class AddHugoHeader(WorkflowBase):
-    """Add Hugo header to blog post"""
-
-    vnote_post: str
-    vnote_post_type: str
-
-    def run(self, context):
-        if self.vnote_post_type == "notes":
-            context["final_post"] = self.vnote_post
-            return
-
-        post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        post_title = self.vnote_post.splitlines()[0].replace("#", "").strip()
-        post_header = f"""+++
-date = {post_date}
-title = "{post_title}"
-description = ""
-slug = ""
-tags = []
-externalLink = ""
-series = []
-+++
-        """
-        final_post = post_header + os.linesep + os.linesep.join(self.vnote_post.splitlines()[2:])
-        context["final_post"] = final_post
-
-
 class SwapPlantUmlWithImageTag(WorkflowBase):
     """Swap PlantUML with image tag"""
 
-    final_post: str
+    vnote_post: str
 
     def run(self, context):
         puml_files = []
-        modified_post = self.final_post
-        for m in re.finditer("```puml(.*?)```", self.final_post, re.DOTALL):
+        modified_post = self.vnote_post
+        for m in re.finditer("```puml(.*?)```", self.vnote_post, re.DOTALL):
             diagram = m.group(0)
             temp_diagram = Path(NamedTemporaryFile(suffix=".puml").name)
             temp_diagram.write_text(diagram)
@@ -105,7 +78,7 @@ class SwapPlantUmlWithImageTag(WorkflowBase):
             puml_files.append(temp_diagram)
 
         context["puml_files"] = puml_files
-        context["final_post"] = modified_post
+        context["vnote_post"] = modified_post
 
     def find_title_in_puml(self, diagram):
         find_title_in_diagram = re.search("title:?(.*)", diagram)
@@ -118,14 +91,14 @@ class SwapPlantUmlWithImageTag(WorkflowBase):
 class WriteHugoPost(WorkflowBase):
     """Write Hugo post in blog directory"""
 
-    final_post: str
+    vnote_post: str
     blog: str
     file_name: str
     vnote_post_type: str
 
     def run(self, context):
         blog_page = f"{self.blog}/content/{self.vnote_post_type}/{self.file_name}"
-        Path(blog_page).write_text(self.final_post)
+        Path(blog_page).write_text(self.vnote_post)
         print(f"Created note at {blog_page}")
 
         context["blog_page"] = blog_page
@@ -208,7 +181,6 @@ class OpenInEditor(WorkflowBase):
 def workflow():
     return [
         LoadVNotePost,
-        AddHugoHeader,
         SwapPlantUmlWithImageTag,
         WriteHugoPost,
         ConvertPlantUmlToPng,
