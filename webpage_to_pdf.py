@@ -45,7 +45,6 @@ async def open_site(browser, website_url, output_dir):
         {"behavior": "allow", "downloadPath": output_dir},
     )
     await page.goto(website_url, {"waitUntil": "networkidle2"})
-    await page.emulateMedia("screen")
     return browser, page
 
 
@@ -62,6 +61,21 @@ async def scroll_to_end(page):
         logging.info(f"current_scroll_position: {current_scroll_position}, new_height: {new_height}")
         # Wait to any dynamic elements to load
         time.sleep(2)
+
+
+async def generate_pdf(page, output_file_path):
+    return await page.pdf(
+        {
+            "margin": {
+                "top": 50,
+                "bottom": 50,
+                "left": 30,
+                "right": 30,
+            },
+            "path": output_file_path,
+            format: "A4",
+        }
+    )
 
 
 async def main():
@@ -92,23 +106,15 @@ async def main():
         await scroll_to_end(page)
         logging.info("🚒 Reached end of page. Trying to capture PDF")
         if run_headless:
-            await page.pdf(
-                {
-                    "margin": {
-                        "top": 50,
-                        "bottom": 50,
-                        "left": 30,
-                        "right": 30,
-                    },
-                    "path": output_file_path.as_posix(),
-                    format: "A4",
-                }
-            )
-            logging.info(f"📸 PDF saved {output_file_path}")
+            try:
+                await asyncio.wait_for(generate_pdf(page, output_file_path.as_posix()), timeout=20)
+                logging.info(f"📸 PDF saved {output_file_path}")
+                await page.close()
+            except asyncio.TimeoutError:
+                logging.error(f"PDF generation timed out for {website_url}")
         else:
             logging.warning("⚠️ PDF generation is only supported in headless mode. Run with --headless")
 
-        await page.close()
     except Exception:
         logging.exception(f"Error while processing {website_url}")
 
