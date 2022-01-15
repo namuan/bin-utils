@@ -28,6 +28,13 @@ def parse_args():
         default=5,
         help="Wait (in secs) before capturing screenshot",
     )
+    parser.add_argument(
+        "-s",
+        "--headless",
+        action="store_true",
+        default=False,
+        help="Run headless (no browser window)",
+    )
     return parser.parse_args()
 
 
@@ -62,11 +69,12 @@ async def main():
     website_url = args.input_url
     output_file_path = args.output_file_path
     wait_in_secs_before_capture = args.wait_in_secs_before_capture
+    run_headless = args.headless
 
     output_dir = output_file_path.parent
     output_dir.mkdir(exist_ok=True)
     launch_config = {
-        "headless": True,
+        "headless": run_headless,
         "defaultViewport": None,
     }
 
@@ -80,23 +88,27 @@ async def main():
     logging.info(f"Processing {website_url}")
     try:
         browser, page = await open_site(browser, website_url, output_dir.as_posix())
-        # gives us some time to dismiss cookie dialog etc. Also good for throttling requests
         time.sleep(wait_in_secs_before_capture)
         await scroll_to_end(page)
-        await page.pdf(
-            {
-                "margin": {
-                    "top": 50,
-                    "bottom": 50,
-                    "left": 30,
-                    "right": 30,
-                },
-                "path": output_file_path.as_posix(),
-                format: "A4",
-            }
-        )
+        logging.info("🚒 Reached end of page. Trying to capture PDF")
+        if run_headless:
+            await page.pdf(
+                {
+                    "margin": {
+                        "top": 50,
+                        "bottom": 50,
+                        "left": 30,
+                        "right": 30,
+                    },
+                    "path": output_file_path.as_posix(),
+                    format: "A4",
+                }
+            )
+            logging.info(f"📸 PDF saved {output_file_path}")
+        else:
+            logging.warning("⚠️ PDF generation is only supported in headless mode. Run with --headless")
+
         await page.close()
-        logging.info(f"📸 PDF saved {output_file_path}")
     except Exception:
         logging.exception(f"Error while processing {website_url}")
 

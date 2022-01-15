@@ -34,7 +34,7 @@ def _handle_web_page(web_page_url: str) -> str:
     bs = html_parser_from(page_html)
     web_page_title = slug(bs.title.string if bs.title and bs.title.string else web_page_url)
     target_file = OUTPUT_DIR / f"{web_page_title}.pdf"
-    cmd = f'./webpage_to_pdf.py -i "{web_page_url}" -o "{target_file}"'
+    cmd = f'./webpage_to_pdf.py -i "{web_page_url}" -o "{target_file}" --headless'
     py_executable_checklist.workflow.run_command(cmd)
     return target_file.as_posix()
 
