@@ -38,13 +38,13 @@ var article = new Readability(uri, documentClone).parse();
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, url, output_dir, wait_time, *args, **kwargs):
+    def __init__(self, url, output_file_path, wait_time, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.new_height = 1
         self.current_scroll_position = 0
         self.wait_time = wait_time
-        self.output_dir = output_dir
+        self.output_file_path = output_file_path
 
         self.browser = QWebEngineView()
         self.browser.setUrl(QUrl(url))
@@ -106,9 +106,7 @@ class MainWindow(QMainWindow):
     def print_page(self):
         web_page = self.browser.page()
         web_page.pdfPrintingFinished.connect(self.pdf_print_finished)
-        web_page_title = slug(web_page.title())
-        output_file_path = self.output_dir / f"{web_page_title}.pdf"
-        web_page.printToPdf(output_file_path.as_posix())
+        web_page.printToPdf(self.output_file_path.as_posix())
 
     def quit(self):
         logging.info("Quitting")
@@ -122,19 +120,19 @@ def main(args):
     app = QApplication(sys.argv)
     app.setApplicationName(BROWSER_NAME)
     window = MainWindow(
-        url=args.webpage_url, output_dir=args.output_directory_path, wait_time=args.wait_in_secs_before_capture
+        url=args.webpage_url, output_file_path=args.output_file_path, wait_time=args.wait_in_secs_before_capture
     )
-    window.showMaximized()
-    # window.show()
+    if args.headless:
+        window.hide()
+    else:
+        window.showMaximized()
     sys.exit(app.exec_())
 
 
 def parse_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-u", "--webpage-url", type=str, required=True, help="Webpage Url")
-    parser.add_argument(
-        "-o", "--output-directory-path", type=Path, required=True, help="Output directory for the generated PDF file"
-    )
+    parser.add_argument("-o", "--output-file-path", type=Path, required=True, help="Full output file path for PDF")
     parser.add_argument(
         "-w",
         "--wait-in-secs-before-capture",

@@ -50,7 +50,10 @@ def _update_user(bot, chat_id, original_message_id, reply_message_id, downloaded
 
 def verified_chat_id(chat_id):
     auth_chat_id = os.getenv("AUTH_CHAT_ID")
-    return chat_id != int(auth_chat_id)
+    if chat_id != int(auth_chat_id):
+        logging.warning(f"🚫 Chat ID {chat_id} is not authorized. Authorized Chat Id: {auth_chat_id}")
+        return False
+    return True
 
 
 def _process_message(update: Update, context) -> None:
@@ -60,12 +63,11 @@ def _process_message(update: Update, context) -> None:
     original_message_id = update.message.message_id
     update_message_text = update.message.text
 
+    logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
     if not verified_chat_id(chat_id):
-        logging.warning(f"🚫 Chat ID {chat_id} is not authorized. Requested URL: {update_message_text}")
         return
 
     if update_message_text.startswith("http"):
-        logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
         reply_message = bot.send_message(
             chat_id,
             f"Got {update_message_text}. 👀 at 🌎",
