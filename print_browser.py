@@ -5,7 +5,6 @@ A custom browser for headless printing
 import logging
 import random
 import sys
-import time
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
@@ -19,6 +18,23 @@ BROWSER_NAME = "Deskriders"
 
 def scroll_speed():
     return random.randint(300, 500)
+
+
+READABILITY_JAVASCRIPT = (Path.cwd() / "Readability.js").read_text(encoding="utf-8")
+READABILITY_JAVASCRIPT += """
+var documentClone = document.cloneNode(true);
+var loc = document.location;
+var uri = {
+  spec: loc.href,
+  host: loc.host,
+  prePath: loc.protocol + "//" + loc.host,
+  scheme: loc.protocol.substr(0, loc.protocol.indexOf(":")),
+  pathBase: loc.protocol + "//" + loc.host +
+            loc.pathname.substr(0, loc.pathname.lastIndexOf("/") + 1)
+};
+var article = new Readability(uri, documentClone).parse();
+"<html><title>" + article.title + "</title><body>" + article.content + "</body></html>";
+"""
 
 
 class MainWindow(QMainWindow):
@@ -53,20 +69,35 @@ class MainWindow(QMainWindow):
         logging.info(f"current_scroll_position: {self.current_scroll_position}, new_height: {self.new_height}")
 
         if self.current_scroll_position <= self.new_height:
-            time.sleep(1)
-            self.scroll_to_end()
+            self.page_down()
         else:
             self.print_page()
 
-    def scroll_to_end(self):
+    def page_down(self):
+        logging.info(f"Scrolling to {self.current_scroll_position}")
         self.browser.page().runJavaScript(f"""window.scrollTo(0, {self.current_scroll_position});""")
         self.browser.page().runJavaScript("""document.body.scrollHeight;""", self.val_screen_height)
 
+    def after_rendered_clean_html(self, ok: bool):
+        logging.info(f"Rendered Readability HTML -> {ok}")
+        self.browser.loadFinished.disconnect()
+        self.page_down()
+
+    def val_readability_html(self, html):
+        logging.info("Cleaning up HTML")
+        self.browser.loadFinished.connect(self.after_rendered_clean_html)
+        self.browser.page().setHtml(html)
+
+    def readability(self):
+        self.browser.page().runJavaScript(READABILITY_JAVASCRIPT, self.val_readability_html)
+
     def page_loaded(self, ok: bool):
+        self.browser.loadFinished.disconnect()
+
         title = self.browser.page().title()
         logging.info(f"Page loaded: {title} -> {ok}")
         self.setWindowTitle(f"{title} - {BROWSER_NAME}")
-        self.scroll_to_end()
+        self.readability()
 
     def pdf_print_finished(self, pth, status):
         logging.info(f"Printing finished {pth} - {status}")
@@ -93,7 +124,8 @@ def main(args):
     window = MainWindow(
         url=args.webpage_url, output_dir=args.output_directory_path, wait_time=args.wait_in_secs_before_capture
     )
-    window.show()
+    window.showMaximized()
+    # window.show()
     sys.exit(app.exec_())
 
 
