@@ -1,6 +1,6 @@
 requests
 beautifulsoup4
-selenium
+selenium==3.141.0
 bson
 boto3
 logzero
@@ -19,3 +19,5 @@ pyperclip
 helium
 javalang
 py-executable-checklist==0.10.1
+PyQt5==5.12.3
+PyQtWebEngine
