@@ -3,30 +3,30 @@
 A custom browser for headless printing
 """
 import logging
+import random
 import sys
+import time
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
 from PyQt5.QtCore import QUrl
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtWidgets import (
-    QAction,
-    QApplication,
-    QLineEdit,
-    QMainWindow,
-    QToolBar,
-    qApp,
-)
+from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QToolBar, qApp
 from slug import slug
 
 BROWSER_NAME = "Deskriders"
-HOMEPAGE = "https://www.deskriders.dev"
+
+
+def scroll_speed():
+    return random.randint(300, 500)
 
 
 class MainWindow(QMainWindow):
     def __init__(self, url, output_dir, wait_time, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.new_height = 1
+        self.current_scroll_position = 0
         self.wait_time = wait_time
         self.output_dir = output_dir
 
@@ -39,24 +39,34 @@ class MainWindow(QMainWindow):
         self.addToolBar(navtb)
 
         reload_btn = QAction("Reload", self)
-        reload_btn.setStatusTip("Reload page")
-
         reload_btn.triggered.connect(self.browser.reload)
         navtb.addAction(reload_btn)
 
-        navtb.addSeparator()
+        print_btn = QAction("Print", self)
+        print_btn.triggered.connect(self.print_page)
+        navtb.addAction(print_btn)
 
-        self.urlbar = QLineEdit()
+    def val_screen_height(self, val):
+        logging.info(f"New height: {val}")
+        self.new_height = val
+        self.current_scroll_position += scroll_speed()
+        logging.info(f"current_scroll_position: {self.current_scroll_position}, new_height: {self.new_height}")
 
-        self.urlbar.returnPressed.connect(self.navigate_to_url)
+        if self.current_scroll_position <= self.new_height:
+            time.sleep(1)
+            self.scroll_to_end()
+        else:
+            self.print_page()
 
-        navtb.addWidget(self.urlbar)
+    def scroll_to_end(self):
+        self.browser.page().runJavaScript(f"""window.scrollTo(0, {self.current_scroll_position});""")
+        self.browser.page().runJavaScript("""document.body.scrollHeight;""", self.val_screen_height)
 
     def page_loaded(self, ok: bool):
         title = self.browser.page().title()
         logging.info(f"Page loaded: {title} -> {ok}")
         self.setWindowTitle(f"{title} - {BROWSER_NAME}")
-        self.print_page()
+        self.scroll_to_end()
 
     def pdf_print_finished(self, pth, status):
         logging.info(f"Printing finished {pth} - {status}")
@@ -68,23 +78,6 @@ class MainWindow(QMainWindow):
         web_page_title = slug(web_page.title())
         output_file_path = self.output_dir / f"{web_page_title}.pdf"
         web_page.printToPdf(output_file_path.as_posix())
-
-    def navigate_home(self):
-        self.browser.setUrl(QUrl(HOMEPAGE))
-
-    def navigate_to_url(self):
-        q = QUrl(self.urlbar.text())
-
-        if q.scheme() == "":
-            q.setScheme("http")
-
-        self.browser.setUrl(q)
-
-    def update_urlbar(self, q):
-        self.urlbar.setText(q.toString())
-
-        # setting cursor position of the url bar
-        self.urlbar.setCursorPosition(0)
 
     def quit(self):
         logging.info("Quitting")
