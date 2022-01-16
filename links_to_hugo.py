@@ -140,7 +140,7 @@ class KeepValidLinks(WorkflowBase):
         return True
 
     def is_valid_link(self, link):
-        known_domains = ["ycombinator", "algolia", "hackernews", "youtube", "twitter", "chrome.google.com"]
+        known_domains = ["ycombinator", "algolia", "hackernews", "youtube", "twitter", "chrome.google.com", "youtu.be"]
 
         def has_known_domain(post_link):
             return any(map(lambda l: l in post_link.lower(), known_domains))
