@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Extract all paths from jsondoc file
 Usage: $ curl -s -X GET http://some-url/restapidoc.json | python jsondoc_parser.py
@@ -16,7 +16,7 @@ ENCODE_OUT = "utf-8"
 
 def parse_args():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "-i",
         "--infile",

@@ -11,27 +11,19 @@ $ python3 links_to_hugo.py -l links.txt -t "<blog title>" -b <blog_directory> --
 
 Process:
 1. Use curl to download the webpage
-```
 $ curl -s <page-url> > .temp/<filename>.html
-```
 
 2. Use pup to extract links and output to a file
-```
 $ cat <filename>.html | pup 'a attr{href}' >> links.txt
-```
 
 3. Run this script
-```
 $ EDITOR=/usr/local/bin/idea ./links_to_hugo.py --links-file .temp/links.txt --post-title "Post title" \
     --blog-directory "<full-path-to-blog-directory"  --open-in-editor
-```
 
 4. Review blog post in the editor and remove any links if necessary
 
 5. Run this script to clean up any images that are left behind due to deleted links
-```
 $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d
-```
 
 6. make deploy from blog directory
 7. make commit-all from blog directory

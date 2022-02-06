@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Publish vNote to Hugo blog post
-Usage: $ python publish_vnote_to_hugo.py <<blog-root>> <<vnote-location>>
+$ python publish_vnote_to_hugo.py <<blog-root>> <<vnote-location>>
 """
 
 import fileinput

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Telegram bot to convert web page links to PDF
+"""
+import argparse
 import logging
 import os
 from pathlib import Path
@@ -122,7 +126,13 @@ def setup_directories():
     OUTPUT_DIR.mkdir(exist_ok=True)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
     setup_logging()
     setup_directories()
     start_bot()

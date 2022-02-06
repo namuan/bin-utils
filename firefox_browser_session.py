@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Setup a Firefox browser session with Selenium.
 Prerequisites:

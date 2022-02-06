@@ -13,22 +13,270 @@ For running python examples
 pip install -r requirements.txt
 ```
 
-_tweet_parser.py_
+### Scripts
 
-Converts a tweet in HTML to JSON.
+<!-- START makefile-doc -->
+_hn_links.py_
+```
+usage: hn_links.py [-h] -l HN_LINK -b BLOG_DIRECTORY [-v]
 
-_download_html_to_file.py_
+Grab links from HN Post and generate Markdown post with image thumbnails
+It also creates a Hugo blog post from Markdown and images generated
 
-Downloads Webpage from a URL to a file
+SUPPORT: To regenerate thumbnail, just delete the image file under thumbnails folder inside the post directory.
+SUPPORT: To remove any link from the blog post, delete the entry after the post is created **in the blog directory**
+Note down all the links somewhere then run the following command from blog directory to delete them
+E.g. Image links will be like
 
-_generate_paypal_errors.py_
+![](/images/2021/12/21/httpsunixstackexchangecoma88682.png)
+![](/images/2021/12/21/httpscleaveapp.png)
 
-Extract error codes from Paypal documentation webpage to JSON
+$ pbpaste | awk -F\/ '{print $6}' | tr -d ')' | while read img; do find . -name $img -delete; done # noqa: W605
 
-_twitter_scrapy.py_
+Usage:
+$ python hn-links.py -l https://news.ycombinator.com/item?id=25381191 -b <blog_directory> --open-in-editor
 
-Scrapes tweets from twitter and writes out html as individual files to the output directory
+optional arguments:
+  -h, --help            show this help message and exit
+  -l HN_LINK, --hn-link HN_LINK
+                        Link to HN Post
+  -b BLOG_DIRECTORY, --blog-directory BLOG_DIRECTORY
+                        Full path to blog directory
+  -v, --verbose         Display context variables at each step
 
+```
+_print_browser.py_
+```
+usage: print_browser.py [-h] -u WEBPAGE_URL -o OUTPUT_FILE_PATH
+                        [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
+
+A custom browser for headless printing
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u WEBPAGE_URL, --webpage-url WEBPAGE_URL
+                        Webpage Url
+  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
+                        Full output file path for PDF
+  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
+                        Wait (in secs) before capturing page
+  -s, --headless        Run headless (no browser window)
+
+```
+_executable_docs.py_
+```
+usage: executable_docs.py [-h] -u USERNAME [-v]
+
+Shows an example of executable documentation.
+
+Usage:
+./executable_docs.py -h
+
+./executable_docs.py --username johndoe
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u USERNAME, --username USERNAME
+                        User name
+  -v, --verbose         Display context variables at each step
+
+```
+_media_manager.py_
+```
+usage: media_manager.py [-h] [-f SOURCE_FILE] [-s SOURCE_DIRECTORY] -t
+                        TARGET_DIRECTORY [-r]
+
+[] Organise photos and videos
+
+TODO:
+Handle ignored files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f SOURCE_FILE, --source-file SOURCE_FILE
+                        Source file
+  -s SOURCE_DIRECTORY, --source-directory SOURCE_DIRECTORY
+                        Source directory
+  -t TARGET_DIRECTORY, --target-directory TARGET_DIRECTORY
+                        Target directory
+  -r, --remove-source   Remove source file
+
+```
+_thumbnail_generator.py_
+```
+usage: thumbnail_generator.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
+                              [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT_URL, --input-url INPUT_URL
+                        Web Url
+  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
+                        Output file path
+  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
+                        Wait (in secs) before capturing screenshot
+  -s, --headless        Run headless (no browser window)
+
+```
+_links_to_hugo.py_
+```
+usage: links_to_hugo.py [-h] -l LINKS_FILE -t POST_TITLE -b BLOG_DIRECTORY
+                        [-e] [-v]
+
+Read a list of links from a file (Each line should contain a single link to a webpage)
+Check if the link is still valid
+Grab title of the webpage
+Grab screenshot/thumbnail of the webpage
+Create a blog post with list of links along with the thumbnail
+
+Usage:
+$ python3 links_to_hugo.py -l links.txt -t "<blog title>" -b <blog_directory> --open-in-editor
+
+Process:
+1. Use curl to download the webpage
+$ curl -s <page-url> > .temp/<filename>.html
+
+2. Use pup to extract links and output to a file
+$ cat <filename>.html | pup 'a attr{href}' >> links.txt
+
+3. Run this script
+$ EDITOR=/usr/local/bin/idea ./links_to_hugo.py --links-file .temp/links.txt --post-title "Post title"     --blog-directory "<full-path-to-blog-directory"  --open-in-editor
+
+4. Review blog post in the editor and remove any links if necessary
+
+5. Run this script to clean up any images that are left behind due to deleted links
+$ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d
+
+6. make deploy from blog directory
+7. make commit-all from blog directory
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LINKS_FILE, --links-file LINKS_FILE
+                        Path to links file
+  -t POST_TITLE, --post-title POST_TITLE
+                        Blog post title
+  -b BLOG_DIRECTORY, --blog-directory BLOG_DIRECTORY
+                        Full path to blog directory
+  -e, --open-in-editor  Open blog site in editor
+  -v, --verbose         Display context variables at each step
+
+```
+_publish_vnote_to_hugo.py_
+```
+usage: publish_vnote_to_hugo.py [-h] [-b BLOG_DIRECTORY] -n VNOTE_FILE_PATH
+                                [-e]
+
+Publish vNote to Hugo blog post
+$ python publish_vnote_to_hugo.py <<blog-root>> <<vnote-location>>
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -b BLOG_DIRECTORY, --blog-directory BLOG_DIRECTORY
+                        Blog directory
+  -n VNOTE_FILE_PATH, --vnote-file-path VNOTE_FILE_PATH
+                        vNote file path
+  -e, --open-in-editor  Open blog site in editor
+
+```
+_readme_docs.py_
+```
+usage: readme_docs.py [-h]
+
+Generates documentation for the readme.md file
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+_py_carbon_clip.py_
+```
+usage: py_carbon_clip.py [-h]
+
+Generate beautiful screenshots of code using carbon.now.sh and puts it on the clipboard.
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+_webpage_to_pdf.py_
+```
+usage: webpage_to_pdf.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
+                         [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT_URL, --input-url INPUT_URL
+                        Web Url
+  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
+                        Full output file path for PDF
+  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
+                        Wait (in secs) before capturing screenshot
+  -s, --headless        Run headless (no browser window)
+
+```
+_java_parser.py_
+```
+usage: java_parser.py [-h] -s SOURCE_DIRECTORY
+
+Parses the java files and creates a list of all the classes and their methods.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SOURCE_DIRECTORY, --source-directory SOURCE_DIRECTORY
+                        Input source directory
+
+```
+_jsondoc_parser.py_
+```
+usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]
+
+Extract all paths from jsondoc file
+Usage: $ curl -s -X GET http://some-url/restapidoc.json | python jsondoc_parser.py
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFILE, --infile INFILE
+  -o OUTFILE, --outfile OUTFILE
+
+```
+_unused_files.py_
+```
+usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
+
+Find/Delete files from source directory that are not used in any file in the target directory.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SOURCE, --source SOURCE
+                        Source directory
+  -t TARGET, --target TARGET
+                        Target directory
+  -d, --delete          Delete unused files
+  -v, --verbose
+
+```
+_rider_brain_bot.py_
+```
+usage: rider_brain_bot.py [-h]
+
+Telegram bot to convert web page links to PDF
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+_helium_selenium_wrapper.py_
+```
+usage: helium_selenium_wrapper.py [-h]
+
+Demonstrates how to use helium to automate a web browser.
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+```
+<!-- END makefile-doc -->
 
 ### DEV: Setting up Pre-commit hooks
 

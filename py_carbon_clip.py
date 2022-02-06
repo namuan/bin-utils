@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-
+"""
+Generate beautiful screenshots of code using carbon.now.sh and puts it on the clipboard.
+"""
 import asyncio
 import os
 import platform
 import subprocess
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from urllib import parse
 
 import pyperclip
@@ -60,7 +63,7 @@ async def encode_clip_text():
     return uri_encoded_clip_text
 
 
-async def main():
+async def main(args):
     uri_encoded_clip_text = await encode_clip_text()
 
     browser, page = await open_site(uri_encoded_clip_text)
@@ -72,4 +75,11 @@ async def main():
     await preview_image(carbon_file_path)
 
 
-asyncio.get_event_loop().run_until_complete(main())
+def parse_args():
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    asyncio.get_event_loop().run_until_complete(main(args))
