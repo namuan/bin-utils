@@ -1,16 +1,10 @@
 #### bin-utils
 Collection of helpful scripts and apps.
 
-###### Setting up python3 with VirtualEnv
+###### Setting up python3 and dependencies with VirtualEnv
 
 ```
-virtualenv -p python3 pyenv
-```
-
-For running python examples
-
-```
-pip install -r requirements.txt
+ make setup
 ```
 
 ### Scripts
