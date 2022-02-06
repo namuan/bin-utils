@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>webpage_to_pdf.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>webpage_to_pdf.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">pyppeteer</span> <span class="kn">import</span> <span class="n">launch</span>
+
+<span class="n">ENCODE_IN</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span>
+<span class="n">ENCODE_OUT</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span>
+<span class="n">TEMPLATE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>Parse command line arguments.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-i&quot;</span><span class="p">,</span> <span class="s2">&quot;--input-url&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Web Url&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--output-file-path&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Full output file path for PDF&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-w&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--wait-in-secs-before-capture&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Wait (in secs) before capturing screenshot&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-s&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--headless&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run headless (no browser window)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">open_site</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">website_url</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">):</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">browser</span><span class="o">.</span><span class="n">newPage</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+        <span class="s2">&quot;Page.setDownloadBehavior&quot;</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;downloadPath&quot;</span><span class="p">:</span> <span class="n">output_dir</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">website_url</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;waitUntil&quot;</span><span class="p">:</span> <span class="s2">&quot;networkidle2&quot;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">page</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">scroll_speed</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">500</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">scroll_to_end</span><span class="p">(</span><span class="n">page</span><span class="p">):</span>
+    <span class="n">current_scroll_position</span><span class="p">,</span> <span class="n">new_height</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">current_scroll_position</span> <span class="o">&lt;=</span> <span class="n">new_height</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;() =&gt; </span><span class="se">{{</span><span class="s2"> window.scrollTo(0, </span><span class="si">{</span><span class="n">current_scroll_position</span><span class="si">}</span><span class="s2">); </span><span class="se">}}</span><span class="s2"> &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">new_height</span> <span class="o">=</span> <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;() =&gt; { return document.body.scrollHeight; } &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">current_scroll_position</span> <span class="o">+=</span> <span class="n">scroll_speed</span><span class="p">()</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;current_scroll_position: </span><span class="si">{</span><span class="n">current_scroll_position</span><span class="si">}</span><span class="s2">, new_height: </span><span class="si">{</span><span class="n">new_height</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>Wait to any dynamic elements to load</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">generate_pdf</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">output_file_path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;margin&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;top&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="s2">&quot;bottom&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="s2">&quot;left&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+                <span class="s2">&quot;right&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">output_file_path</span><span class="p">,</span>
+            <span class="nb">format</span><span class="p">:</span> <span class="s2">&quot;A4&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">website_url</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">input_url</span>
+    <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_file_path</span>
+    <span class="n">wait_in_secs_before_capture</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">wait_in_secs_before_capture</span>
+    <span class="n">run_headless</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">headless</span>
+
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">launch_config</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;headless&quot;</span><span class="p">:</span> <span class="n">run_headless</span><span class="p">,</span>
+        <span class="s2">&quot;defaultViewport&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;/usr/bin/chromium-browser&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+            <span class="n">launch_config</span><span class="p">[</span><span class="s2">&quot;executablePath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/usr/bin/chromium-browser&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Chromium not found. Please install it and make it available in /usr/bin/chromium-browser&quot;</span><span class="p">)</span>
+
+    <span class="n">browser</span> <span class="o">=</span> <span class="k">await</span> <span class="n">launch</span><span class="p">(</span><span class="o">**</span><span class="n">launch_config</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">website_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">browser</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">open_site</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">website_url</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wait_in_secs_before_capture</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">scroll_to_end</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;🚒 Reached end of page. Trying to capture PDF&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">run_headless</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">generate_pdf</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">output_file_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()),</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📸 PDF saved </span><span class="si">{</span><span class="n">output_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">except</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TimeoutError</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PDF generation timed out for </span><span class="si">{</span><span class="n">website_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;⚠️ PDF generation is only supported in headless mode. Run with --headless&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error while processing </span><span class="si">{</span><span class="n">website_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_logging</span><span class="p">():</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+        <span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()],</span>
+        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">setup_logging</span><span class="p">()</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

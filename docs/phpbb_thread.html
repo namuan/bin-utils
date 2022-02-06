@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>phpbb_thread.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>phpbb_thread.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>Download complete PhpBB Forum Thread and convert to a single HTML Page</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
+<span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
+<span class="kn">from</span> <span class="nn">slug</span> <span class="kn">import</span> <span class="n">slug</span>
+
+<span class="kn">from</span> <span class="nn">common.workflow</span> <span class="kn">import</span> <span class="n">WorkflowBase</span><span class="p">,</span> <span class="n">run_workflow</span>
+<span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="n">create_dir</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()],</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">with_ignoring_errors</span><span class="p">(</span><span class="n">code_to_run</span><span class="p">,</span> <span class="n">warning_msg</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">code_to_run</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">warning_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;N/A&quot;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-p&quot;</span><span class="p">,</span> <span class="s2">&quot;--page-url&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;PhpBB Forum Page Url&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>Initialise environment</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">InitScript</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_init_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(),</span>
+        <span class="p">]</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+            <span class="n">handlers</span><span class="o">=</span><span class="n">handlers</span><span class="p">,</span>
+            <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+            <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_script</span><span class="p">()</span>
+        <span class="n">template_folder</span> <span class="o">=</span> <span class="s2">&quot;sample&quot;</span>
+        <span class="n">template_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">template_folder</span>
+        <span class="n">jinja_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">template_dir</span><span class="p">),</span> <span class="n">trim_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;jinja_env&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jinja_env</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;output_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_folder</span> <span class="o">=</span> <span class="s2">&quot;generated&quot;</span>
+        <span class="n">create_dir</span><span class="p">(</span><span class="n">output_folder</span><span class="p">,</span> <span class="n">delete_existing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <p>Open Browser Session</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">OpenBrowserSession</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">page_url</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;args&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">page_url</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">webdriver</span><span class="o">.</span><span class="n">Firefox</span><span class="p">()</span>
+        <span class="n">browser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">page_url</span><span class="p">)</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;browser&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">browser</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">page_url</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>Extract Thread Details</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">ExtractThreadDetails</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;browser&quot;</span><span class="p">]</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;thread_topic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;h2.topic-title&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;slugged_thread_topic&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;thread_topic&quot;</span><span class="p">])</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;complete_html_page&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">.html&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;slugged_thread_topic&quot;</span><span class="p">])</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;complete_pdf_page&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;slugged_thread_topic&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span>
+        <span class="n">total_pages_elem</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;div.pagination&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span>
+            <span class="s2">&quot;li a&quot;</span>
+        <span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;total_pages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">total_pages_elem</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>Scrape Pages</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">ScrapePages</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_get_next_page_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">current_page</span><span class="p">):</span>
+        <span class="n">pages_li_elements</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;div.pagination&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span>
+            <span class="s2">&quot;li a&quot;</span>
+        <span class="p">)</span>
+        <span class="n">next_page</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pages_li_elements</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">current_page</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">next_page</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_extract_element_from_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post_body</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">with_ignoring_errors</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">post_body</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="n">selector</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="sa">f</span><span class="s2">&quot;Unable to find </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_extract_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">):</span>
+        <span class="n">post_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">post_body</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;div.postbody&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">post_data</span><span class="p">[</span><span class="s2">&quot;heading&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">with_ignoring_errors</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">post_body</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;h3 a&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="s2">&quot;Unable to find heading&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">post_data</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">with_ignoring_errors</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">post_body</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;a.username&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="s2">&quot;Unable to find username&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">post_data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">with_ignoring_errors</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">post_body</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="s2">&quot;Unable to find time&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">post_data</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">with_ignoring_errors</span><span class="p">(</span>
+            <span class="k">lambda</span><span class="p">:</span> <span class="n">post_body</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;div.content&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;outerHTML&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;Unable to find content&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">post_data</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_cache_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_file</span><span class="p">,</span> <span class="n">file_content</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">text_file</span><span class="p">:</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_content</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;browser&quot;</span><span class="p">]</span>
+        <span class="n">total_pages</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;total_pages&quot;</span><span class="p">]</span>
+        <span class="n">all_posts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_pages</span><span class="p">):</span>
+            <span class="n">current_page</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">thread_topic</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;thread_topic&quot;</span><span class="p">]</span>
+            <span class="n">output_folder</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;output_folder&quot;</span><span class="p">]</span>
+            <span class="n">page_source</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">page_source</span>
+            <span class="n">html_page_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_folder</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">current_page</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">thread_topic</span><span class="si">}</span><span class="s2">.html&quot;</span>
+            <span class="n">html_page_absolute_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">html_page_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">html_page_absolute_path</span><span class="p">):</span>
+                <span class="n">browser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file:///&quot;</span> <span class="o">+</span> <span class="n">html_page_absolute_path</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_cache_page</span><span class="p">(</span><span class="n">html_page_path</span><span class="p">,</span> <span class="n">page_source</span><span class="p">)</span>
+
+            <span class="n">total_posts_on_page</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">find_elements_by_css_selector</span><span class="p">(</span><span class="s2">&quot;div.post&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">total_posts_on_page</span><span class="p">:</span>
+                <span class="n">post_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_post</span><span class="p">(</span><span class="n">post</span><span class="p">)</span>
+                <span class="n">all_posts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">post_data</span><span class="p">)</span>
+
+            <span class="n">rand_sleep_time</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🚧 On page </span><span class="si">{</span><span class="n">current_page</span><span class="si">}</span><span class="s2">, 😴 Zzzz for </span><span class="si">{</span><span class="n">rand_sleep_time</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">rand_sleep_time</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current_page</span> <span class="o">!=</span> <span class="n">total_pages</span><span class="p">:</span>
+                <span class="n">next_page_link</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_next_page_link</span><span class="p">(</span><span class="n">browser</span><span class="p">,</span> <span class="n">current_page</span><span class="p">)</span>
+                <span class="n">browser</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">next_page_link</span><span class="p">)</span>
+
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_posts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_posts</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>Clean Up Posts</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">CleanUpPosts</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_clean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">base_url</span><span class="p">):</span>
+        <span class="n">post_content</span> <span class="o">=</span> <span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
+        <span class="n">post</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">post_content</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;./&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base_url</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">post_content</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">post</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;base_url&quot;</span><span class="p">]</span>
+        <span class="n">all_posts</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_posts&quot;</span><span class="p">]</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_posts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_clean</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">base_url</span><span class="p">)</span> <span class="k">for</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">all_posts</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <p>Close Browser Session</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">CloseBrowserSession</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">browser</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;browser&quot;</span><span class="p">]</span>
+        <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>Join All Pages</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">JoinAllPages</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_jinja_transform_and_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jinja_env</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">template_file</span><span class="p">,</span> <span class="n">target_file</span><span class="p">):</span>
+        <span class="n">rendered</span> <span class="o">=</span> <span class="n">jinja_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">target_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">text_file</span><span class="p">:</span>
+            <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">rendered</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">all_posts</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_posts&quot;</span><span class="p">]</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Collected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_posts</span><span class="p">)</span><span class="si">}</span><span class="s2"> posts&quot;</span><span class="p">)</span>
+        <span class="n">thread_topic</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;thread_topic&quot;</span><span class="p">]</span>
+        <span class="n">complete_html_page</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;complete_html_page&quot;</span><span class="p">]</span>
+        <span class="n">jinja_env</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;jinja_env&quot;</span><span class="p">]</span>
+        <span class="n">jinja_context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;thread_topic&quot;</span><span class="p">:</span> <span class="n">thread_topic</span><span class="p">,</span> <span class="s2">&quot;all_posts&quot;</span><span class="p">:</span> <span class="n">all_posts</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_jinja_transform_and_save</span><span class="p">(</span>
+            <span class="n">jinja_env</span><span class="p">,</span>
+            <span class="n">jinja_context</span><span class="p">,</span>
+            <span class="s2">&quot;phpbb_page_template.html&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="s2">&quot;output_folder&quot;</span><span class="p">],</span> <span class="n">complete_html_page</span><span class="p">),</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      <p>Open Html Page</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">OpenHtmlPage</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">complete_html_page</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;complete_html_page&quot;</span><span class="p">]</span>
+        <span class="n">output_folder</span> <span class="o">=</span> <span class="n">context</span><span class="p">[</span><span class="s2">&quot;output_folder&quot;</span><span class="p">]</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>  <span class="c1"># nosemgrep</span>
+            <span class="sa">f</span><span class="s2">&quot;open </span><span class="si">{</span><span class="n">output_folder</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">complete_html_page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">workflow</span><span class="p">():</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">InitScript</span><span class="p">,</span>
+        <span class="n">OpenBrowserSession</span><span class="p">,</span>
+        <span class="n">ExtractThreadDetails</span><span class="p">,</span>
+        <span class="n">ScrapePages</span><span class="p">,</span>
+        <span class="n">CleanUpPosts</span><span class="p">,</span>
+        <span class="n">CloseBrowserSession</span><span class="p">,</span>
+        <span class="n">JoinAllPages</span><span class="p">,</span>
+        <span class="n">OpenHtmlPage</span><span class="p">,</span>
+    <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;args&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">}</span>
+
+    <span class="n">run_workflow</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">workflow</span><span class="p">())</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

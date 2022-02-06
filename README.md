@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ### Scripts
 
 <!-- START makefile-doc -->
-_hn_links.py_
+[_hn_links.py_](https://namuan.github.io/bin-utils/hn_links.html)
 ```
 usage: hn_links.py [-h] -l HN_LINK -b BLOG_DIRECTORY [-v]
 
@@ -45,7 +45,7 @@ optional arguments:
   -v, --verbose         Display context variables at each step
 
 ```
-_print_browser.py_
+[_print_browser.py_](https://namuan.github.io/bin-utils/print_browser.html)
 ```
 usage: print_browser.py [-h] -u WEBPAGE_URL -o OUTPUT_FILE_PATH
                         [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
@@ -63,7 +63,7 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
-_executable_docs.py_
+[_executable_docs.py_](https://namuan.github.io/bin-utils/executable_docs.html)
 ```
 usage: executable_docs.py [-h] -u USERNAME [-v]
 
@@ -81,7 +81,7 @@ optional arguments:
   -v, --verbose         Display context variables at each step
 
 ```
-_media_manager.py_
+[_media_manager.py_](https://namuan.github.io/bin-utils/media_manager.html)
 ```
 usage: media_manager.py [-h] [-f SOURCE_FILE] [-s SOURCE_DIRECTORY] -t
                         TARGET_DIRECTORY [-r]
@@ -102,7 +102,7 @@ optional arguments:
   -r, --remove-source   Remove source file
 
 ```
-_thumbnail_generator.py_
+[_thumbnail_generator.py_](https://namuan.github.io/bin-utils/thumbnail_generator.html)
 ```
 usage: thumbnail_generator.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
                               [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
@@ -118,7 +118,7 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
-_links_to_hugo.py_
+[_links_to_hugo.py_](https://namuan.github.io/bin-utils/links_to_hugo.html)
 ```
 usage: links_to_hugo.py [-h] -l LINKS_FILE -t POST_TITLE -b BLOG_DIRECTORY
                         [-e] [-v]
@@ -162,7 +162,7 @@ optional arguments:
   -v, --verbose         Display context variables at each step
 
 ```
-_publish_vnote_to_hugo.py_
+[_publish_vnote_to_hugo.py_](https://namuan.github.io/bin-utils/publish_vnote_to_hugo.html)
 ```
 usage: publish_vnote_to_hugo.py [-h] [-b BLOG_DIRECTORY] -n VNOTE_FILE_PATH
                                 [-e]
@@ -179,7 +179,7 @@ optional arguments:
   -e, --open-in-editor  Open blog site in editor
 
 ```
-_readme_docs.py_
+[_readme_docs.py_](https://namuan.github.io/bin-utils/readme_docs.html)
 ```
 usage: readme_docs.py [-h]
 
@@ -189,7 +189,7 @@ optional arguments:
   -h, --help  show this help message and exit
 
 ```
-_py_carbon_clip.py_
+[_py_carbon_clip.py_](https://namuan.github.io/bin-utils/py_carbon_clip.html)
 ```
 usage: py_carbon_clip.py [-h]
 
@@ -199,7 +199,7 @@ optional arguments:
   -h, --help  show this help message and exit
 
 ```
-_webpage_to_pdf.py_
+[_webpage_to_pdf.py_](https://namuan.github.io/bin-utils/webpage_to_pdf.html)
 ```
 usage: webpage_to_pdf.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
                          [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
@@ -215,7 +215,7 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
-_java_parser.py_
+[_java_parser.py_](https://namuan.github.io/bin-utils/java_parser.html)
 ```
 usage: java_parser.py [-h] -s SOURCE_DIRECTORY
 
@@ -227,7 +227,7 @@ optional arguments:
                         Input source directory
 
 ```
-_jsondoc_parser.py_
+[_jsondoc_parser.py_](https://namuan.github.io/bin-utils/jsondoc_parser.html)
 ```
 usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]
 
@@ -240,7 +240,7 @@ optional arguments:
   -o OUTFILE, --outfile OUTFILE
 
 ```
-_unused_files.py_
+[_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)
 ```
 usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
 
@@ -256,7 +256,7 @@ optional arguments:
   -v, --verbose
 
 ```
-_rider_brain_bot.py_
+[_rider_brain_bot.py_](https://namuan.github.io/bin-utils/rider_brain_bot.html)
 ```
 usage: rider_brain_bot.py [-h]
 
@@ -266,7 +266,7 @@ optional arguments:
   -h, --help  show this help message and exit
 
 ```
-_helium_selenium_wrapper.py_
+[_helium_selenium_wrapper.py_](https://namuan.github.io/bin-utils/helium_selenium_wrapper.html)
 ```
 usage: helium_selenium_wrapper.py [-h]
 

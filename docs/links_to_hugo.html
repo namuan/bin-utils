@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>links_to_hugo.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>links_to_hugo.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>Read a list of links from a file (Each line should contain a single link to a webpage)
+Check if the link is still valid
+Grab title of the webpage
+Grab screenshot/thumbnail of the webpage
+Create a blog post with list of links along with the thumbnail</p>
+<p>Usage:
+$ python3 links_to_hugo.py -l links.txt -t &ldquo;<blog title>&rdquo; -b <blog_directory> &ndash;open-in-editor</p>
+<p>Process:
+1. Use curl to download the webpage
+$ curl -s <page-url> &gt; .temp/<filename>.html</p>
+<ol>
+<li>
+<p>Use pup to extract links and output to a file
+$ cat <filename>.html | pup &lsquo;a attr{href}&rsquo; &gt;&gt; links.txt</p>
+</li>
+<li>
+<p>Run this script
+$ EDITOR=/usr/local/bin/idea ./links_to_hugo.py &ndash;links-file .temp/links.txt &ndash;post-title &ldquo;Post title&rdquo; \
+    &ndash;blog-directory &ldquo;&lt;full-path-to-blog-directory&rdquo;  &ndash;open-in-editor</p>
+</li>
+<li>
+<p>Review blog post in the editor and remove any links if necessary</p>
+</li>
+<li>
+<p>Run this script to clean up any images that are left behind due to deleted links
+$ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
+</li>
+<li>
+<p>make deploy from blog directory</p>
+</li>
+<li>make commit-all from blog directory</li>
+</ol>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">subprocess</span> <span class="kn">import</span> <span class="n">CalledProcessError</span>
+
+<span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
+<span class="kn">from</span> <span class="nn">py_executable_checklist.workflow</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">WorkflowBase</span><span class="p">,</span>
+    <span class="n">notify_me</span><span class="p">,</span>
+    <span class="n">run_command</span><span class="p">,</span>
+    <span class="n">run_workflow</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">slug</span> <span class="kn">import</span> <span class="n">slug</span>
+
+<span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="n">fetch_html_page</span><span class="p">,</span> <span class="n">html_parser_from</span>
+
+<span class="n">UTF_ENCODING</span> <span class="o">=</span> <span class="s2">&quot;utf-8&quot;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>Common functions</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">fetch_html</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">post_html_page_file</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fetching HTML title for </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">post_html_page_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🌕 Loading page from cache </span><span class="si">{</span><span class="n">post_html_page_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">post_html_page_file</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">UTF_ENCODING</span><span class="p">)</span>
+
+    <span class="n">page_html</span> <span class="o">=</span> <span class="n">fetch_html_page</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Caching page </span><span class="si">{</span><span class="n">post_html_page_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">post_html_page_file</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">page_html</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">UTF_ENCODING</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">page_html</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">relative_image_directory</span><span class="p">():</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y&quot;</span><span class="p">)</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%m&quot;</span><span class="p">)</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;images/</span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">month</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">day</span><span class="si">}</span><span class="s2">&quot;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>Workflow steps</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>Create output folder using Post id in the temporary folder</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">CreateOutputFolder</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">post_title</span><span class="p">:</span> <span class="nb">str</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">blog_title_slug</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_title</span><span class="p">)</span>
+        <span class="n">download_folder</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="si">}</span><span class="s2">/.temp&quot;</span>
+
+        <span class="n">target_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_folder</span><span class="p">)</span> <span class="o">/</span> <span class="n">blog_title_slug</span>
+        <span class="n">child_links_folder</span> <span class="o">=</span> <span class="n">target_folder</span> <span class="o">/</span> <span class="s2">&quot;links&quot;</span>
+        <span class="n">thumbnails_folder</span> <span class="o">=</span> <span class="n">target_folder</span> <span class="o">/</span> <span class="s2">&quot;thumbnails&quot;</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="n">target_folder</span><span class="p">,</span> <span class="n">child_links_folder</span><span class="p">,</span> <span class="n">thumbnails_folder</span><span class="p">]:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;target_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_folder</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;child_links_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">child_links_folder</span>
+        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;thumbnails_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thumbnails_folder</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>Extract all links</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">ExtractAllLinksFromPost</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">links_file</span><span class="p">:</span> <span class="nb">str</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">all_links</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_file</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">UTF_ENCODING</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_links</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>Only keep interesting links</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">KeepValidLinks</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">all_links</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">child_links_folder</span><span class="p">:</span> <span class="n">Path</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">accessible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">,</span> <span class="n">child_links_folder</span><span class="p">):</span>
+        <span class="n">page_slug</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">page_slug</span><span class="si">}</span><span class="s2">.html&quot;</span>
+        <span class="n">post_html_page_file</span> <span class="o">=</span> <span class="n">child_links_folder</span> <span class="o">/</span> <span class="n">page_path</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">post_html_page_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="n">fetch_html</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">post_html_page_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;💥 </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">is_valid_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
+        <span class="n">known_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ycombinator&quot;</span><span class="p">,</span> <span class="s2">&quot;algolia&quot;</span><span class="p">,</span> <span class="s2">&quot;hackernews&quot;</span><span class="p">,</span> <span class="s2">&quot;youtube&quot;</span><span class="p">,</span> <span class="s2">&quot;twitter&quot;</span><span class="p">,</span> <span class="s2">&quot;chrome.google.com&quot;</span><span class="p">,</span> <span class="s2">&quot;youtu.be&quot;</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">def</span> <span class="nf">has_known_domain</span><span class="p">(</span><span class="n">post_link</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">post_link</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">known_domains</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">link</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_known_domain</span><span class="p">(</span><span class="n">link</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">valid_links</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">link</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_links</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">accessible</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_links_folder</span><span class="p">)</span>
+        <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;valid_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valid_links</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>Get page title for each valid link</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">GrabChildLinkTitle</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">valid_links</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">child_links_folder</span><span class="p">:</span> <span class="n">Path</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">page_title_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child_links_folder</span><span class="p">,</span> <span class="n">link_in_comment</span><span class="p">):</span>
+        <span class="n">page_slug</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="n">link_in_comment</span><span class="p">)</span>
+        <span class="n">page_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">page_slug</span><span class="si">}</span><span class="s2">.html&quot;</span>
+
+        <span class="n">post_html_page_file</span> <span class="o">=</span> <span class="n">child_links_folder</span> <span class="o">/</span> <span class="n">page_path</span>
+        <span class="n">page_html</span> <span class="o">=</span> <span class="n">fetch_html</span><span class="p">(</span><span class="n">link_in_comment</span><span class="p">,</span> <span class="n">post_html_page_file</span><span class="p">)</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">html_parser_from</span><span class="p">(</span><span class="n">page_html</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bs</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">string</span> <span class="k">if</span> <span class="n">bs</span><span class="o">.</span><span class="n">title</span> <span class="ow">and</span> <span class="n">bs</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">string</span> <span class="k">else</span> <span class="n">link_in_comment</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">stripped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page_title</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">page_title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">links_with_titles</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stripped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_title_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">child_links_folder</span><span class="p">,</span> <span class="n">link</span><span class="p">)),</span> <span class="n">link</span><span class="p">)</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_links</span>
+        <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;links_with_titles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">links_with_titles</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>For each link, get screen thumbnail</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">GrabScreenThumbnail</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">links_with_titles</span><span class="p">:</span> <span class="nb">list</span>
+    <span class="n">thumbnails_folder</span><span class="p">:</span> <span class="n">Path</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">thumbnail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thumbnails_folder</span><span class="p">,</span> <span class="n">page_link</span><span class="p">):</span>
+        <span class="n">page_slug</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="n">page_link</span><span class="p">)</span>
+        <span class="n">target_path</span> <span class="o">=</span> <span class="n">thumbnails_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">page_slug</span><span class="si">}</span><span class="s2">.png&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./thumbnail_generator.py -i &#39;</span><span class="si">{</span><span class="n">page_link</span><span class="si">}</span><span class="s2">&#39; -o </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2"> --headless&quot;</span>
+        <span class="k">if</span> <span class="n">target_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🌕 Thumbnail already exists for </span><span class="si">{</span><span class="n">page_link</span><span class="si">}</span><span class="s2">. Run </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2"> to update it&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">target_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="n">failed_commands</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">run_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>  <span class="c1"># noqa: B001, E722</span>
+            <span class="n">failed_commands</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">failed_command</span> <span class="ow">in</span> <span class="n">failed_commands</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Command failed. Try running it again </span><span class="si">{</span><span class="n">failed_command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">target_path</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">links_with_metadata</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">page_title</span><span class="p">,</span> <span class="n">page_link</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thumbnail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thumbnails_folder</span><span class="p">,</span> <span class="n">page_link</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">page_title</span><span class="p">,</span> <span class="n">page_link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">links_with_titles</span>
+        <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;links_with_metadata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">links_with_metadata</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      <p>Generate Markdown using the data in context</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">GenerateMarkdown</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">setup_template_env</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">template_folder</span> <span class="o">=</span> <span class="s2">&quot;templates&quot;</span>
+        <span class="n">template_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">template_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jinja_env</span> <span class="o">=</span> <span class="n">Environment</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">template_dir</span><span class="p">),</span> <span class="n">trim_blocks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">render_markdown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">rendered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jinja_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="s2">&quot;hn_post_links.md.j2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rendered</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_template_env</span><span class="p">()</span>
+        <span class="n">markdown_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_markdown</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-36'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-36'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;markdown_text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown_text</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-37'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-37'>#</a>
+      </div>
+      <p>Add blog header with metadata</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">AddHugoHeader</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-38'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-38'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">markdown_text</span><span class="p">:</span> <span class="nb">str</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-39'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-39'>#</a>
+      </div>
+      <pre><code>    post_with_header = post_header + os.linesep + os.linesep.join(self.markdown_text.splitlines()[2:])
+
+    # output
+    post_file_name = slug(post_title) + ".md"
+    context["post_file_name"] = post_file_name
+    context["post_with_header"] = post_with_header
+</code></pre>
+<p>class UpdateLinksInMarkdown(WorkflowBase):
+Use relative links in Markdown to point to images</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">post_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="n">post_title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markdown_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">post_header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;+++</span>
+<span class="s2">    date = </span><span class="si">{</span><span class="n">post_date</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    title = &quot;</span><span class="si">{</span><span class="n">post_title</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">    description = &quot;&quot;</span>
+<span class="s2">    slug = &quot;&quot;</span>
+<span class="s2">    tags = [&quot;hacker-news-links&quot;]</span>
+<span class="s2">    categories = []</span>
+<span class="s2">    externalLink = &quot;&quot;</span>
+<span class="s2">    series = []</span>
+<span class="s2">+++</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    post_with_header: str</span>
+<span class="s2">    target_folder: Path</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def run(self, context):</span>
+<span class="s2">        thumbnails_directory = self.target_folder / &quot;thumbnails&quot;</span>
+<span class="s2">        replace_from = f&quot;![](</span><span class="si">{</span><span class="n">thumbnails_directory</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">        replace_with = f&quot;![](/</span><span class="si">{</span><span class="n">relative_image_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">        md_with_updated_links = self.post_with_header.replace(replace_from, replace_with)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        context[&quot;md_with_updated_links&quot;] = md_with_updated_links</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">class WriteBlogPost(WorkflowBase):</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    md_with_updated_links: str</span>
+<span class="s2">    blog_directory: Path</span>
+<span class="s2">    post_file_name: str</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def run(self, context):</span>
+<span class="s2">        blog_page_path = f&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">blog_directory</span><span class="si">}</span><span class="s2">/content/posts/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">post_file_name</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">        Path(blog_page_path).write_text(self.md_with_updated_links)</span>
+<span class="s2">        logging.info(f&quot;📒 Created note at </span><span class="si">{</span><span class="n">blog_page_path</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        context[&quot;blog_page&quot;] = blog_page_path</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">class CompressImages(WorkflowBase):</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    blog_directory: Path</span>
+<span class="s2">    target_folder: Path</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def run(self, _):</span>
+<span class="s2">        for img in self.target_folder.glob(&quot;thumbnails/*&quot;):</span>
+<span class="s2">            img_name = img.name</span>
+<span class="s2">            img_path = img.as_posix()</span>
+<span class="s2">            target_path = Path(f&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">blog_directory</span><span class="si">}</span><span class="s2">/static/</span><span class="si">{</span><span class="n">relative_image_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">img_name</span><span class="si">}</span><span class="s2">&quot;)</span>
+
+<span class="s2">            cmd = f&quot;convert </span><span class="si">{</span><span class="n">img_path</span><span class="si">}</span><span class="s2"> -resize 640x480 -quality 50% </span><span class="si">{</span><span class="n">target_path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="s2">            if target_path.exists():</span>
+<span class="s2">                logging.info(f&quot;🌕 </span><span class="si">{</span><span class="n">img_name</span><span class="si">}</span><span class="s2"> already resized/compressed. Run this to re-convert </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">                continue</span>
+
+<span class="s2">            Path(target_path).parent.mkdir(parents=True, exist_ok=True)</span>
+<span class="s2">            try:</span>
+<span class="s2">                run_command(cmd)</span>
+<span class="s2">            except CalledProcessError:</span>
+<span class="s2">                logging.exception(f&quot;🚨 Failed to resize/compress </span><span class="si">{</span><span class="n">img_name</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">class NotifyMe(WorkflowBase):</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    post_title: str</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def run(self, _):</span>
+<span class="s2">        pushover_config = </span><span class="si">{</span>
+            <span class="s2">&quot;pushover_url&quot;</span><span class="si">:</span><span class="s2"> os.getenv(&quot;PUSHOVER_URL&quot;),</span>
+<span class="s2">            &quot;pushover_token&quot;: os.getenv(&quot;PUSHOVER_TOKEN&quot;),</span>
+<span class="s2">            &quot;pushover_user&quot;: os.getenv(&quot;PUSHOVER_USER&quot;),</span>
+<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
+<span class="s2">        notify_me(f&quot;✅ </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">post_title</span><span class="si">}</span><span class="s2"> done!&quot;, pushover_config)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">class OpenInEditor(WorkflowBase):</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    open_in_editor: bool</span>
+<span class="s2">    blog_directory: Path</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def run(self, _):</span>
+<span class="s2">        if not self.open_in_editor:</span>
+<span class="s2">            return</span>
+<span class="s2">        editor = os.environ.get(&quot;EDITOR&quot;)</span>
+<span class="s2">        print(f&quot;Opening </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">blog_directory</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">editor</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">        run_command(f&quot;</span><span class="si">{</span><span class="n">editor</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">blog_directory</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">#DIVIDER</span>
+<span class="s2">def workflow_steps():</span>
+<span class="s2">    return [</span>
+<span class="s2">        CreateOutputFolder,</span>
+<span class="s2">        ExtractAllLinksFromPost,</span>
+<span class="s2">        KeepValidLinks,</span>
+<span class="s2">        GrabChildLinkTitle,</span>
+<span class="s2">        GrabScreenThumbnail,</span>
+<span class="s2">        GenerateMarkdown,</span>
+<span class="s2">        AddHugoHeader,</span>
+<span class="s2">        UpdateLinksInMarkdown,</span>
+<span class="s2">        WriteBlogPost,</span>
+<span class="s2">        CompressImages,</span>
+<span class="s2">        OpenInEditor,</span>
+<span class="s2">        NotifyMe,</span>
+<span class="s2">    ]</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">#DIVIDER</span>
+<span class="s2">def setup_logging():</span>
+<span class="s2">    logging.basicConfig(</span>
+<span class="s2">        handlers=[logging.StreamHandler()],</span>
+<span class="s2">        format=&quot;%(asctime)s - %(filename)s:%(lineno)d - %(message)s&quot;,</span>
+<span class="s2">        datefmt=&quot;%Y-%m-%d %H:%M:%S&quot;,</span>
+<span class="s2">        level=logging.INFO,</span>
+<span class="s2">    )</span>
+<span class="s2">    logging.captureWarnings(capture=True)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def main(args):</span>
+<span class="s2">    context = args.__dict__</span>
+<span class="s2">    run_workflow(context, workflow_steps())</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def parse_args():</span>
+<span class="s2">    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)</span>
+<span class="s2">    parser.add_argument(&quot;-l&quot;, &quot;--links-file&quot;, required=True, type=str, help=&quot;Path to links file&quot;)</span>
+<span class="s2">    parser.add_argument(&quot;-t&quot;, &quot;--post-title&quot;, required=True, type=str, help=&quot;Blog post title&quot;)</span>
+<span class="s2">    parser.add_argument(</span>
+<span class="s2">        &quot;-b&quot;,</span>
+<span class="s2">        &quot;--blog-directory&quot;,</span>
+<span class="s2">        type=str,</span>
+<span class="s2">        required=True,</span>
+<span class="s2">        help=&quot;Full path to blog directory&quot;,</span>
+<span class="s2">    )</span>
+<span class="s2">    parser.add_argument(</span>
+<span class="s2">        &quot;-e&quot;,</span>
+<span class="s2">        &quot;--open-in-editor&quot;,</span>
+<span class="s2">        action=&quot;store_true&quot;,</span>
+<span class="s2">        default=False,</span>
+<span class="s2">        help=&quot;Open blog site in editor&quot;,</span>
+<span class="s2">    )</span>
+<span class="s2">    parser.add_argument(</span>
+<span class="s2">        &quot;-v&quot;,</span>
+<span class="s2">        &quot;--verbose&quot;,</span>
+<span class="s2">        action=&quot;store_true&quot;,</span>
+<span class="s2">        default=False,</span>
+<span class="s2">        dest=&quot;verbose&quot;,</span>
+<span class="s2">        help=&quot;Display context variables at each step&quot;,</span>
+<span class="s2">    )</span>
+<span class="s2">    return parser.parse_args()</span>
+
+
+<span class="s2">if __name__ == &quot;__main__&quot;:</span>
+<span class="s2">    setup_logging()</span>
+<span class="s2">    args = parse_args()</span>
+<span class="s2">    main(args)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-40'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-40'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-41'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-41'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-42'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-42'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-43'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-43'>#</a>
+      </div>
+      <p>Write to blog directory with correct file name</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-44'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-44'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-45'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-45'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-46'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-46'>#</a>
+      </div>
+      <p>output</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-47'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-47'>#</a>
+      </div>
+      <p>Resize images and compress them</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-48'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-48'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-49'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-49'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-50'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-50'>#</a>
+      </div>
+      <p>Notify when the blog post is ready to review</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-51'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-51'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-52'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-52'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-53'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-53'>#</a>
+      </div>
+      <p>Open blog post in editor defined by the environment variable EDITOR</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-54'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-54'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-55'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-55'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-56'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-56'>#</a>
+      </div>
+      <p>Workflow definition</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-57'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-57'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-58'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-58'>#</a>
+      </div>
+      <p>Boilerplate</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-59'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-59'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-60'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-60'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-61'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-61'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

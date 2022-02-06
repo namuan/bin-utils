@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>media_manager.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>media_manager.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>[] Organise photos and videos</p>
+<p>TODO:
+Handle ignored files</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">exif</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">plum.exceptions</span> <span class="kn">import</span> <span class="n">UnpackError</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">handlers</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(),</span>
+    <span class="p">],</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MediaMetadata</span><span class="p">:</span>
+    <span class="n">has_metadata</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">year</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">month</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">day</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">time</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-f&quot;</span><span class="p">,</span> <span class="s2">&quot;--source-file&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Source file&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-s&quot;</span><span class="p">,</span> <span class="s2">&quot;--source-directory&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Source directory&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;-t&quot;</span><span class="p">,</span> <span class="s2">&quot;--target-directory&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Target directory&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-r&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--remove-source&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Remove source file&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">get_datetime_from_exif</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+    <span class="n">datetime_to_parse</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;datetime_original&quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;datetime&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">datetime_to_parse</span><span class="p">:</span>
+        <span class="n">file_directory</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">json_file</span> <span class="o">=</span> <span class="n">file_directory</span> <span class="o">/</span> <span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">json_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">datetime_to_parse</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s2">&quot;creationTime&quot;</span><span class="p">][</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span>
+
+    <span class="n">formats_to_try</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;%Y:%m:</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span> <span class="s2">&quot;%Y:%m:</span><span class="si">%d</span><span class="s2">:%H:%M:%S&quot;</span><span class="p">]</span>
+    <span class="n">datetime_from_exif</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">format_to_try</span> <span class="ow">in</span> <span class="n">formats_to_try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datetime_from_exif</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">datetime_to_parse</span><span class="p">,</span> <span class="n">format_to_try</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">datetime_from_exif</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datetime_from_exif</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">datetime_to_parse</span><span class="p">))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">datetime_from_exif</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">datetime_from_exif</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_birthtime</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">datetime_from_exif</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to parse date time from exif data: </span><span class="si">{</span><span class="nb">dir</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="si">}</span><span class="s2"> , formats: </span><span class="si">{</span><span class="n">formats_to_try</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">datetime_from_exif</span>
+
+
+<span class="k">def</span> <span class="nf">get_photo_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">has_exif</span><span class="p">:</span>
+        <span class="n">media_created_date_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_birthtime</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">media_created_date_time</span> <span class="o">=</span> <span class="n">get_datetime_from_exif</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
+
+    <span class="n">year</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">year</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">month</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">day</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">.</span><span class="n">hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">.</span><span class="n">minute</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">MediaMetadata</span><span class="p">(</span><span class="n">has_metadata</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">has_exif</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="n">day</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">build_target_file_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="n">target_folder</span> <span class="o">=</span> <span class="n">target_directory</span> <span class="o">/</span> <span class="n">metadata</span><span class="o">.</span><span class="n">year</span> <span class="o">/</span> <span class="n">metadata</span><span class="o">.</span><span class="n">month</span> <span class="o">/</span> <span class="n">metadata</span><span class="o">.</span><span class="n">day</span>
+    <span class="n">target_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="p">:</span>
+        <span class="n">target_folder</span> <span class="o">=</span> <span class="n">target_directory</span> <span class="o">/</span> <span class="s2">&quot;ToSort&quot;</span>
+
+    <span class="k">return</span> <span class="n">target_folder</span> <span class="o">/</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+        <span class="n">metadata</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">valid_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">invalid_file_extensions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.json&quot;</span><span class="p">,</span> <span class="s2">&quot;.ini&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">]</span>
+    <span class="n">invalid_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;.ds_store&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">file_path</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+        <span class="ow">and</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_file_extensions</span>
+        <span class="ow">and</span> <span class="n">file_path</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_names</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">process_later</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">):</span>
+    <span class="n">target_file</span> <span class="o">=</span> <span class="n">target_directory</span> <span class="o">/</span> <span class="s2">&quot;ToSort&quot;</span> <span class="o">/</span> <span class="n">file_path</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_file</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">is_video_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;.mov&quot;</span><span class="p">,</span> <span class="s2">&quot;.m4v&quot;</span><span class="p">,</span> <span class="s2">&quot;.avi&quot;</span><span class="p">,</span> <span class="s2">&quot;.3gp&quot;</span><span class="p">,</span> <span class="s2">&quot;.flv&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">get_video_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">media_created_date_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">file_path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_birthtime</span><span class="p">)</span>
+
+    <span class="n">year</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">year</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">month</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">day</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">day</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">.</span><span class="n">hour</span><span class="si">:</span><span class="s2">02d</span><span class="si">}{</span><span class="n">media_created_date_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">.</span><span class="n">minute</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">MediaMetadata</span><span class="p">(</span><span class="n">has_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="n">day</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">time</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">process_media</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">is_video_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">get_video_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">get_photo_metadata</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to parse metadata for </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">target_file</span> <span class="o">=</span> <span class="n">build_target_file_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">target_file</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">target_file</span>
+
+
+<span class="k">def</span> <span class="nf">create_required_directories</span><span class="p">(</span><span class="n">target_directory</span><span class="p">):</span>
+    <span class="n">target_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">target_directory</span> <span class="o">/</span> <span class="s2">&quot;ToSort&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">collect_media_files_from</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">source_file</span><span class="p">:</span>
+        <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">source_file</span><span class="p">)</span>
+        <span class="n">media_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_file</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">source_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">source_directory</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+        <span class="n">media_files</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">source_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;**/*&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">valid_file</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">media_files</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">source_directory</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">source_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either source_file or source_directory must be specified&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">source_directory</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">source_file</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only one of source_file or source_directory can be specified&quot;</span><span class="p">)</span>
+
+    <span class="n">media_files</span> <span class="o">=</span> <span class="n">collect_media_files_from</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📂 </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">media_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files found&quot;</span><span class="p">)</span>
+    <span class="n">target_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">target_directory</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">create_required_directories</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">media_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">media_files</span><span class="p">):</span>
+        <span class="n">source_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">media_file</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⏳ Processing </span><span class="si">{</span><span class="n">source_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">target_file</span> <span class="o">=</span> <span class="n">process_media</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">remove_source</span><span class="p">:</span>
+                <span class="n">source_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🗑 Removing source file: </span><span class="si">{</span><span class="n">source_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📓 [</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">source_file</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">target_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">UnpackError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Unknown file format -&gt; 🗄 Moving to process later: </span><span class="si">{</span><span class="n">source_file</span><span class="si">}</span><span class="s2"> ERROR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">process_later</span><span class="p">(</span><span class="n">source_file</span><span class="p">,</span> <span class="n">target_directory</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Done.&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

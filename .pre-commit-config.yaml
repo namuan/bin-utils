@@ -41,6 +41,11 @@ repos:
         entry: flake8
         language: system
         types: [ python ]
+      - id: pycco
+        name: pycco
+        entry: pycco -p
+        language: system
+        types: [ python ]
       - id: readme-docs
         name: Readme documentation
         description: Using [python help], inserts into README.md.

@@ -4,3 +4,4 @@ bpython
 pre-commit
 flake8
 commitizen
+pycco

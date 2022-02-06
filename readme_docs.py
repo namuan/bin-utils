@@ -26,6 +26,7 @@ def parse_args():
 
 
 def main(args):
+    # These files will be ignored during processing
     ignored_files = [
         "page_to_pdf_selenium.py",
         "file_counter.py",
@@ -38,25 +39,27 @@ def main(args):
         "git_log_to_sqlite.py",
     ]
     py_scripts_with_help = []
+    # Grab all the python scripts in the current directory and collect output from running the help command
     for f in Path(".").glob("*.py"):
         if f.name in ignored_files:
             continue
         logging.info(f"Running python --help on {f}")
         py_help_output = subprocess.run([f"./{f.as_posix()} --help"], shell=True, capture_output=True)  # nosemgrep
         py_scripts_with_help.append(
-            "_{}_{}```{}{}{}```".format(
-                f.name, os.linesep, os.linesep, py_help_output.stdout.decode("utf-8"), os.linesep
+            "[_{}_](https://namuan.github.io/bin-utils/{}.html){}```{}{}{}```".format(
+                f.name, f.stem, os.linesep, os.linesep, py_help_output.stdout.decode("utf-8"), os.linesep
             )
         )
 
     logging.info("Loaded all files. Now replacing regex patterns")
+    # Generate output within the start/end pattern
     start_pattern = "<!-- START makefile-doc -->"
     end_pattern = "<!-- END makefile-doc -->"
     docs_placeholder_regex = re.compile(f"{start_pattern}(.*){end_pattern}", re.DOTALL)
     replacement_string = "\n".join(py_scripts_with_help)
     replacement_string_with_placeholder = f"{start_pattern}{os.linesep}{replacement_string}{os.linesep}{end_pattern}"
 
-    # replace section in README.md with content of list
+    # Replace section in README.md
     readme_file = Path("README.md")
     readme_contents = readme_file.read_text(encoding="utf-8")
     readme_file.write_text(

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>py_carbon_clip.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>py_carbon_clip.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>Generate beautiful screenshots of code using carbon.now.sh and puts it on the clipboard.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+<span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">parse</span>
+
+<span class="kn">import</span> <span class="nn">pyperclip</span>
+<span class="kn">from</span> <span class="nn">pyppeteer</span> <span class="kn">import</span> <span class="n">launch</span>
+
+<span class="n">CWD</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+<span class="n">DOWNLOAD_FOLDER</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">CWD</span><span class="si">}</span><span class="s2">/.temp&quot;</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">preview_image</span><span class="p">(</span><span class="n">carbon_file_path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Darwin&quot;</span><span class="p">:</span>
+        <span class="n">open_file_cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;open </span><span class="si">{</span><span class="n">carbon_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+        <span class="n">open_file_cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;start </span><span class="si">{</span><span class="n">carbon_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">open_file_cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;xdg-open </span><span class="si">{</span><span class="n">carbon_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">open_file_cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># nosemgrep</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">copy_image_to_clip</span><span class="p">(</span><span class="n">carbon_file_path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Darwin&quot;</span><span class="p">:</span>
+        <span class="n">copy_img_cmd</span> <span class="o">=</span> <span class="s2">&quot;osascript -e &#39;set the clipboard to (read (POSIX file </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s2">) as JPEG picture)&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">carbon_file_path</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+        <span class="n">copy_img_cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;nircmd clipboard copyimage </span><span class="si">{</span><span class="n">carbon_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">copy_img_cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;xclip -selection clipboard -t image/png -i </span><span class="si">{</span><span class="n">carbon_file_path</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">copy_img_cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>  <span class="c1"># nosemrep</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">download_image</span><span class="p">(</span><span class="n">page</span><span class="p">):</span>
+    <span class="n">export_button</span> <span class="o">=</span> <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">querySelector</span><span class="p">(</span><span class="s2">&quot;button[data-cy=&#39;quick-export-button&#39;]&quot;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">export_button</span><span class="o">.</span><span class="n">click</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">waitFor</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">open_site</span><span class="p">(</span><span class="n">uri_encoded_clip_text</span><span class="p">):</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="k">await</span> <span class="n">launch</span><span class="p">(</span><span class="n">defaultViewport</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">browser</span><span class="o">.</span><span class="n">newPage</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">send</span><span class="p">(</span>
+        <span class="s2">&quot;Page.setDownloadBehavior&quot;</span><span class="p">,</span>
+        <span class="p">{</span><span class="s2">&quot;behavior&quot;</span><span class="p">:</span> <span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="s2">&quot;downloadPath&quot;</span><span class="p">:</span> <span class="n">DOWNLOAD_FOLDER</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="k">await</span> <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="s2">&quot;https://carbon.now.sh?code=&quot;</span> <span class="o">+</span> <span class="n">uri_encoded_clip_text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">page</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">encode_clip_text</span><span class="p">():</span>
+    <span class="n">clip_text</span> <span class="o">=</span> <span class="n">pyperclip</span><span class="o">.</span><span class="n">paste</span><span class="p">()</span>
+    <span class="n">uri_encoded_clip_text</span> <span class="o">=</span> <span class="n">parse</span><span class="o">.</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">clip_text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">uri_encoded_clip_text</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">uri_encoded_clip_text</span> <span class="o">=</span> <span class="k">await</span> <span class="n">encode_clip_text</span><span class="p">()</span>
+
+    <span class="n">browser</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="k">await</span> <span class="n">open_site</span><span class="p">(</span><span class="n">uri_encoded_clip_text</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">download_image</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">carbon_file_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">DOWNLOAD_FOLDER</span><span class="si">}</span><span class="s2">/carbon.png&quot;</span>
+    <span class="k">await</span> <span class="n">copy_image_to_clip</span><span class="p">(</span><span class="n">carbon_file_path</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">preview_image</span><span class="p">(</span><span class="n">carbon_file_path</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>
