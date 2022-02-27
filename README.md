@@ -39,6 +39,23 @@ optional arguments:
   -v, --verbose         Display context variables at each step
 
 ```
+[_template_py_scripts.py_](https://namuan.github.io/bin-utils/template_py_scripts.html)
+```
+usage: template_py_scripts.py [-h] [-v]
+
+A simple script
+
+Usage:
+./template_py_scripts.py -h
+
+./template_py_scripts.py -v # To log INFO messages
+./template_py_scripts.py -vv # To log DEBUG messages
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_print_browser.py_](https://namuan.github.io/bin-utils/print_browser.html)
 ```
 usage: print_browser.py [-h] -u WEBPAGE_URL -o OUTPUT_FILE_PATH
@@ -55,24 +72,6 @@ optional arguments:
   -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
                         Wait (in secs) before capturing page
   -s, --headless        Run headless (no browser window)
-
-```
-[_executable_docs.py_](https://namuan.github.io/bin-utils/executable_docs.html)
-```
-usage: executable_docs.py [-h] -u USERNAME [-v]
-
-Shows an example of executable documentation.
-
-Usage:
-./executable_docs.py -h
-
-./executable_docs.py --username johndoe
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -u USERNAME, --username USERNAME
-                        User name
-  -v, --verbose         Display context variables at each step
 
 ```
 [_media_manager.py_](https://namuan.github.io/bin-utils/media_manager.html)
@@ -181,6 +180,24 @@ Generates documentation for the readme.md file
 
 optional arguments:
   -h, --help  show this help message and exit
+
+```
+[_template_executable_docs.py_](https://namuan.github.io/bin-utils/template_executable_docs.html)
+```
+usage: template_executable_docs.py [-h] -u USERNAME [-v]
+
+Shows an example of executable documentation.
+
+Usage:
+./executable_docs.py -h
+
+./executable_docs.py --username johndoe
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u USERNAME, --username USERNAME
+                        User name
+  -v, --verbose         Display context variables at each step
 
 ```
 [_py_carbon_clip.py_](https://namuan.github.io/bin-utils/py_carbon_clip.html)
