@@ -238,6 +238,21 @@ optional arguments:
                         Input source directory
 
 ```
+[_hn_new_github_repos.py_](https://namuan.github.io/bin-utils/hn_new_github_repos.html)
+```
+usage: hn_new_github_repos.py [-h] [-v]
+
+Find Links to Github/GitLab and Bitbucket from HN new news
+Send links over Telegram
+
+Usage:
+./hn_new_github_repos.py -h
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  Display context variables at each step
+
+```
 [_jsondoc_parser.py_](https://namuan.github.io/bin-utils/jsondoc_parser.html)
 ```
 usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]

@@ -40,6 +40,20 @@ def html_parser_from(page_html):
     return BeautifulSoup(page_html, "html.parser")
 
 
+def get_telegram_api_url(method, token):
+    return f"https://api.telegram.org/bot{token}/{method}"
+
+
+def send_message_to_telegram(bot_token, chat_id, message, format="Markdown", disable_web_preview=True):
+    data = {
+        "chat_id": chat_id,
+        "text": message,
+        "parse_mode": format,
+        "disable_web_page_preview": disable_web_preview,
+    }
+    requests.post(get_telegram_api_url("sendMessage", bot_token), data=data)
+
+
 def retry(exceptions, tries=4, delay=3, back_off=2):
     def deco_retry(f):
         @wraps(f)

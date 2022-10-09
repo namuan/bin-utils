@@ -18,6 +18,4 @@ fire
 pyperclip
 helium
 javalang
-py-executable-checklist==0.10.1
-PyQt5==5.12.3
-PyQtWebEngine
+py-executable-checklist==1.2.0

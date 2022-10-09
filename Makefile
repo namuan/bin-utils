@@ -8,6 +8,7 @@ setup: ## Setup Virtual Env
 
 deps: ## Install dependencies
 	./venv/bin/pip3 install -r requirements/dev.txt
+	./venv/bin/pip3 install -r requirements/ui.txt
 
 clean: ## Clean package
 	find . -type d -name '__pycache__' | xargs rm -rf
@@ -33,6 +34,7 @@ deploy: clean ## Copies any changed file to the server
 		webpage_to_pdf.py \
 		print_browser.py \
 		Readability.js \
+		hn_new_github_repos.py \
 		scripts \
 		${PROJECTNAME}:./${PROJECTNAME}
 
