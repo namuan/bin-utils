@@ -350,10 +350,10 @@ Send links over Telegram</p>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
     <span class="n">context</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="vm">__dict__</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">minutes</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">run_on_schedule</span><span class="p">,</span> <span class="n">context</span><span class="p">))</span>
+    <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">minutes</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">run_on_schedule</span><span class="p">,</span> <span class="n">context</span><span class="p">))</span>
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
         <span class="n">schedule</span><span class="o">.</span><span class="n">run_pending</span><span class="p">()</span>
-        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

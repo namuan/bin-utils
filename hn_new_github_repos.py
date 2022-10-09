@@ -126,10 +126,10 @@ def run_on_schedule(context):
 def main(args):
     context = args.__dict__
     print(f"Running {datetime.now()}")
-    schedule.every(5).minutes.do(functools.partial(run_on_schedule, context))
+    schedule.every(15).minutes.do(functools.partial(run_on_schedule, context))
     while True:
         schedule.run_pending()
-        time.sleep(1 * 60)
+        time.sleep(10 * 60)
 
 
 if __name__ == "__main__":
