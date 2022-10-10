@@ -32,7 +32,9 @@ Send links over Telegram</p>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 
+<span class="kn">import</span> <span class="nn">dataset</span>
 <span class="kn">import</span> <span class="nn">schedule</span>
+<span class="kn">from</span> <span class="nn">dataset</span> <span class="kn">import</span> <span class="n">Table</span>
 <span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
 <span class="kn">from</span> <span class="nn">py_executable_checklist.workflow</span> <span class="kn">import</span> <span class="n">WorkflowBase</span><span class="p">,</span> <span class="n">run_workflow</span>
 
@@ -204,6 +206,7 @@ Send links over Telegram</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SelectRepoLinks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_links</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;repo_links&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">link</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_links</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interested_in</span><span class="p">(</span><span class="n">link</span><span class="p">)]}</span></pre></div>
     </div>
   </div>
@@ -228,7 +231,7 @@ Send links over Telegram</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">repo_links</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">saved_repo_links</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -241,10 +244,11 @@ Send links over Telegram</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">repo_links</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SendToTelegram: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saved_repo_links</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_repo_links</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;HackerNews/API&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">link</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sending </span><span class="si">{</span><span class="n">link</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">send_message_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">link</span><span class="p">,</span> <span class="n">disable_web_preview</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></pre></div>
+                <span class="n">send_message_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">link</span><span class="p">,</span> <span class="n">disable_web_preview</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sent </span><span class="si">{</span><span class="n">link</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -253,10 +257,10 @@ Send links over Telegram</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-17'>#</a>
       </div>
-      <p>Workflow definition</p>
+      <p>Ignore links already stored in the database</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">FilterExistingLinks</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -268,8 +272,8 @@ Send links over Telegram</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">workflow</span><span class="p">():</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">GrabHackerNewsPage</span><span class="p">,</span> <span class="n">ExtractLinks</span><span class="p">,</span> <span class="n">SelectRepoLinks</span><span class="p">,</span> <span class="n">SendToTelegram</span><span class="p">]</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">repo_links</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">db_table</span><span class="p">:</span> <span class="n">Table</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -278,10 +282,11 @@ Send links over Telegram</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-19'>#</a>
       </div>
-      <p>Boilerplate</p>
+      
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_in_database</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">repo_link</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">db_table</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span><span class="n">repo_link</span><span class="o">=</span><span class="n">repo_link</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -289,6 +294,154 @@ Send links over Telegram</p>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FilterExistingLinks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">repo_links</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;new_repo_links&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">link</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">repo_links</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_database</span><span class="p">(</span><span class="n">link</span><span class="p">)]}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      <p>Save links in the database</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">SaveLinks</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">new_repo_links</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">db_table</span><span class="p">:</span> <span class="n">Table</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SaveLinks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">new_repo_links</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_repo_links</span><span class="p">:</span>
+            <span class="n">entry_row</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;repo_link&quot;</span><span class="p">:</span> <span class="n">link</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">db_table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">entry_row</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updated database: </span><span class="si">{</span><span class="n">entry_row</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;saved_repo_links&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_repo_links</span><span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <p>Set up SQLite database</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">SetupDatabase</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">home_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;HOME&quot;</span><span class="p">)</span>
+        <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;hn_repo_links&quot;</span>
+        <span class="n">db_file</span> <span class="o">=</span> <span class="s2">&quot;hn_new_github_repos.db&quot;</span>
+        <span class="n">db_connection_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sqlite:///</span><span class="si">{</span><span class="n">home_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">db_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">db_connection_string</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connecting to database </span><span class="si">{</span><span class="n">db_connection_string</span><span class="si">}</span><span class="s2"> and table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;db_table&quot;</span><span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">create_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>Workflow definition</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">workflow</span><span class="p">():</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">SetupDatabase</span><span class="p">,</span>
+        <span class="n">GrabHackerNewsPage</span><span class="p">,</span>
+        <span class="n">ExtractLinks</span><span class="p">,</span>
+        <span class="n">SelectRepoLinks</span><span class="p">,</span>
+        <span class="n">FilterExistingLinks</span><span class="p">,</span>
+        <span class="n">SaveLinks</span><span class="p">,</span>
+        <span class="n">SendToTelegram</span><span class="p">,</span>
+    <span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>Boilerplate</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
       </div>
       
     </div>
@@ -304,10 +457,10 @@ Send links over Telegram</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-21'>
+  <div class='section' id='section-31'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-21'>#</a>
+        <a class='octothorpe' href='#section-31'>#</a>
       </div>
       
     </div>
@@ -326,10 +479,10 @@ Send links over Telegram</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-22'>
+  <div class='section' id='section-32'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-22'>#</a>
+        <a class='octothorpe' href='#section-32'>#</a>
       </div>
       
     </div>
@@ -339,16 +492,15 @@ Send links over Telegram</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-23'>
+  <div class='section' id='section-33'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-23'>#</a>
+        <a class='octothorpe' href='#section-33'>#</a>
       </div>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-    <span class="n">context</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="vm">__dict__</span>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">schedule</span><span class="o">.</span><span class="n">every</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span><span class="o">.</span><span class="n">minutes</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">run_on_schedule</span><span class="p">,</span> <span class="n">context</span><span class="p">))</span>
     <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
@@ -359,9 +511,19 @@ Send links over Telegram</p>
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">setup_logging</span><span class="p">()</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
-    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-
-</pre></div>
+    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      <p>run_on_schedule(args.<strong>dict</strong>)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>

@@ -16,7 +16,9 @@ from argparse import ArgumentParser
 from datetime import datetime
 from typing import List
 
+import dataset
 import schedule
+from dataset import Table
 from dotenv import load_dotenv
 from py_executable_checklist.workflow import WorkflowBase, run_workflow
 
@@ -27,6 +29,7 @@ load_dotenv()
 
 DEFAULT_BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROUP_CHAT_ID = os.getenv("GROUP_CHAT_ID")
+
 
 # Workflow steps
 
@@ -69,6 +72,7 @@ class SelectRepoLinks(WorkflowBase):
         return link.startswith("http") and has_known_domain(link)
 
     def execute(self):
+        logging.info(f"SelectRepoLinks: {len(self.all_links)}")
         return {"repo_links": [link for link in self.all_links if self.interested_in(link)]}
 
 
@@ -77,20 +81,80 @@ class SendToTelegram(WorkflowBase):
     Send links as telegram messages
     """
 
-    repo_links: List[str]
+    saved_repo_links: List[str]
 
     def execute(self):
-        for link in self.repo_links:
+        logging.info(f"SendToTelegram: {len(self.saved_repo_links)}")
+        for link in self.saved_repo_links:
             if "HackerNews/API" not in link:
-                logging.info(f"Sending {link}")
                 send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)
+                logging.info(f"Sent {link}")
+
+
+class FilterExistingLinks(WorkflowBase):
+    """
+    Ignore links already stored in the database
+    """
+
+    repo_links: List[str]
+    db_table: Table
+
+    def _in_database(self, repo_link):
+        return self.db_table.find_one(repo_link=repo_link)
+
+    def execute(self):
+        logging.info(f"FilterExistingLinks: {len(self.repo_links)}")
+        return {"new_repo_links": [link for link in self.repo_links if not self._in_database(link)]}
+
+
+class SaveLinks(WorkflowBase):
+    """
+    Save links in the database
+    """
+
+    new_repo_links: List[str]
+    db_table: Table
+
+    def execute(self):
+        logging.info(f"SaveLinks: {len(self.new_repo_links)}")
+        for link in self.new_repo_links:
+            entry_row = {
+                "repo_link": link,
+            }
+            self.db_table.insert(entry_row)
+            logging.info(f"Updated database: {entry_row}")
+
+        return {"saved_repo_links": self.new_repo_links}
+
+
+class SetupDatabase(WorkflowBase):
+    """
+    Set up SQLite database
+    """
+
+    def execute(self):
+        home_dir = os.getenv("HOME")
+        table_name = "hn_repo_links"
+        db_file = "hn_new_github_repos.db"
+        db_connection_string = f"sqlite:///{home_dir}/{db_file}"
+        db = dataset.connect(db_connection_string)
+        logging.info(f"Connecting to database {db_connection_string} and table {table_name}")
+        return {"db_table": db.create_table(table_name)}
 
 
 # Workflow definition
 
 
 def workflow():
-    return [GrabHackerNewsPage, ExtractLinks, SelectRepoLinks, SendToTelegram]
+    return [
+        SetupDatabase,
+        GrabHackerNewsPage,
+        ExtractLinks,
+        SelectRepoLinks,
+        FilterExistingLinks,
+        SaveLinks,
+        SendToTelegram,
+    ]
 
 
 # Boilerplate
@@ -123,8 +187,7 @@ def run_on_schedule(context):
     run_workflow(context, workflow())
 
 
-def main(args):
-    context = args.__dict__
+def main(context):
     print(f"Running {datetime.now()}")
     schedule.every(15).minutes.do(functools.partial(run_on_schedule, context))
     while True:
@@ -135,4 +198,5 @@ def main(args):
 if __name__ == "__main__":
     setup_logging()
     args = parse_args()
-    main(args)
+    main(args.__dict__)
+    # run_on_schedule(args.__dict__)
