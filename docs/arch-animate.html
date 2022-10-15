@@ -17,17 +17,24 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-0'>#</a>
       </div>
-      <p>Simple script to demonstrate animate software architecture diagrams</p>
+      <p>Simple script to demonstrate animating software architecture diagrams using PyGame</p>
+<p>Requires
+* brew install imagemagick</p>
 <p>Usage:
 ./arch-animate.py -h</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
-<span class="kn">import</span> <span class="nn">pygame</span>
-<span class="kn">from</span> <span class="nn">pygame.locals</span> <span class="kn">import</span> <span class="n">QUIT</span></pre></div>
+<span class="kn">import</span> <span class="nn">pygame</span> <span class="k">as</span> <span class="nn">pg</span>
+<span class="kn">from</span> <span class="nn">pygame.locals</span> <span class="kn">import</span> <span class="n">QUIT</span>
+
+<span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="n">setup_logging</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -39,35 +46,11 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_logging</span><span class="p">(</span><span class="n">verbosity</span><span class="p">):</span>
-    <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
-    <span class="k">if</span> <span class="n">verbosity</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
-    <span class="k">elif</span> <span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
-
-    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
-        <span class="n">handlers</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(),</span>
-        <span class="p">],</span>
-        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
-        <span class="n">level</span><span class="o">=</span><span class="n">logging_level</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-2'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-2'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="s2">&quot;--convert-to-animation&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Generate animated gif&quot;</span>
+    <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
@@ -76,7 +59,25 @@
         <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Increase verbosity of logging output&quot;</span><span class="p">,</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></pre></div>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+<span class="n">directory_now</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+<span class="n">output_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;output_dir&quot;</span>
+<span class="n">output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>Colors</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">bg_color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>  <span class="c1"># white</span>
+<span class="n">some_color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -85,23 +86,46 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-3'>#</a>
       </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">convert_files_to_animated_gif</span><span class="p">(</span><span class="n">frame_delay</span><span class="p">,</span> <span class="n">filename_list</span><span class="p">):</span>
+    <span class="n">target_filename</span> <span class="o">=</span> <span class="s2">&quot;arch-animate-final.gif&quot;</span>
+    <span class="n">command_list</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;convert&quot;</span><span class="p">,</span> <span class="s2">&quot;-delay&quot;</span><span class="p">,</span> <span class="n">frame_delay</span><span class="p">,</span> <span class="s2">&quot;-loop&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">filename_list</span> <span class="o">+</span> <span class="p">[</span><span class="n">target_filename</span><span class="p">]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🚒 Converting to animated gif </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_list</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">command_list</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">output_directory</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleting temporary generated files ...&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">output_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;temp-arch-animate*.png&quot;</span><span class="p">):</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Generated </span><span class="si">{</span><span class="n">target_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
       <p>Update game. Called once per frame.
 dt is the amount of time passed since last frame.
 If you want to have constant apparent movement no matter your framerate,
-what you can do is something like</p>
-<p>x += v * dt</p>
+what you can do is something like
+x += v * dt</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">dt</span><span class="p">):</span>
     <span class="ow">and</span> <span class="n">this</span> <span class="n">will</span> <span class="n">scale</span> <span class="n">your</span> <span class="n">velocity</span> <span class="n">based</span> <span class="n">on</span> <span class="n">time</span><span class="o">.</span> <span class="n">Extend</span> <span class="k">as</span> <span class="n">necessary</span><span class="o">.</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    for event in pygame.event.get():</span>
+<span class="s2">    for event in pg.event.get():</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">        if event.type == QUIT:</span>
-<span class="s2">            pygame.quit()  # Opposite of pygame.init</span>
+<span class="s2">            pg.quit()  # Opposite of pygame.init</span>
 <span class="s2">            sys.exit()  # Not including this line crashes the script on Windows. Possibly</span>
 <span class="s2">#DIVIDER</span>
 
+<span class="s2">#DIVIDER</span>
+<span class="s2">def draw_scene(screen):</span>
+<span class="s2">    pg.draw.circle(screen, some_color, (300, 50), 100, 1)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">def draw(screen):</span>
 <span class="s2">    &quot;&quot;&quot;</span>
@@ -111,26 +135,12 @@ what you can do is something like</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-4'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-4'>#</a>
-      </div>
-      <p>Go through events that are passed to the script by the window.</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-5'>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
       </div>
-      <p>We need to handle these events. Initially the only one you&rsquo;ll want to care
-about is the QUIT event, because if you don&rsquo;t handle it, your game will crash
-whenever someone tries to exit.</p>
+      <p>Go through events that are passed to the script by the window.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
@@ -142,8 +152,9 @@ whenever someone tries to exit.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-6'>#</a>
       </div>
-      <p>on other operating systems too, but I don&rsquo;t know for sure.
-Handle other events as you wish.</p>
+      <p>We need to handle these events. Initially the only one you&rsquo;ll want to care
+about is the QUIT event, because if you don&rsquo;t handle it, your game will crash
+whenever someone tries to exit.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
@@ -155,33 +166,61 @@ Handle other events as you wish.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-7'>#</a>
       </div>
-      <p>screen.fill((0, 0, 0))  # Fill the screen with black.</p>
+      <p>on other operating systems too, but I don&rsquo;t know for sure.
+Handle other events as you wish.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>screen.fill(bg_color)</p>
 <h1>Redraw screen here.</h1>
+<p>draw_scene(screen)</p>
 <h1>Flip the display so that the things we drew actually show up.</h1>
-<p>pygame.display.flip()</p>
-<p>def run_pygame_loop():</p>
-<h1>Initialise PyGame.</h1>
-<p>pygame.init()</p>
-<h1>Set up the clock. This will tick every frame and thus maintain a relatively constant framerate. Hopefully.</h1>
+<p>pg.display.flip()</p>
+<p>def draw_diagram(args):
+pg.init()</p>
 <p>fps = 60
-fps_clock = pygame.time.Clock()</p>
-<h1>Set up the window.</h1>
-<p>width, height = 640, 480
-screen = pygame.display.set_mode((width, height))</p>
-<h1>screen is the surface representing the window.</h1>
-<h1>PyGame surfaces can be thought of as screen sections that you can draw onto.</h1>
-<h1>You can also draw surfaces onto other surfaces, rotate surfaces, and transform surfaces.</h1>
-<h1>Main game loop.</h1>
-<p>dt = 1 / fps * 1000  # dt is the time since last frame.
-while True:  # Loop forever!
-    update(dt)  # You can update/draw here, I&rsquo;ve just moved the code for neatness.
+fps_clock = pg.time.Clock()</p>
+<p>img_height = 640
+img_width = 480</p>
+<h1>shrink for smooth-ness</h1>
+<p>final_height = int(round(0.3 * img_height))
+final_width = int(round(0.3 * img_width))</p>
+<p>screen = pg.display.set_mode((img_height, img_width))</p>
+<p>frame_number = 0
+dt = 1 / fps * 1000
+while True:
+    update(dt)
     draw(screen)</p>
-<pre><code>dt = fps_clock.tick(fps)
+<pre><code># Save screen
+shrunk_surface = pg.transform.smoothscale(screen, (final_width, final_height))
+if args.convert_to_animation:
+    pg.image.save(shrunk_surface, output_directory / f"temp-arch-animate-{frame_number}.png")
+    frame_number += 1
+
+dt = fps_clock.tick(fps)
 </code></pre>
 <p>def main(args):
-run_pygame_loop()
-logging.debug(f&rdquo;This is a debug log message: {args.verbose}&rdquo;)
-logging.info(f&rdquo;This is an info log message: {args.verbose}&rdquo;)</p>
+draw_diagram(args)</p>
 <p>if <strong>name</strong> == &ldquo;<strong>main</strong>&rdquo;:
 args = parse_args()
 setup_logging(args.verbose)

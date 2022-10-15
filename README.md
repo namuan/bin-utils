@@ -268,6 +268,23 @@ optional arguments:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
+pygame 2.1.2 (SDL 2.0.18, Python 3.8.12)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+usage: arch-animate.py [-h] [-c] [-v]
+
+Simple script to demonstrate animating software architecture diagrams using PyGame
+
+Requires
+* brew install imagemagick
+
+Usage:
+./arch-animate.py -h
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c, --convert-to-animation
+                        Generate animated gif
+  -v, --verbose         Increase verbosity of logging output
 
 ```
 [_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)

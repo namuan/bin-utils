@@ -1,38 +1,31 @@
 #!/usr/bin/env python3
 """
-Simple script to demonstrate animate software architecture diagrams
+Simple script to demonstrate animating software architecture diagrams using PyGame
+
+Requires
+* brew install imagemagick
 
 Usage:
 ./arch-animate.py -h
 """
 import logging
+import os
+import subprocess
 import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
 
-import pygame
+import pygame as pg
 from pygame.locals import QUIT
 
-
-def setup_logging(verbosity):
-    logging_level = logging.WARNING
-    if verbosity == 1:
-        logging_level = logging.INFO
-    elif verbosity >= 2:
-        logging_level = logging.DEBUG
-
-    logging.basicConfig(
-        handlers=[
-            logging.StreamHandler(),
-        ],
-        format="%(asctime)s - %(filename)s:%(lineno)d - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging_level,
-    )
-    logging.captureWarnings(capture=True)
+from common_utils import setup_logging
 
 
 def parse_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "-c", "--convert-to-animation", default=False, action="store_true", help="Generate animated gif"
+    )
     parser.add_argument(
         "-v",
         "--verbose",
@@ -44,70 +37,97 @@ def parse_args():
     return parser.parse_args()
 
 
+directory_now = os.path.dirname(os.path.realpath(__file__))
+output_directory = Path.cwd() / "output_dir"
+output_directory.mkdir(exist_ok=True)
+
+# Colors
+
+bg_color = (255, 255, 255)  # white
+some_color = (255, 0, 0)
+
+
+def convert_files_to_animated_gif(frame_delay, filename_list):
+    target_filename = "arch-animate-final.gif"
+    command_list = ["convert", "-delay", frame_delay, "-loop", "0"] + filename_list + [target_filename]
+    logging.info(f"🚒 Converting to animated gif {' '.join(command_list)}")
+    subprocess.call(command_list, cwd=output_directory)
+    logging.info("Deleting temporary generated files ...")
+    for f in output_directory.glob("temp-arch-animate*.png"):
+        f.unlink(missing_ok=True)
+    logging.info(f"✅ Generated {target_filename}")
+
+
 def update(dt):
     """
     Update game. Called once per frame.
     dt is the amount of time passed since last frame.
     If you want to have constant apparent movement no matter your framerate,
     what you can do is something like
-
     x += v * dt
-
     and this will scale your velocity based on time. Extend as necessary."""
 
     # Go through events that are passed to the script by the window.
-    for event in pygame.event.get():
+    for event in pg.event.get():
         # We need to handle these events. Initially the only one you'll want to care
         # about is the QUIT event, because if you don't handle it, your game will crash
         # whenever someone tries to exit.
         if event.type == QUIT:
-            pygame.quit()  # Opposite of pygame.init
+            pg.quit()  # Opposite of pygame.init
             sys.exit()  # Not including this line crashes the script on Windows. Possibly
             # on other operating systems too, but I don't know for sure.
         # Handle other events as you wish.
+
+
+def draw_scene(screen):
+    pg.draw.circle(screen, some_color, (300, 50), 100, 1)
 
 
 def draw(screen):
     """
     Draw things to the window. Called once per frame.
     """
-    screen.fill((0, 0, 0))  # Fill the screen with black.
+    screen.fill(bg_color)
 
     # Redraw screen here.
+    draw_scene(screen)
 
     # Flip the display so that the things we drew actually show up.
-    pygame.display.flip()
+    pg.display.flip()
 
 
-def run_pygame_loop():
-    # Initialise PyGame.
-    pygame.init()
+def draw_diagram(args):
+    pg.init()
 
-    # Set up the clock. This will tick every frame and thus maintain a relatively constant framerate. Hopefully.
     fps = 60
-    fps_clock = pygame.time.Clock()
+    fps_clock = pg.time.Clock()
 
-    # Set up the window.
-    width, height = 640, 480
-    screen = pygame.display.set_mode((width, height))
+    img_height = 640
+    img_width = 480
 
-    # screen is the surface representing the window.
-    # PyGame surfaces can be thought of as screen sections that you can draw onto.
-    # You can also draw surfaces onto other surfaces, rotate surfaces, and transform surfaces.
+    # shrink for smooth-ness
+    final_height = int(round(0.3 * img_height))
+    final_width = int(round(0.3 * img_width))
 
-    # Main game loop.
-    dt = 1 / fps * 1000  # dt is the time since last frame.
-    while True:  # Loop forever!
-        update(dt)  # You can update/draw here, I've just moved the code for neatness.
+    screen = pg.display.set_mode((img_height, img_width))
+
+    frame_number = 0
+    dt = 1 / fps * 1000
+    while True:
+        update(dt)
         draw(screen)
+
+        # Save screen
+        shrunk_surface = pg.transform.smoothscale(screen, (final_width, final_height))
+        if args.convert_to_animation:
+            pg.image.save(shrunk_surface, output_directory / f"temp-arch-animate-{frame_number}.png")
+            frame_number += 1
 
         dt = fps_clock.tick(fps)
 
 
 def main(args):
-    run_pygame_loop()
-    logging.debug(f"This is a debug log message: {args.verbose}")
-    logging.info(f"This is an info log message: {args.verbose}")
+    draw_diagram(args)
 
 
 if __name__ == "__main__":
