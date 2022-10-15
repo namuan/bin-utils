@@ -266,6 +266,10 @@ optional arguments:
   -o OUTFILE, --outfile OUTFILE
 
 ```
+[_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
+```
+
+```
 [_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)
 ```
 usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
