@@ -124,8 +124,54 @@ x += v * dt</p>
 <span class="s2">#DIVIDER</span>
 
 <span class="s2">#DIVIDER</span>
+<span class="s2">class Application:</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def __init__(self, start_x, start_y, height, width, color):</span>
+<span class="s2">        self.x = start_x</span>
+<span class="s2">        self.y = start_y</span>
+<span class="s2">        self.height = height</span>
+<span class="s2">        self.width = width</span>
+<span class="s2">        self.color = color</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def draw_on(self, drawing_screen):</span>
+<span class="s2">        pg.draw.rect(drawing_screen, some_color, [self.x, self.y, self.width, self.height])</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def move_to(self, x, y):</span>
+<span class="s2">        self.x = self.x + x</span>
+<span class="s2">        self.y += y</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def centre(self):</span>
+<span class="s2">        return self.x + (self.width / 2), self.y + (self.height / 2)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">class Message:</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def __init__(self, source_component: Application):</span>
+<span class="s2">        self.x, self.y = source_component.centre()</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def draw_on(self, drawing_screen):</span>
+<span class="s2">        pg.draw.circle(drawing_screen, (0, 255, 0), (self.x, self.y), radius=5)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    def move_to(self, target_component):</span>
+<span class="s2">        target_centre_x, target_centre_y = target_component.centre()</span>
+<span class="s2">        dx, dy = (target_centre_x - self.x, target_centre_y - self.y)</span>
+<span class="s2">        step_x, step_y = (dx / 25.0, dy / 25.0)</span>
+
+<span class="s2">        self.x = self.x + step_x</span>
+<span class="s2">        self.y = self.y + step_y</span>
+
+
+<span class="s2">app_a = Application(100, 100, 100, 200, some_color)</span>
+<span class="s2">app_b = Application(200, 300, 100, 200, some_color)</span>
+<span class="s2">message = Message(app_a)</span>
+<span class="s2">message_2 = Message(app_b)</span>
+<span class="s2">#DIVIDER</span>
 <span class="s2">def draw_scene(screen):</span>
-<span class="s2">    pg.draw.circle(screen, some_color, (300, 50), 100, 1)</span>
+<span class="s2">    app_a.draw_on(screen)</span>
+<span class="s2">    app_b.draw_on(screen)</span>
+<span class="s2">    message.draw_on(screen)</span>
+<span class="s2">    message.move_to(app_b)</span>
+<span class="s2">    message_2.draw_on(screen)</span>
+<span class="s2">    message_2.move_to(app_a)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">def draw(screen):</span>
 <span class="s2">    &quot;&quot;&quot;</span>
@@ -190,6 +236,114 @@ Handle other events as you wish.</p>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
       </div>
       <p>screen.fill(bg_color)</p>
 <h1>Redraw screen here.</h1>

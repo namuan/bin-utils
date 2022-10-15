@@ -79,8 +79,54 @@ def update(dt):
         # Handle other events as you wish.
 
 
+class Application:
+    def __init__(self, start_x, start_y, height, width, color):
+        self.x = start_x
+        self.y = start_y
+        self.height = height
+        self.width = width
+        self.color = color
+
+    def draw_on(self, drawing_screen):
+        pg.draw.rect(drawing_screen, some_color, [self.x, self.y, self.width, self.height])
+
+    def move_to(self, x, y):
+        self.x = self.x + x
+        self.y += y
+
+    def centre(self):
+        return self.x + (self.width / 2), self.y + (self.height / 2)
+
+
+class Message:
+    def __init__(self, source_component: Application):
+        self.x, self.y = source_component.centre()
+
+    def draw_on(self, drawing_screen):
+        pg.draw.circle(drawing_screen, (0, 255, 0), (self.x, self.y), radius=5)
+
+    def move_to(self, target_component):
+        target_centre_x, target_centre_y = target_component.centre()
+        dx, dy = (target_centre_x - self.x, target_centre_y - self.y)
+        step_x, step_y = (dx / 25.0, dy / 25.0)
+
+        self.x = self.x + step_x
+        self.y = self.y + step_y
+
+
+app_a = Application(100, 100, 100, 200, some_color)
+app_b = Application(200, 300, 100, 200, some_color)
+message = Message(app_a)
+message_2 = Message(app_b)
+
+
 def draw_scene(screen):
-    pg.draw.circle(screen, some_color, (300, 50), 100, 1)
+    app_a.draw_on(screen)
+    app_b.draw_on(screen)
+    message.draw_on(screen)
+    message.move_to(app_b)
+    message_2.draw_on(screen)
+    message_2.move_to(app_a)
 
 
 def draw(screen):
