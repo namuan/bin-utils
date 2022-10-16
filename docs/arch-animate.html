@@ -64,7 +64,9 @@
 
 <span class="n">directory_now</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
 <span class="n">output_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;output_dir&quot;</span>
-<span class="n">output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+<span class="n">output_directory</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">pg</span><span class="o">.</span><span class="n">init</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -73,11 +75,27 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-2'>#</a>
       </div>
-      <p>Colors</p>
+      <p>colors</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="n">bg_color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>  <span class="c1"># white</span>
-<span class="n">some_color</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></pre></div>
+
+<span class="n">aqua</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+<span class="n">black</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">blue</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+<span class="n">fuchsia</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+<span class="n">gray</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+<span class="n">green</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">lime</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">maroon</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">navy_blue</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+<span class="n">olive</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">purple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+<span class="n">red</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">silver</span> <span class="o">=</span> <span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">)</span>
+<span class="n">teal</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+<span class="n">white</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+<span class="n">yellow</span> <span class="o">=</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -85,6 +103,18 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>fonts</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">application_label_font</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">font</span><span class="o">.</span><span class="n">SysFont</span><span class="p">(</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
       </div>
       
     </div>
@@ -101,10 +131,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-4'>
+  <div class='section' id='section-5'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-4'>#</a>
+        <a class='octothorpe' href='#section-5'>#</a>
       </div>
       <p>Update game. Called once per frame.
 dt is the amount of time passed since last frame.
@@ -124,17 +154,39 @@ x += v * dt</p>
 <span class="s2">#DIVIDER</span>
 
 <span class="s2">#DIVIDER</span>
+<span class="s2">def darker(c):</span>
+<span class="s2">    shade_factor = 0.5</span>
+<span class="s2">    newR = c[0] * (1 - shade_factor)</span>
+<span class="s2">    newG = c[1] * (1 - shade_factor)</span>
+<span class="s2">    newB = c[2] * (1 - shade_factor)</span>
+<span class="s2">    return newR, newG, newB</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def lighten(c):</span>
+<span class="s2">    factor = 0.2</span>
+<span class="s2">    return [255 - (255 - c[0]) * (1 - factor), 255 - (255 - c[1]) * (1 - factor), 255 - (255 - c[2]) * (1 - factor)]</span>
+<span class="s2">#DIVIDER</span>
 <span class="s2">class Application:</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def __init__(self, start_x, start_y, height, width, color):</span>
+<span class="s2">    def __init__(self, label, start_x, start_y, height, width, color):</span>
+<span class="s2">        self.label = label</span>
 <span class="s2">        self.x = start_x</span>
 <span class="s2">        self.y = start_y</span>
 <span class="s2">        self.height = height</span>
 <span class="s2">        self.width = width</span>
 <span class="s2">        self.color = color</span>
+<span class="s2">        self.border_width = 4</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def draw_on(self, drawing_screen):</span>
-<span class="s2">        pg.draw.rect(drawing_screen, some_color, [self.x, self.y, self.width, self.height])</span>
+<span class="s2">        pg.draw.rect(drawing_screen, lighten(self.color), [self.x, self.y, self.width, self.height], 0)</span>
+<span class="s2">        for i in range(self.border_width):</span>
+<span class="s2">            pg.draw.rect(</span>
+<span class="s2">                drawing_screen,</span>
+<span class="s2">                darker(self.color),</span>
+<span class="s2">                [self.x - i, self.y - i, self.width + self.border_width, self.height + self.border_width],</span>
+<span class="s2">                1,</span>
+<span class="s2">            )</span>
+<span class="s2">        rendered_label = application_label_font.render(self.label, True, black)</span>
+<span class="s2">        drawing_screen.blit(rendered_label, (self.x, self.y - 20))</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def move_to(self, x, y):</span>
 <span class="s2">        self.x = self.x + x</span>
@@ -147,9 +199,14 @@ x += v * dt</p>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def __init__(self, source_component: Application):</span>
 <span class="s2">        self.x, self.y = source_component.centre()</span>
+<span class="s2">        self.color = yellow</span>
+<span class="s2">        self.radius = 8</span>
+<span class="s2">        self.border_width = 1</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def draw_on(self, drawing_screen):</span>
-<span class="s2">        pg.draw.circle(drawing_screen, (0, 255, 0), (self.x, self.y), radius=5)</span>
+<span class="s2">        pg.draw.circle(drawing_screen, lighten(self.color), (self.x, self.y), self.radius, 0)</span>
+<span class="s2">        for i in range(self.border_width):</span>
+<span class="s2">            pg.draw.circle(drawing_screen, darker(self.color), (self.x - i, self.y - i), self.radius + i, 1)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def move_to(self, target_component):</span>
 <span class="s2">        target_centre_x, target_centre_y = target_component.centre()</span>
@@ -160,8 +217,8 @@ x += v * dt</p>
 <span class="s2">        self.y = self.y + step_y</span>
 
 
-<span class="s2">app_a = Application(100, 100, 100, 200, some_color)</span>
-<span class="s2">app_b = Application(200, 300, 100, 200, some_color)</span>
+<span class="s2">app_a = Application(&quot;Gateway&quot;, 100, 100, 50, 100, lime)</span>
+<span class="s2">app_b = Application(&quot;Payment Service&quot;, 400, 100, 50, 100, fuchsia)</span>
 <span class="s2">message = Message(app_a)</span>
 <span class="s2">message_2 = Message(app_b)</span>
 <span class="s2">#DIVIDER</span>
@@ -181,26 +238,12 @@ x += v * dt</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-5'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-5'>#</a>
-      </div>
-      <p>Go through events that are passed to the script by the window.</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-6'>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-6'>#</a>
       </div>
-      <p>We need to handle these events. Initially the only one you&rsquo;ll want to care
-about is the QUIT event, because if you don&rsquo;t handle it, your game will crash
-whenever someone tries to exit.</p>
+      <p>Go through events that are passed to the script by the window.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
@@ -212,8 +255,9 @@ whenever someone tries to exit.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-7'>#</a>
       </div>
-      <p>on other operating systems too, but I don&rsquo;t know for sure.
-Handle other events as you wish.</p>
+      <p>We need to handle these events. Initially the only one you&rsquo;ll want to care
+about is the QUIT event, because if you don&rsquo;t handle it, your game will crash
+whenever someone tries to exit.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
@@ -225,7 +269,8 @@ Handle other events as you wish.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-8'>#</a>
       </div>
-      
+      <p>on other operating systems too, but I don&rsquo;t know for sure.
+Handle other events as you wish.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
@@ -345,14 +390,49 @@ Handle other events as you wish.</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-18'>#</a>
       </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
       <p>screen.fill(bg_color)</p>
 <h1>Redraw screen here.</h1>
 <p>draw_scene(screen)</p>
 <h1>Flip the display so that the things we drew actually show up.</h1>
 <p>pg.display.flip()</p>
 <p>def draw_diagram(args):
-pg.init()</p>
-<p>fps = 60
+fps = 60
 fps_clock = pg.time.Clock()</p>
 <p>img_height = 640
 img_width = 480</p>

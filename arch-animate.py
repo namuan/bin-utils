@@ -41,10 +41,30 @@ directory_now = os.path.dirname(os.path.realpath(__file__))
 output_directory = Path.cwd() / "output_dir"
 output_directory.mkdir(exist_ok=True)
 
-# Colors
+pg.init()
 
+# colors
 bg_color = (255, 255, 255)  # white
-some_color = (255, 0, 0)
+
+aqua = (0, 255, 255)
+black = (0, 0, 0)
+blue = (0, 0, 255)
+fuchsia = (255, 0, 255)
+gray = (128, 128, 128)
+green = (0, 128, 0)
+lime = (0, 255, 0)
+maroon = (128, 0, 0)
+navy_blue = (0, 0, 128)
+olive = (128, 128, 0)
+purple = (128, 0, 128)
+red = (255, 0, 0)
+silver = (192, 192, 192)
+teal = (0, 128, 128)
+white = (255, 255, 255)
+yellow = (255, 255, 0)
+
+# fonts
+application_label_font = pg.font.SysFont("Arial", 15)
 
 
 def convert_files_to_animated_gif(frame_delay, filename_list):
@@ -79,16 +99,40 @@ def update(dt):
         # Handle other events as you wish.
 
 
+def darker(c):
+    shade_factor = 0.5
+    newR = c[0] * (1 - shade_factor)
+    newG = c[1] * (1 - shade_factor)
+    newB = c[2] * (1 - shade_factor)
+    return newR, newG, newB
+
+
+def lighten(c):
+    factor = 0.2
+    return [255 - (255 - c[0]) * (1 - factor), 255 - (255 - c[1]) * (1 - factor), 255 - (255 - c[2]) * (1 - factor)]
+
+
 class Application:
-    def __init__(self, start_x, start_y, height, width, color):
+    def __init__(self, label, start_x, start_y, height, width, color):
+        self.label = label
         self.x = start_x
         self.y = start_y
         self.height = height
         self.width = width
         self.color = color
+        self.border_width = 4
 
     def draw_on(self, drawing_screen):
-        pg.draw.rect(drawing_screen, some_color, [self.x, self.y, self.width, self.height])
+        pg.draw.rect(drawing_screen, lighten(self.color), [self.x, self.y, self.width, self.height], 0)
+        for i in range(self.border_width):
+            pg.draw.rect(
+                drawing_screen,
+                darker(self.color),
+                [self.x - i, self.y - i, self.width + self.border_width, self.height + self.border_width],
+                1,
+            )
+        rendered_label = application_label_font.render(self.label, True, black)
+        drawing_screen.blit(rendered_label, (self.x, self.y - 20))
 
     def move_to(self, x, y):
         self.x = self.x + x
@@ -101,9 +145,14 @@ class Application:
 class Message:
     def __init__(self, source_component: Application):
         self.x, self.y = source_component.centre()
+        self.color = yellow
+        self.radius = 8
+        self.border_width = 1
 
     def draw_on(self, drawing_screen):
-        pg.draw.circle(drawing_screen, (0, 255, 0), (self.x, self.y), radius=5)
+        pg.draw.circle(drawing_screen, lighten(self.color), (self.x, self.y), self.radius, 0)
+        for i in range(self.border_width):
+            pg.draw.circle(drawing_screen, darker(self.color), (self.x - i, self.y - i), self.radius + i, 1)
 
     def move_to(self, target_component):
         target_centre_x, target_centre_y = target_component.centre()
@@ -114,8 +163,8 @@ class Message:
         self.y = self.y + step_y
 
 
-app_a = Application(100, 100, 100, 200, some_color)
-app_b = Application(200, 300, 100, 200, some_color)
+app_a = Application("Gateway", 100, 100, 50, 100, lime)
+app_b = Application("Payment Service", 400, 100, 50, 100, fuchsia)
 message = Message(app_a)
 message_2 = Message(app_b)
 
@@ -143,8 +192,6 @@ def draw(screen):
 
 
 def draw_diagram(args):
-    pg.init()
-
     fps = 60
     fps_clock = pg.time.Clock()
 
