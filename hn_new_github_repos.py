@@ -87,8 +87,11 @@ class SendToTelegram(WorkflowBase):
         logging.info(f"SendToTelegram: {len(self.saved_repo_links)}")
         for link in self.saved_repo_links:
             if "HackerNews/API" not in link:
-                send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)
-                logging.info(f"Sent {link}")
+                try:
+                    send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)
+                    logging.info(f"Sent {link}")
+                except Exception as e:
+                    logging.error(f"Unable to send telegram message for {link}", e)
 
 
 class FilterExistingLinks(WorkflowBase):
