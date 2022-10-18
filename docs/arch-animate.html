@@ -439,7 +439,8 @@ img_width = 480</p>
 <h1>shrink for smooth-ness</h1>
 <p>final_height = int(round(0.3 * img_height))
 final_width = int(round(0.3 * img_width))</p>
-<p>screen = pg.display.set_mode((img_height, img_width))</p>
+<p>screen = pg.display.set_mode((img_height, img_width))
+pg.display.set_caption(&ldquo;Arch Animate&rdquo;)</p>
 <p>frame_number = 0
 dt = 1 / fps * 1000
 while True:

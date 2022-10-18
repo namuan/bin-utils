@@ -203,6 +203,7 @@ def draw_diagram(args):
     final_width = int(round(0.3 * img_width))
 
     screen = pg.display.set_mode((img_height, img_width))
+    pg.display.set_caption("Arch Animate")
 
     frame_number = 0
     dt = 1 / fps * 1000

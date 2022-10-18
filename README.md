@@ -268,7 +268,7 @@ optional arguments:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.8.12)
+pygame 2.1.2 (SDL 2.0.18, Python 3.9.13)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
