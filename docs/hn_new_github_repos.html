@@ -102,7 +102,12 @@ Send links over Telegram</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">page_html</span> <span class="o">=</span> <span class="n">fetch_html_page</span><span class="p">(</span><span class="s2">&quot;https://news.ycombinator.com/newest&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">page_html</span> <span class="o">=</span> <span class="n">fetch_html_page</span><span class="p">(</span><span class="s2">&quot;https://news.ycombinator.com/newest&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to fetch Hackernews page&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hn_newest_html&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;html&gt;&lt;/html&gt;&quot;</span><span class="p">}</span>
+
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hn_newest_html&quot;</span><span class="p">:</span> <span class="n">page_html</span><span class="p">}</span></pre></div>
     </div>
   </div>
