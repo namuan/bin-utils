@@ -56,6 +56,10 @@ optional arguments:
   -v, --verbose  Increase verbosity of logging output
 
 ```
+[_reddit_api.py_](https://namuan.github.io/bin-utils/reddit_api.html)
+```
+
+```
 [_print_browser.py_](https://namuan.github.io/bin-utils/print_browser.html)
 ```
 usage: print_browser.py [-h] -u WEBPAGE_URL -o OUTPUT_FILE_PATH
