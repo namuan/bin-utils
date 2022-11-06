@@ -83,7 +83,15 @@ class BaseHandler:
     def __init__(self, url):
         self.url = url
 
+    def _find_existing_bookmark(self):
+        return bookmarks_table.find_one(link=self.url)
+
     def bookmark(self) -> str:
+        existing_bookmark = self._find_existing_bookmark()
+        if existing_bookmark:
+            logging.info(f"Found one already bookmarked: {existing_bookmark}")
+            return existing_bookmark.get("target_location")
+
         file_location = self._bookmark()
         entry_row = {
             "source": self.__class__.__name__,

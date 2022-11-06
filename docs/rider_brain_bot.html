@@ -137,7 +137,15 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
 
+    <span class="k">def</span> <span class="nf">_find_existing_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">bookmarks_table</span><span class="o">.</span><span class="n">find_one</span><span class="p">(</span><span class="n">link</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">existing_bookmark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_existing_bookmark</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">existing_bookmark</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found one already bookmarked: </span><span class="si">{</span><span class="n">existing_bookmark</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">existing_bookmark</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;target_location&quot;</span><span class="p">)</span>
+
         <span class="n">file_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bookmark</span><span class="p">()</span>
         <span class="n">entry_row</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
