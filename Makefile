@@ -47,6 +47,11 @@ stop: deploy ## Stop any running screen session on the server
 ssh: ## SSH into the target VM
 	ssh ${PROJECTNAME}
 
+syncdatabases: ## Copy databases from remote to local
+	rm -rf output_dir/*.db
+	rsync -avzr ${PROJECTNAME}:./hn_new_github_repos.* output_dir/
+	rsync -avzr ${PROJECTNAME}:./rider_brain.* output_dir/
+
 bpython: ## Runs bpython
 	./venv/bin/bpython
 
