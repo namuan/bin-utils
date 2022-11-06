@@ -27,11 +27,11 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
 
+<span class="kn">from</span> <span class="nn">common.workflow</span> <span class="kn">import</span> <span class="n">WorkflowBase</span><span class="p">,</span> <span class="n">run_workflow</span>
 <span class="kn">from</span> <span class="nn">jinja2</span> <span class="kn">import</span> <span class="n">Environment</span><span class="p">,</span> <span class="n">FileSystemLoader</span>
 <span class="kn">from</span> <span class="nn">selenium</span> <span class="kn">import</span> <span class="n">webdriver</span>
 <span class="kn">from</span> <span class="nn">slug</span> <span class="kn">import</span> <span class="n">slug</span>
 
-<span class="kn">from</span> <span class="nn">common.workflow</span> <span class="kn">import</span> <span class="n">WorkflowBase</span><span class="p">,</span> <span class="n">run_workflow</span>
 <span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="n">create_dir</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>

@@ -1,3 +1,5 @@
+import base64
+import json
 import logging
 import random
 import shutil
@@ -70,6 +72,24 @@ def send_message_to_telegram(bot_token, chat_id, message, format="Markdown", dis
         "disable_web_page_preview": disable_web_preview,
     }
     requests.post(get_telegram_api_url("sendMessage", bot_token), data=data)
+
+
+def decode(src):
+    logging.info(f"Decoding {src}")
+    src_in_bytes_base64 = bytes(src, encoding="utf-8")
+    src_in_string_bytes = base64.standard_b64decode(src_in_bytes_base64)
+    return src_in_string_bytes.decode(encoding="utf-8")
+
+
+def encode(src):
+    logging.info(f"Encoding {src}")
+    src_in_bytes = bytes(src, encoding="utf-8")
+    src_in_bytes_base64 = base64.standard_b64encode(src_in_bytes)
+    return src_in_bytes_base64.decode(encoding="utf-8")
+
+
+def obj_to_json(given_obj):
+    return json.dumps(given_obj)
 
 
 def retry(exceptions, tries=4, delay=3, back_off=2):

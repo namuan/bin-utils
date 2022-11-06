@@ -7,6 +7,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dataset
 import py_executable_checklist.workflow
@@ -16,7 +17,8 @@ from slug import slug
 from telegram import Update
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from common_utils import fetch_html_page, html_parser_from, retry
+from common_utils import decode, encode, fetch_html_page, html_parser_from, retry
+from twitter_api import get_tweet
 
 load_dotenv()
 
@@ -60,15 +62,16 @@ def handle_web_page(web_page_url: str) -> str:
     return target_file.as_posix()
 
 
-@retry(telegram.error.TimedOut, tries=3)
 def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text, downloaded_file_path):
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
-    if downloaded_file_path:
-        bot.send_chat_action(chat_id, "upload_document")
-        bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
-    else:
-        bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
+    bot.send_message(chat_id, incoming_text, disable_web_page_preview=False)
+    # TODO: Use this code when recalling a bookmark
+    # if downloaded_file_path:
+    #     bot.send_chat_action(chat_id, "upload_document")
+    #     bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
+    # else:
+    #     bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
 
 
 def verified_chat_id(chat_id):
@@ -90,21 +93,29 @@ class BaseHandler:
         existing_bookmark = self._find_existing_bookmark()
         if existing_bookmark:
             logging.info(f"Found one already bookmarked: {existing_bookmark}")
-            return existing_bookmark.get("target_location")
+            return decode(existing_bookmark.get("archived"))
 
-        file_location = self._bookmark()
+        archived_entry = self._bookmark()
         entry_row = {
             "source": self.__class__.__name__,
             "link": self.url,
             "created_at": datetime.now(),
-            "target_location": file_location,
+            "archived": encode(archived_entry),
         }
         bookmarks_table.insert(entry_row)
         logging.info(f"Updated database: {entry_row}")
-        return file_location
+        return archived_entry
 
     def _bookmark(self) -> str:
         pass
+
+
+class Twitter(BaseHandler):
+    def _bookmark(self) -> str:
+        parsed_tweet = urlparse(self.url)
+        tweet_id = os.path.basename(parsed_tweet.path)
+        tweet = get_tweet(tweet_id)
+        return tweet.text
 
 
 class WebPage(BaseHandler):
@@ -114,6 +125,14 @@ class WebPage(BaseHandler):
 
 
 def message_handler_for(incoming_url) -> BaseHandler:
+    urls_to_handler = [{"urls": ["https://twitter.com"], "handler": Twitter}]
+
+    for entry in urls_to_handler:
+        for url in entry.get("urls"):
+            logging.info(f"Checking {url} against {incoming_url}")
+            if incoming_url.startswith(url):
+                return entry.get("handler")(incoming_url)
+
     return WebPage(incoming_url)
 
 
@@ -144,12 +163,16 @@ def process_message(update: Update, context) -> None:
         logging.warning(f"🚫 Ignoring message: {update_message_text}")
 
 
+@retry(telegram.error.TimedOut, tries=3)
 def adapter(update: Update, context):
     try:
         process_message(update, context)
+    except telegram.error.TimedOut:
+        raise
     except Exception as e:
-        logging.exception(e)
-        update.message.reply_text(str(e))
+        error_message = f"🚨 🚨 🚨 {e}"
+        update.message.reply_text(error_message)
+        raise e
 
 
 def start_bot():
