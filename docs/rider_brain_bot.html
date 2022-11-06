@@ -35,7 +35,14 @@
 <span class="kn">from</span> <span class="nn">telegram</span> <span class="kn">import</span> <span class="n">Update</span>
 <span class="kn">from</span> <span class="nn">telegram.ext</span> <span class="kn">import</span> <span class="n">CommandHandler</span><span class="p">,</span> <span class="n">Filters</span><span class="p">,</span> <span class="n">MessageHandler</span><span class="p">,</span> <span class="n">Updater</span>
 
-<span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="n">decode</span><span class="p">,</span> <span class="n">encode</span><span class="p">,</span> <span class="n">fetch_html_page</span><span class="p">,</span> <span class="n">html_parser_from</span><span class="p">,</span> <span class="n">retry</span>
+<span class="kn">from</span> <span class="nn">common_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">decode</span><span class="p">,</span>
+    <span class="n">encode</span><span class="p">,</span>
+    <span class="n">fetch_html_page</span><span class="p">,</span>
+    <span class="n">html_parser_from</span><span class="p">,</span>
+    <span class="n">retry</span><span class="p">,</span>
+    <span class="n">send_file_to_telegram</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">twitter_api</span> <span class="kn">import</span> <span class="n">get_tweet</span>
 
 <span class="n">load_dotenv</span><span class="p">()</span>
@@ -47,6 +54,9 @@
     <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">DEFAULT_BOT_TOKEN</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BOT_TOKEN&quot;</span><span class="p">)</span>
+<span class="n">GROUP_CHAT_ID</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GROUP_CHAT_ID&quot;</span><span class="p">)</span>
 
 <span class="n">HOME_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;HOME&quot;</span><span class="p">)</span>
 <span class="n">DB_FILE</span> <span class="o">=</span> <span class="s2">&quot;rider_brain.db&quot;</span>
@@ -119,11 +129,7 @@
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">):</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">)</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">downloaded_file_path</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="n">bot</span><span class="o">.</span><span class="n">send_chat_action</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="s2">&quot;upload_document&quot;</span><span class="p">)</span>
-        <span class="n">bot</span><span class="o">.</span><span class="n">sendDocument</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span></pre></div>
+    <span class="k">if</span> <span class="n">downloaded_file_path</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -131,6 +137,32 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">send_file_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>bot.send_chat_action(chat_id, &ldquo;upload_document&rdquo;)
+bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
       </div>
       
     </div>
@@ -144,10 +176,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-6'>
+  <div class='section' id='section-8'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-6'>#</a>
+        <a class='octothorpe' href='#section-8'>#</a>
       </div>
       
     </div>
@@ -156,10 +188,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-7'>
+  <div class='section' id='section-9'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-7'>#</a>
+        <a class='octothorpe' href='#section-9'>#</a>
       </div>
       
     </div>
@@ -169,10 +201,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-8'>
+  <div class='section' id='section-10'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-8'>#</a>
+        <a class='octothorpe' href='#section-10'>#</a>
       </div>
       
     </div>
@@ -182,10 +214,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-9'>
+  <div class='section' id='section-11'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-9'>#</a>
+        <a class='octothorpe' href='#section-11'>#</a>
       </div>
       
     </div>
@@ -209,31 +241,6 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-10'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-10'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">pass</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-11'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Youtube</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-12'>
     <div class='docs'>
       <div class='octowrap'>
@@ -243,7 +250,7 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></pre></div>
+        <span class="k">pass</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -255,7 +262,7 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Twitter</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Youtube</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -268,10 +275,7 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">parsed_tweet</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-        <span class="n">tweet_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">parsed_tweet</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">tweet</span> <span class="o">=</span> <span class="n">get_tweet</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tweet</span><span class="o">.</span><span class="n">text</span></pre></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -283,7 +287,7 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">class</span> <span class="nc">WebPage</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Twitter</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -296,8 +300,10 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bookmarking WebPage: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">handle_web_page</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span></pre></div>
+        <span class="n">parsed_tweet</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">tweet_id</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">parsed_tweet</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">tweet</span> <span class="o">=</span> <span class="n">get_tweet</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tweet</span><span class="o">.</span><span class="n">text</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -305,6 +311,32 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">WebPage</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bookmarking WebPage: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">handle_web_page</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
       </div>
       
     </div>
@@ -325,10 +357,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-18'>
+  <div class='section' id='section-20'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-18'>#</a>
+        <a class='octothorpe' href='#section-20'>#</a>
       </div>
       
     </div>
@@ -361,10 +393,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-19'>
+  <div class='section' id='section-21'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-19'>#</a>
+        <a class='octothorpe' href='#section-21'>#</a>
       </div>
       <p>Start bot and hook callback functions</p>
     </div>
@@ -385,10 +417,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-20'>
+  <div class='section' id='section-22'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-20'>#</a>
+        <a class='octothorpe' href='#section-22'>#</a>
       </div>
       
     </div>
@@ -412,10 +444,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-21'>
+  <div class='section' id='section-23'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-21'>#</a>
+        <a class='octothorpe' href='#section-23'>#</a>
       </div>
       
     </div>
@@ -425,10 +457,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-22'>
+  <div class='section' id='section-24'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-22'>#</a>
+        <a class='octothorpe' href='#section-24'>#</a>
       </div>
       
     </div>

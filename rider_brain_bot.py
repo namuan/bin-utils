@@ -17,7 +17,14 @@ from slug import slug
 from telegram import Update
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from common_utils import decode, encode, fetch_html_page, html_parser_from, retry
+from common_utils import (
+    decode,
+    encode,
+    fetch_html_page,
+    html_parser_from,
+    retry,
+    send_file_to_telegram,
+)
 from twitter_api import get_tweet
 
 load_dotenv()
@@ -29,6 +36,9 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logging.captureWarnings(capture=True)
+
+DEFAULT_BOT_TOKEN = os.getenv("BOT_TOKEN")
+GROUP_CHAT_ID = os.getenv("GROUP_CHAT_ID")
 
 HOME_DIR = os.getenv("HOME")
 DB_FILE = "rider_brain.db"
@@ -66,8 +76,10 @@ def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_te
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
     if downloaded_file_path and Path(downloaded_file_path).is_file():
-        bot.send_chat_action(chat_id, "upload_document")
-        bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
+        # send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)
+        send_file_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, incoming_text, downloaded_file_path)
+        # bot.send_chat_action(chat_id, "upload_document")
+        # bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
     else:
         bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
 

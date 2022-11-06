@@ -158,6 +158,25 @@
       
     </div>
     <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">send_file_to_telegram</span><span class="p">(</span><span class="n">bot_token</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;chat_id&quot;</span><span class="p">:</span> <span class="n">chat_id</span><span class="p">,</span>
+        <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;document&quot;</span><span class="p">:</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)}</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">get_telegram_api_url</span><span class="p">(</span><span class="s2">&quot;sendDocument&quot;</span><span class="p">,</span> <span class="n">bot_token</span><span class="p">),</span> <span class="n">files</span><span class="o">=</span><span class="n">files</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">send_message_to_telegram</span><span class="p">(</span><span class="n">bot_token</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;Markdown&quot;</span><span class="p">,</span> <span class="n">disable_web_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;chat_id&quot;</span><span class="p">:</span> <span class="n">chat_id</span><span class="p">,</span>
@@ -169,10 +188,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-9'>
+  <div class='section' id='section-10'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-9'>#</a>
+        <a class='octothorpe' href='#section-10'>#</a>
       </div>
       
     </div>
@@ -185,10 +204,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-10'>
+  <div class='section' id='section-11'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-10'>#</a>
+        <a class='octothorpe' href='#section-11'>#</a>
       </div>
       
     </div>
@@ -201,19 +220,6 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-11'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">obj_to_json</span><span class="p">(</span><span class="n">given_obj</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">given_obj</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-12'>
     <div class='docs'>
       <div class='octowrap'>
@@ -222,7 +228,8 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">retry</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">back_off</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">obj_to_json</span><span class="p">(</span><span class="n">given_obj</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">given_obj</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -234,7 +241,7 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">deco_retry</span><span class="p">(</span><span class="n">f</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">retry</span><span class="p">(</span><span class="n">exceptions</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">back_off</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -242,6 +249,18 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">deco_retry</span><span class="p">(</span><span class="n">f</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
       </div>
       
     </div>

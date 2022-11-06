@@ -64,6 +64,16 @@ def get_telegram_api_url(method, token):
     return f"https://api.telegram.org/bot{token}/{method}"
 
 
+def send_file_to_telegram(bot_token, chat_id, message, file_path):
+    data = {
+        "chat_id": chat_id,
+        "text": message,
+    }
+    files = {"document": open(file_path, "rb")}
+    r = requests.post(get_telegram_api_url("sendDocument", bot_token), files=files, data=data)
+    return r
+
+
 def send_message_to_telegram(bot_token, chat_id, message, format="Markdown", disable_web_preview=True):
     data = {
         "chat_id": chat_id,
