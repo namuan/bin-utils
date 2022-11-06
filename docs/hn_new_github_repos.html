@@ -53,7 +53,8 @@ Send links over Telegram</p>
       <div class="highlight"><pre><span class="n">load_dotenv</span><span class="p">()</span>
 
 <span class="n">DEFAULT_BOT_TOKEN</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BOT_TOKEN&quot;</span><span class="p">)</span>
-<span class="n">GROUP_CHAT_ID</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GROUP_CHAT_ID&quot;</span><span class="p">)</span></pre></div>
+<span class="n">GROUP_CHAT_ID</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GROUP_CHAT_ID&quot;</span><span class="p">)</span>
+<span class="n">DB_FILE</span> <span class="o">=</span> <span class="s2">&quot;hn_new_github_repos.db&quot;</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -393,8 +394,7 @@ Send links over Telegram</p>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">home_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;HOME&quot;</span><span class="p">)</span>
         <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;hn_repo_links&quot;</span>
-        <span class="n">db_file</span> <span class="o">=</span> <span class="s2">&quot;hn_new_github_repos.db&quot;</span>
-        <span class="n">db_connection_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sqlite:///</span><span class="si">{</span><span class="n">home_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">db_file</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">db_connection_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sqlite:///</span><span class="si">{</span><span class="n">home_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">DB_FILE</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">db</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">db_connection_string</span><span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connecting to database </span><span class="si">{</span><span class="n">db_connection_string</span><span class="si">}</span><span class="s2"> and table </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;db_table&quot;</span><span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">create_table</span><span class="p">(</span><span class="n">table_name</span><span class="p">)}</span></pre></div>

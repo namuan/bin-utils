@@ -29,7 +29,7 @@ load_dotenv()
 
 DEFAULT_BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROUP_CHAT_ID = os.getenv("GROUP_CHAT_ID")
-
+DB_FILE = "hn_new_github_repos.db"
 
 # Workflow steps
 
@@ -143,8 +143,7 @@ class SetupDatabase(WorkflowBase):
     def execute(self):
         home_dir = os.getenv("HOME")
         table_name = "hn_repo_links"
-        db_file = "hn_new_github_repos.db"
-        db_connection_string = f"sqlite:///{home_dir}/{db_file}"
+        db_connection_string = f"sqlite:///{home_dir}/{DB_FILE}"
         db = dataset.connect(db_connection_string)
         logging.info(f"Connecting to database {db_connection_string} and table {table_name}")
         return {"db_table": db.create_table(table_name)}
