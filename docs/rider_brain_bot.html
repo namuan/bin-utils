@@ -17,14 +17,16 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-0'>#</a>
       </div>
-      <p>Telegram bot to convert web page links to PDF</p>
+      <p>Telegram bot to bookmark links</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span> <span class="nn">dataset</span>
 <span class="kn">import</span> <span class="nn">py_executable_checklist.workflow</span>
 <span class="kn">import</span> <span class="nn">telegram</span>
 <span class="kn">from</span> <span class="nn">dotenv</span> <span class="kn">import</span> <span class="n">load_dotenv</span>
@@ -36,7 +38,24 @@
 
 <span class="n">load_dotenv</span><span class="p">()</span>
 
-<span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;OutputDir&quot;</span><span class="p">,</span> <span class="s2">&quot;web-to-pdf&quot;</span><span class="p">)</span></pre></div>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()],</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+    <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">HOME_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;HOME&quot;</span><span class="p">)</span>
+<span class="n">DB_FILE</span> <span class="o">=</span> <span class="s2">&quot;rider_brain.db&quot;</span>
+<span class="n">DB_CONNECTION_STRING</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;sqlite:///</span><span class="si">{</span><span class="n">HOME_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">DB_FILE</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;OutputDir&quot;</span><span class="p">,</span> <span class="s2">&quot;web-to-pdf&quot;</span><span class="p">)</span>
+<span class="n">BOOKMARKS_TABLE</span> <span class="o">=</span> <span class="s2">&quot;bookmarks&quot;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">DB_CONNECTION_STRING</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Connecting to database </span><span class="si">{</span><span class="n">DB_CONNECTION_STRING</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating table </span><span class="si">{</span><span class="n">BOOKMARKS_TABLE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">bookmarks_table</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">create_table</span><span class="p">(</span><span class="n">BOOKMARKS_TABLE</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -50,9 +69,7 @@
     <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">welcome</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
-        <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span>
-            <span class="s2">&quot;👋 Hi there. ⬇️ I&#39;m a bot that converts web pages to PDFs. ⬆️. &quot;</span> <span class="s2">&quot;Try sending me a link to a web page&quot;</span>
-        <span class="p">)</span></pre></div>
+        <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="s2">&quot;👋 Hi there. ⬇️ I&#39;m a bot to save bookmarks ⬆️. &quot;</span> <span class="s2">&quot;Try sending me a link&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -78,7 +95,7 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">_handle_web_page</span><span class="p">(</span><span class="n">web_page_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">handle_web_page</span><span class="p">(</span><span class="n">web_page_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">page_html</span> <span class="o">=</span> <span class="n">fetch_html_page</span><span class="p">(</span><span class="n">web_page_url</span><span class="p">)</span>
     <span class="n">bs</span> <span class="o">=</span> <span class="n">html_parser_from</span><span class="p">(</span><span class="n">page_html</span><span class="p">)</span>
     <span class="n">web_page_title</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="n">bs</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">string</span> <span class="k">if</span> <span class="n">bs</span><span class="o">.</span><span class="n">title</span> <span class="ow">and</span> <span class="n">bs</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">string</span> <span class="k">else</span> <span class="n">web_page_url</span><span class="p">)</span>
@@ -98,12 +115,14 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="nd">@retry</span><span class="p">(</span><span class="n">telegram</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TimedOut</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">_update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">):</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">)</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">)</span>
-    <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;💾 Saved it here 👉 </span><span class="si">{</span><span class="n">downloaded_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">bot</span><span class="o">.</span><span class="n">send_chat_action</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="s2">&quot;upload_document&quot;</span><span class="p">)</span>
-    <span class="n">bot</span><span class="o">.</span><span class="n">sendDocument</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">downloaded_file_path</span><span class="p">:</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_chat_action</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="s2">&quot;upload_document&quot;</span><span class="p">)</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">sendDocument</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">verified_chat_id</span><span class="p">(</span><span class="n">chat_id</span><span class="p">):</span>
@@ -114,7 +133,37 @@
     <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">_process_message</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">BaseHandler</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+
+    <span class="k">def</span> <span class="nf">bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">file_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bookmark</span><span class="p">()</span>
+        <span class="n">entry_row</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;source&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s2">&quot;link&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="s2">&quot;created_at&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
+            <span class="s2">&quot;target_location&quot;</span><span class="p">:</span> <span class="n">file_location</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">bookmarks_table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">entry_row</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Updated database: </span><span class="si">{</span><span class="n">entry_row</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_location</span>
+
+    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">WebPage</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Bookmarking WebPage: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">handle_web_page</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">message_handler_for</span><span class="p">(</span><span class="n">incoming_url</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseHandler</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">WebPage</span><span class="p">(</span><span class="n">incoming_url</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">process_message</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">bot</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">bot</span>
     <span class="n">chat_id</span> <span class="o">=</span> <span class="n">update</span><span class="o">.</span><span class="n">effective_chat</span><span class="o">.</span><span class="n">id</span>
 
@@ -131,8 +180,11 @@
             <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="n">update_message_text</span><span class="si">}</span><span class="s2">. 👀 at 🌎&quot;</span><span class="p">,</span>
             <span class="n">disable_web_page_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">downloaded_file_path</span> <span class="o">=</span> <span class="n">_handle_web_page</span><span class="p">(</span><span class="n">update_message_text</span><span class="p">)</span>
-        <span class="n">_update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message</span><span class="o">.</span><span class="n">message_id</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">)</span>
+        <span class="n">message_handler</span> <span class="o">=</span> <span class="n">message_handler_for</span><span class="p">(</span><span class="n">update_message_text</span><span class="p">)</span>
+        <span class="n">downloaded_file_path</span> <span class="o">=</span> <span class="n">message_handler</span><span class="o">.</span><span class="n">bookmark</span><span class="p">()</span>
+        <span class="n">update_user</span><span class="p">(</span>
+            <span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message</span><span class="o">.</span><span class="n">message_id</span><span class="p">,</span> <span class="n">update_message_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span>
+        <span class="p">)</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Document sent back to user </span><span class="si">{</span><span class="n">chat_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🚫 Ignoring message: </span><span class="si">{</span><span class="n">update_message_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -140,7 +192,7 @@
 
 <span class="k">def</span> <span class="nf">adapter</span><span class="p">(</span><span class="n">update</span><span class="p">:</span> <span class="n">Update</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">_process_message</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="n">process_message</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="n">update</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">reply_text</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
@@ -185,14 +237,8 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_logging</span><span class="p">():</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
-        <span class="n">handlers</span><span class="o">=</span><span class="p">[</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()],</span>
-        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
-        <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_directories</span><span class="p">():</span>
+    <span class="n">OUTPUT_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -204,19 +250,6 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_directories</span><span class="p">():</span>
-    <span class="n">OUTPUT_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-8'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-8'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
@@ -224,7 +257,6 @@
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
-    <span class="n">setup_logging</span><span class="p">()</span>
     <span class="n">setup_directories</span><span class="p">()</span>
     <span class="n">start_bot</span><span class="p">()</span>
 

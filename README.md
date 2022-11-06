@@ -268,7 +268,7 @@ optional arguments:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.9.13)
+pygame 2.1.2 (SDL 2.0.18, Python 3.8.12)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
@@ -307,7 +307,7 @@ optional arguments:
 ```
 usage: rider_brain_bot.py [-h]
 
-Telegram bot to convert web page links to PDF
+Telegram bot to bookmark links
 
 optional arguments:
   -h, --help  show this help message and exit
