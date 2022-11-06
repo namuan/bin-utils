@@ -65,13 +65,11 @@ def handle_web_page(web_page_url: str) -> str:
 def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text, downloaded_file_path):
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
-    bot.send_message(chat_id, incoming_text, disable_web_page_preview=False)
-    # TODO: Use this code when recalling a bookmark
-    # if downloaded_file_path:
-    #     bot.send_chat_action(chat_id, "upload_document")
-    #     bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
-    # else:
-    #     bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
+    if downloaded_file_path and Path(downloaded_file_path).is_file():
+        bot.send_chat_action(chat_id, "upload_document")
+        bot.sendDocument(chat_id, open(downloaded_file_path, "rb"))
+    else:
+        bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
 
 
 def verified_chat_id(chat_id):
@@ -110,6 +108,11 @@ class BaseHandler:
         pass
 
 
+class Youtube(BaseHandler):
+    def _bookmark(self) -> str:
+        return self.url
+
+
 class Twitter(BaseHandler):
     def _bookmark(self) -> str:
         parsed_tweet = urlparse(self.url)
@@ -125,7 +128,10 @@ class WebPage(BaseHandler):
 
 
 def message_handler_for(incoming_url) -> BaseHandler:
-    urls_to_handler = [{"urls": ["https://twitter.com"], "handler": Twitter}]
+    urls_to_handler = [
+        {"urls": ["https://twitter.com"], "handler": Twitter},
+        {"urls": ["https://youtube.com", "https://www.youtube.com"], "handler": Youtube},
+    ]
 
     for entry in urls_to_handler:
         for url in entry.get("urls"):
