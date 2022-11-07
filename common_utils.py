@@ -2,6 +2,7 @@ import base64
 import json
 import logging
 import random
+import re
 import shutil
 import string
 import time
@@ -121,3 +122,15 @@ def retry(exceptions, tries=4, delay=3, back_off=2):
         return f_retry  # true decorator
 
     return deco_retry
+
+
+def replace_rgx(rgx_to_match, source_str, replacement) -> str:
+    return rgx_to_match.sub(replacement, source_str)
+
+
+if __name__ == "__main__":
+    rgx = re.compile("([\\w.]*reddit.com)")
+    incoming = (
+        "https://www.reddit.com/r/InternetIsBeautiful/comments/xb7qt9/im_looking_for_cool_websites_to_display_on_a/"
+    )
+    print(replace_rgx(rgx, incoming, "old.reddit.com"))

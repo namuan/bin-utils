@@ -5,6 +5,7 @@ Telegram bot to bookmark links
 import argparse
 import logging
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -22,6 +23,7 @@ from common_utils import (
     encode,
     fetch_html_page,
     html_parser_from,
+    replace_rgx,
     retry,
     send_file_to_telegram,
 )
@@ -91,7 +93,7 @@ def verified_chat_id(chat_id):
 
 class BaseHandler:
     def __init__(self, url):
-        self.url = url
+        self.url: str = url
 
     def _find_existing_bookmark(self):
         return bookmarks_table.find_one(link=self.url)
@@ -117,6 +119,13 @@ class BaseHandler:
         pass
 
 
+class Reddit(BaseHandler):
+    def _bookmark(self) -> str:
+        rgx = re.compile("([\\w.]*reddit.com)")
+        old_reddit_link = replace_rgx(rgx, self.url, "old.reddit.com")
+        return handle_web_page(old_reddit_link)
+
+
 class Youtube(BaseHandler):
     def _bookmark(self) -> str:
         return self.url
@@ -140,6 +149,7 @@ def message_handler_for(incoming_url) -> BaseHandler:
     urls_to_handler = [
         {"urls": ["https://twitter.com"], "handler": Twitter},
         {"urls": ["https://youtube.com", "https://www.youtube.com"], "handler": Youtube},
+        {"urls": ["https://reddit.com", "https://www.reddit.com"], "handler": Reddit},
     ]
 
     for entry in urls_to_handler:

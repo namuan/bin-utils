@@ -23,6 +23,7 @@
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
@@ -40,6 +41,7 @@
     <span class="n">encode</span><span class="p">,</span>
     <span class="n">fetch_html_page</span><span class="p">,</span>
     <span class="n">html_parser_from</span><span class="p">,</span>
+    <span class="n">replace_rgx</span><span class="p">,</span>
     <span class="n">retry</span><span class="p">,</span>
     <span class="n">send_file_to_telegram</span><span class="p">,</span>
 <span class="p">)</span>
@@ -129,7 +131,10 @@
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">):</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">)</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">downloaded_file_path</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span></pre></div>
+    <span class="k">if</span> <span class="n">downloaded_file_path</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">send_file_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -137,32 +142,6 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
-      </div>
-      <p>send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, link, disable_web_preview=False)</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>        <span class="n">send_file_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-6'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-6'>#</a>
-      </div>
-      <p>bot.send_chat_action(chat_id, &ldquo;upload_document&rdquo;)
-bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="k">else</span><span class="p">:</span>
-        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-7'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-7'>#</a>
       </div>
       
     </div>
@@ -176,10 +155,10 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-8'>
+  <div class='section' id='section-6'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-8'>#</a>
+        <a class='octothorpe' href='#section-6'>#</a>
       </div>
       
     </div>
@@ -188,23 +167,23 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-9'>
+  <div class='section' id='section-7'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-9'>#</a>
+        <a class='octothorpe' href='#section-7'>#</a>
       </div>
       
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span></pre></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">url</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-10'>
+  <div class='section' id='section-8'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-10'>#</a>
+        <a class='octothorpe' href='#section-8'>#</a>
       </div>
       
     </div>
@@ -214,10 +193,10 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-11'>
+  <div class='section' id='section-9'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
+        <a class='octothorpe' href='#section-9'>#</a>
       </div>
       
     </div>
@@ -241,6 +220,31 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     </div>
   </div>
   <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">pass</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Reddit</span><span class="p">(</span><span class="n">BaseHandler</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
   <div class='section' id='section-12'>
     <div class='docs'>
       <div class='octowrap'>
@@ -250,7 +254,9 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">pass</span></pre></div>
+        <span class="n">rgx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;([</span><span class="se">\\</span><span class="s2">w.]*reddit.com)&quot;</span><span class="p">)</span>
+        <span class="n">old_reddit_link</span> <span class="o">=</span> <span class="n">replace_rgx</span><span class="p">(</span><span class="n">rgx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="s2">&quot;old.reddit.com&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">handle_web_page</span><span class="p">(</span><span class="n">old_reddit_link</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -345,6 +351,7 @@ bot.sendDocument(chat_id, open(downloaded_file_path, &ldquo;rb&rdquo;))</p>
     <span class="n">urls_to_handler</span> <span class="o">=</span> <span class="p">[</span>
         <span class="p">{</span><span class="s2">&quot;urls&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;https://twitter.com&quot;</span><span class="p">],</span> <span class="s2">&quot;handler&quot;</span><span class="p">:</span> <span class="n">Twitter</span><span class="p">},</span>
         <span class="p">{</span><span class="s2">&quot;urls&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;https://youtube.com&quot;</span><span class="p">,</span> <span class="s2">&quot;https://www.youtube.com&quot;</span><span class="p">],</span> <span class="s2">&quot;handler&quot;</span><span class="p">:</span> <span class="n">Youtube</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;urls&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;https://reddit.com&quot;</span><span class="p">,</span> <span class="s2">&quot;https://www.reddit.com&quot;</span><span class="p">],</span> <span class="s2">&quot;handler&quot;</span><span class="p">:</span> <span class="n">Reddit</span><span class="p">},</span>
     <span class="p">]</span>
 
     <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">urls_to_handler</span><span class="p">:</span>
