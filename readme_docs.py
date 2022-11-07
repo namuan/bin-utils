@@ -37,6 +37,8 @@ def main(args):
         "common_utils.py",
         "flatten_directory.py",
         "git_log_to_sqlite.py",
+        "twitter_api.py",
+        "yt_api.py",
     ]
     py_scripts_with_help = []
     # Grab all the python scripts in the current directory and collect output from running the help command
