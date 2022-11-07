@@ -44,8 +44,10 @@
     <span class="n">replace_rgx</span><span class="p">,</span>
     <span class="n">retry</span><span class="p">,</span>
     <span class="n">send_file_to_telegram</span><span class="p">,</span>
+    <span class="n">send_message_to_telegram</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">twitter_api</span> <span class="kn">import</span> <span class="n">get_tweet</span>
+<span class="kn">from</span> <span class="nn">yt_api</span> <span class="kn">import</span> <span class="n">fetch_best_video_stream</span>
 
 <span class="n">load_dotenv</span><span class="p">()</span>
 
@@ -128,13 +130,14 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">):</span>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">update_user</span><span class="p">(</span><span class="n">bot</span><span class="p">,</span> <span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">handler_generated_response</span><span class="p">):</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">original_message_id</span><span class="p">)</span>
     <span class="n">bot</span><span class="o">.</span><span class="n">delete_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="n">reply_message_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">downloaded_file_path</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded_file_path</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-        <span class="n">send_file_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">downloaded_file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">handler_generated_response</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">handler_generated_response</span><span class="p">)</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="n">send_file_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">incoming_text</span><span class="p">,</span> <span class="n">handler_generated_response</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span></pre></div>
+        <span class="n">bot</span><span class="o">.</span><span class="n">send_message</span><span class="p">(</span><span class="n">chat_id</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;🔖 </span><span class="si">{</span><span class="n">incoming_text</span><span class="si">}</span><span class="s2"> bookmarked&quot;</span><span class="p">)</span>
+        <span class="n">send_message_to_telegram</span><span class="p">(</span><span class="n">DEFAULT_BOT_TOKEN</span><span class="p">,</span> <span class="n">GROUP_CHAT_ID</span><span class="p">,</span> <span class="n">handler_generated_response</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -281,7 +284,8 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span></pre></div>
+        <span class="n">best_resolution_stream</span> <span class="o">=</span> <span class="n">fetch_best_video_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">best_resolution_stream</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>

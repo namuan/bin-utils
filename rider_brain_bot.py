@@ -26,8 +26,10 @@ from common_utils import (
     replace_rgx,
     retry,
     send_file_to_telegram,
+    send_message_to_telegram,
 )
 from twitter_api import get_tweet
+from yt_api import fetch_best_video_stream
 
 load_dotenv()
 
@@ -74,13 +76,14 @@ def handle_web_page(web_page_url: str) -> str:
     return target_file.as_posix()
 
 
-def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text, downloaded_file_path):
+def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text, handler_generated_response):
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
-    if downloaded_file_path and Path(downloaded_file_path).is_file():
-        send_file_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, incoming_text, downloaded_file_path)
+    if handler_generated_response and Path(handler_generated_response).is_file():
+        send_file_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, incoming_text, handler_generated_response)
     else:
         bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
+        send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, handler_generated_response)
 
 
 def verified_chat_id(chat_id):
@@ -128,7 +131,8 @@ class Reddit(BaseHandler):
 
 class Youtube(BaseHandler):
     def _bookmark(self) -> str:
-        return self.url
+        best_resolution_stream = fetch_best_video_stream(self.url)
+        return best_resolution_stream
 
 
 class Twitter(BaseHandler):

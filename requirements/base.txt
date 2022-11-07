@@ -22,3 +22,4 @@ py-executable-checklist==1.2.0
 dataset
 tweepy
 praw
+pytube

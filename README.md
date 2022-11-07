@@ -78,6 +78,10 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
+[_yt_api.py_](https://namuan.github.io/bin-utils/yt_api.html)
+```
+
+```
 [_media_manager.py_](https://namuan.github.io/bin-utils/media_manager.html)
 ```
 usage: media_manager.py [-h] [-f SOURCE_FILE] [-s SOURCE_DIRECTORY] -t
