@@ -48,7 +48,7 @@ bookmarks_table = db.create_table(BOOKMARKS_TABLE)
 
 def welcome(update: Update, _):
     if update.message:
-        update.message.reply_text("👋 Hi there. ⬇️ I'm a bot to save bookmarks ⬆️. " "Try sending me a link")
+        update.message.reply_text("👋 Hi there. ⬇️ I'm a bot to save bookmarks ⬆️. " "Try sending me something")
 
 
 def help_command(update: Update, _):
@@ -132,6 +132,18 @@ class PlainTextNote(BaseHandler):
         return self.note
 
 
+class Photo(BaseHandler):
+    def __init__(self, note, photo_file):
+        super().__init__(note)
+        self.photo_file = photo_file
+
+    def _bookmark(self) -> str:
+        target_file = OUTPUT_DIR / f"{self.note}.png"
+        self.photo_file.download(target_file)
+        logging.info(f"Photo saved: {target_file}")
+        return target_file.as_posix()
+
+
 def message_handler_for(incoming_text) -> BaseHandler:
     if not incoming_text.startswith("http"):
         return PlainTextNote(incoming_text)
@@ -152,17 +164,40 @@ def message_handler_for(incoming_text) -> BaseHandler:
     return WebPage(incoming_url)
 
 
-def process_message(update: Update, context) -> None:
-    bot = context.bot
+def process_photo(update: Update, context) -> None:
     chat_id = update.effective_chat.id
+    if not verified_chat_id(chat_id):
+        return
 
+    bot = context.bot
     original_message_id = update.message.message_id
     update_message_text = update.message.text
 
     logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
+    reply_message = bot.send_message(
+        chat_id,
+        f"Got {update_message_text}. 👀 at 🌎",
+        disable_web_page_preview=True,
+    )
+
+    photo_file = update.message.photo[-1].get_file()
+    photo_handler = Photo(update_message_text or original_message_id, photo_file)
+    photo_handler.bookmark()
+
+    update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
+    logging.info(f"✅ Document sent back to user {chat_id}")
+
+
+def process_message(update: Update, context) -> None:
+    chat_id = update.effective_chat.id
     if not verified_chat_id(chat_id):
         return
 
+    bot = context.bot
+    original_message_id = update.message.message_id
+    update_message_text = update.message.text
+
+    logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
     reply_message = bot.send_message(
         chat_id,
         f"Got {update_message_text}. 👀 at 🌎",
@@ -177,9 +212,21 @@ def process_message(update: Update, context) -> None:
 
 
 @retry(telegram.error.TimedOut, tries=3)
-def adapter(update: Update, context):
+def adapter_plain_text(update: Update, context):
     try:
         process_message(update, context)
+    except telegram.error.TimedOut:
+        raise
+    except Exception as e:
+        error_message = f"🚨 🚨 🚨 {e}"
+        update.message.reply_text(error_message)
+        raise e
+
+
+@retry(telegram.error.TimedOut, tries=3)
+def adapter_photo(update: Update, context):
+    try:
+        process_photo(update, context)
     except telegram.error.TimedOut:
         raise
     except Exception as e:
@@ -201,7 +248,8 @@ def start_bot():
 
     dispatcher.add_handler(CommandHandler("start", welcome))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, adapter))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, adapter_plain_text))
+    dispatcher.add_handler(MessageHandler(Filters.photo & ~Filters.command, adapter_photo))
 
     updater.start_polling()
     updater.idle()
