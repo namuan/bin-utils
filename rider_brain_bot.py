@@ -81,11 +81,11 @@ def verified_chat_id(chat_id):
 
 
 class BaseHandler:
-    def __init__(self, url):
-        self.url: str = url
+    def __init__(self, note):
+        self.note: str = note
 
     def _find_existing_bookmark(self):
-        return bookmarks_table.find_one(note=self.url)
+        return bookmarks_table.find_one(note=self.note)
 
     def bookmark(self) -> str:
         existing_bookmark = self._find_existing_bookmark()
@@ -96,7 +96,7 @@ class BaseHandler:
         archived_entry = self._bookmark()
         entry_row = {
             "source": self.__class__.__name__,
-            "note": self.url,
+            "note": self.note,
             "created_at": datetime.now(),
             "content": archived_entry,
         }
@@ -110,12 +110,12 @@ class BaseHandler:
 
 class Youtube(BaseHandler):
     def _bookmark(self) -> str:
-        return video_title(self.url)
+        return video_title(self.note)
 
 
 class Twitter(BaseHandler):
     def _bookmark(self) -> str:
-        parsed_tweet = urlparse(self.url)
+        parsed_tweet = urlparse(self.note)
         tweet_id = os.path.basename(parsed_tweet.path)
         tweet = get_tweet(tweet_id)
         return tweet.text
@@ -123,11 +123,21 @@ class Twitter(BaseHandler):
 
 class WebPage(BaseHandler):
     def _bookmark(self) -> str:
-        logging.info(f"Bookmarking WebPage: {self.url}")
-        return handle_web_page(self.url)
+        logging.info(f"Bookmarking WebPage: {self.note}")
+        return handle_web_page(self.note)
 
 
-def message_handler_for(incoming_url) -> BaseHandler:
+class PlainTextNote(BaseHandler):
+    def _bookmark(self) -> str:
+        return self.note
+
+
+def message_handler_for(incoming_text) -> BaseHandler:
+    if not incoming_text.startswith("http"):
+        return PlainTextNote(incoming_text)
+
+    incoming_url = incoming_text
+
     urls_to_handler = [
         {"urls": ["https://twitter.com"], "handler": Twitter},
         {"urls": ["https://youtube.com", "https://www.youtube.com", "https://m.youtube.com"], "handler": Youtube},
@@ -159,11 +169,8 @@ def process_message(update: Update, context) -> None:
         disable_web_page_preview=True,
     )
 
-    if update_message_text.startswith("http"):
-        message_handler = message_handler_for(update_message_text)
-        message_handler.bookmark()
-    else:
-        logging.warning(f"🚫 Ignoring message: {update_message_text}")
+    message_handler = message_handler_for(update_message_text)
+    message_handler.bookmark()
 
     update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
     logging.info(f"✅ Document sent back to user {chat_id}")
