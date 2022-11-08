@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Telegram bot to bookmark links
+🧠 Telegram bot to bookmark stuff
 """
 import argparse
 import logging
 import os
-import re
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -18,18 +17,9 @@ from slug import slug
 from telegram import Update
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater
 
-from common_utils import (
-    decode,
-    encode,
-    fetch_html_page,
-    html_parser_from,
-    replace_rgx,
-    retry,
-    send_file_to_telegram,
-    send_message_to_telegram,
-)
+from common_utils import fetch_html_page, html_parser_from, retry
 from twitter_api import get_tweet
-from yt_api import fetch_best_video_stream
+from yt_api import video_title
 
 load_dotenv()
 
@@ -76,14 +66,10 @@ def handle_web_page(web_page_url: str) -> str:
     return target_file.as_posix()
 
 
-def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text, handler_generated_response):
+def update_user(bot, chat_id, original_message_id, reply_message_id, incoming_text):
     bot.delete_message(chat_id, original_message_id)
     bot.delete_message(chat_id, reply_message_id)
-    if handler_generated_response and Path(handler_generated_response).is_file():
-        send_file_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, incoming_text, handler_generated_response)
-    else:
-        bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
-        send_message_to_telegram(DEFAULT_BOT_TOKEN, GROUP_CHAT_ID, handler_generated_response)
+    bot.send_message(chat_id, f"🔖 {incoming_text} bookmarked")
 
 
 def verified_chat_id(chat_id):
@@ -99,20 +85,20 @@ class BaseHandler:
         self.url: str = url
 
     def _find_existing_bookmark(self):
-        return bookmarks_table.find_one(link=self.url)
+        return bookmarks_table.find_one(note=self.url)
 
     def bookmark(self) -> str:
         existing_bookmark = self._find_existing_bookmark()
         if existing_bookmark:
             logging.info(f"Found one already bookmarked: {existing_bookmark}")
-            return decode(existing_bookmark.get("archived"))
+            return existing_bookmark.get("content")
 
         archived_entry = self._bookmark()
         entry_row = {
             "source": self.__class__.__name__,
-            "link": self.url,
+            "note": self.url,
             "created_at": datetime.now(),
-            "archived": encode(archived_entry),
+            "content": archived_entry,
         }
         bookmarks_table.insert(entry_row)
         logging.info(f"Updated database: {entry_row}")
@@ -122,17 +108,9 @@ class BaseHandler:
         pass
 
 
-class Reddit(BaseHandler):
-    def _bookmark(self) -> str:
-        rgx = re.compile("([\\w.]*reddit.com)")
-        old_reddit_link = replace_rgx(rgx, self.url, "old.reddit.com")
-        return handle_web_page(old_reddit_link)
-
-
 class Youtube(BaseHandler):
     def _bookmark(self) -> str:
-        best_resolution_stream = fetch_best_video_stream(self.url)
-        return best_resolution_stream
+        return video_title(self.url)
 
 
 class Twitter(BaseHandler):
@@ -152,8 +130,7 @@ class WebPage(BaseHandler):
 def message_handler_for(incoming_url) -> BaseHandler:
     urls_to_handler = [
         {"urls": ["https://twitter.com"], "handler": Twitter},
-        {"urls": ["https://youtube.com", "https://www.youtube.com"], "handler": Youtube},
-        {"urls": ["https://reddit.com", "https://www.reddit.com"], "handler": Reddit},
+        {"urls": ["https://youtube.com", "https://www.youtube.com", "https://m.youtube.com"], "handler": Youtube},
     ]
 
     for entry in urls_to_handler:
@@ -176,20 +153,20 @@ def process_message(update: Update, context) -> None:
     if not verified_chat_id(chat_id):
         return
 
+    reply_message = bot.send_message(
+        chat_id,
+        f"Got {update_message_text}. 👀 at 🌎",
+        disable_web_page_preview=True,
+    )
+
     if update_message_text.startswith("http"):
-        reply_message = bot.send_message(
-            chat_id,
-            f"Got {update_message_text}. 👀 at 🌎",
-            disable_web_page_preview=True,
-        )
         message_handler = message_handler_for(update_message_text)
-        downloaded_file_path = message_handler.bookmark()
-        update_user(
-            bot, chat_id, original_message_id, reply_message.message_id, update_message_text, downloaded_file_path
-        )
-        logging.info(f"✅ Document sent back to user {chat_id}")
+        message_handler.bookmark()
     else:
         logging.warning(f"🚫 Ignoring message: {update_message_text}")
+
+    update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
+    logging.info(f"✅ Document sent back to user {chat_id}")
 
 
 @retry(telegram.error.TimedOut, tries=3)

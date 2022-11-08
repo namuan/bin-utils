@@ -311,7 +311,7 @@ optional arguments:
 ```
 usage: rider_brain_bot.py [-h]
 
-Telegram bot to bookmark links
+🧠 Telegram bot to bookmark stuff
 
 optional arguments:
   -h, --help  show this help message and exit
