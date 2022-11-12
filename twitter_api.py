@@ -36,4 +36,4 @@ def with_limit_handled(func):
 
 
 if __name__ == "__main__":
-    pass
+    print(get_twitter_home_timeline())
