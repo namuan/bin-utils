@@ -37,6 +37,7 @@ def main(args):
         "common_utils.py",
         "flatten_directory.py",
         "git_log_to_sqlite.py",
+        "reddit_api.py",
         "twitter_api.py",
         "yt_api.py",
     ]

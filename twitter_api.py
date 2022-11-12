@@ -22,6 +22,10 @@ def get_tweet(tweet_id):
     return with_limit_handled(lambda: api.get_status(id=tweet_id))
 
 
+def get_twitter_home_timeline():
+    return with_limit_handled(lambda: api.home_timeline(count=200, exclude_replies=True))
+
+
 def with_limit_handled(func):
     try:
         return func()
