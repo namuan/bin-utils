@@ -32,7 +32,7 @@ def with_limit_handled(func):
     except tweepy.client.TooManyRequests:
         logging.warning("Hit Limit, waiting for 15 minutes")
         time.sleep(15 * 60)
-        return func
+        return func()
 
 
 if __name__ == "__main__":
