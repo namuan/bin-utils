@@ -164,69 +164,46 @@ def message_handler_for(incoming_text) -> BaseHandler:
     return WebPage(incoming_url)
 
 
-def process_photo(update: Update, context) -> None:
-    chat_id = update.effective_chat.id
-    if not verified_chat_id(chat_id):
-        return
-
-    bot = context.bot
+def process_photo(update: Update) -> None:
     original_message_id = update.message.message_id
     update_message_text = update.message.text
-
-    logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
-    reply_message = bot.send_message(
-        chat_id,
-        f"Got {update_message_text}. 👀 at 🌎",
-        disable_web_page_preview=True,
-    )
 
     photo_file = update.message.photo[-1].get_file()
     photo_handler = Photo(update_message_text or original_message_id, photo_file)
     photo_handler.bookmark()
 
-    update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
-    logging.info(f"✅ Document sent back to user {chat_id}")
 
-
-def process_message(update: Update, context) -> None:
-    chat_id = update.effective_chat.id
-    if not verified_chat_id(chat_id):
-        return
-
-    bot = context.bot
-    original_message_id = update.message.message_id
+def process_message(update: Update) -> None:
     update_message_text = update.message.text
-
-    logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
-    reply_message = bot.send_message(
-        chat_id,
-        f"Got {update_message_text}. 👀 at 🌎",
-        disable_web_page_preview=True,
-    )
-
     message_handler = message_handler_for(update_message_text)
     message_handler.bookmark()
 
-    update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
-    logging.info(f"✅ Document sent back to user {chat_id}")
-
 
 @retry(telegram.error.TimedOut, tries=3)
-def adapter_plain_text(update: Update, context):
+def adapter(update: Update, context):
     try:
-        process_message(update, context)
-    except telegram.error.TimedOut:
-        raise
-    except Exception as e:
-        error_message = f"🚨 🚨 🚨 {e}"
-        update.message.reply_text(error_message)
-        raise e
+        chat_id = update.effective_chat.id
+        if not verified_chat_id(chat_id):
+            return
 
+        bot = context.bot
+        original_message_id = update.message.message_id
+        update_message_text = update.message.text
 
-@retry(telegram.error.TimedOut, tries=3)
-def adapter_photo(update: Update, context):
-    try:
-        process_photo(update, context)
+        logging.info(f"📡 Processing message: {update_message_text} from {chat_id}")
+        reply_message = bot.send_message(
+            chat_id,
+            f"Got {update_message_text}. 👀 at 🌎",
+            disable_web_page_preview=True,
+        )
+
+        if update.message.photo:
+            process_photo(update)
+        else:
+            process_message(update)
+
+        update_user(bot, chat_id, original_message_id, reply_message.message_id, update_message_text)
+        logging.info(f"✅ Document sent back to user {chat_id}")
     except telegram.error.TimedOut:
         raise
     except Exception as e:
@@ -248,8 +225,7 @@ def start_bot():
 
     dispatcher.add_handler(CommandHandler("start", welcome))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, adapter_plain_text))
-    dispatcher.add_handler(MessageHandler(Filters.photo & ~Filters.command, adapter_photo))
+    dispatcher.add_handler(MessageHandler(~Filters.command, adapter))
 
     updater.start_polling()
     updater.idle()
