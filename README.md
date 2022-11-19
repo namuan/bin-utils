@@ -74,6 +74,16 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
+[_twitter_login.py_](https://namuan.github.io/bin-utils/twitter_login.html)
+```
+usage: twitter_login.py [-h] [-v] [-i]
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -v, --verbose    Increase verbosity of logging output
+  -i, --invisible  Run session in headless mode
+
+```
 [_media_manager.py_](https://namuan.github.io/bin-utils/media_manager.html)
 ```
 usage: media_manager.py [-h] [-f SOURCE_FILE] [-s SOURCE_DIRECTORY] -t

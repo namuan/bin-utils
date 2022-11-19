@@ -167,7 +167,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">blog_title_slug</span> <span class="o">=</span> <span class="n">slug</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">post_title</span><span class="p">)</span>
         <span class="n">download_folder</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span><span class="si">}</span><span class="s2">/.temp&quot;</span>
 
@@ -188,9 +188,11 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;target_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_folder</span>
-        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;child_links_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">child_links_folder</span>
-        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;thumbnails_folder&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">thumbnails_folder</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;target_folder&quot;</span><span class="p">:</span> <span class="n">target_folder</span><span class="p">,</span>
+            <span class="s2">&quot;child_links_folder&quot;</span><span class="p">:</span> <span class="n">child_links_folder</span><span class="p">,</span>
+            <span class="s2">&quot;thumbnails_folder&quot;</span><span class="p">:</span> <span class="n">thumbnails_folder</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -226,7 +228,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">all_links</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">links_file</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">UTF_ENCODING</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span></pre></div>
     </div>
   </div>
@@ -239,7 +241,9 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;all_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_links</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;all_links&quot;</span><span class="p">:</span> <span class="n">all_links</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -302,7 +306,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">is_valid_link</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">link</span><span class="p">):</span>
-        <span class="n">known_domains</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ycombinator&quot;</span><span class="p">,</span> <span class="s2">&quot;algolia&quot;</span><span class="p">,</span> <span class="s2">&quot;hackernews&quot;</span><span class="p">,</span> <span class="s2">&quot;youtube&quot;</span><span class="p">,</span> <span class="s2">&quot;twitter&quot;</span><span class="p">,</span> <span class="s2">&quot;chrome.google.com&quot;</span><span class="p">,</span> <span class="s2">&quot;youtu.be&quot;</span><span class="p">]</span></pre></div>
+        <span class="n">known_domains</span> <span class="o">=</span> <span class="p">[]</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -329,7 +333,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">valid_links</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">link</span>
             <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_links</span>
@@ -346,7 +350,9 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;valid_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">valid_links</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;valid_links&quot;</span><span class="p">:</span> <span class="n">valid_links</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -415,7 +421,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">links_with_titles</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stripped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_title_from</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">child_links_folder</span><span class="p">,</span> <span class="n">link</span><span class="p">)),</span> <span class="n">link</span><span class="p">)</span> <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valid_links</span>
         <span class="p">]</span></pre></div>
@@ -430,7 +436,9 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;links_with_titles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">links_with_titles</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;links_with_titles&quot;</span><span class="p">:</span> <span class="n">links_with_titles</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -495,7 +503,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">links_with_metadata</span> <span class="o">=</span> <span class="p">[</span>
             <span class="p">(</span><span class="n">page_title</span><span class="p">,</span> <span class="n">page_link</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thumbnail</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thumbnails_folder</span><span class="p">,</span> <span class="n">page_link</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">page_title</span><span class="p">,</span> <span class="n">page_link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">links_with_titles</span>
@@ -511,7 +519,9 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;links_with_metadata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">links_with_metadata</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;links_with_metadata&quot;</span><span class="p">:</span> <span class="n">links_with_metadata</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -535,7 +545,8 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>    <span class="n">post_title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">links_with_metadata</span><span class="p">:</span> <span class="nb">list</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -576,9 +587,10 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setup_template_env</span><span class="p">()</span>
-        <span class="n">markdown_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_markdown</span><span class="p">(</span><span class="n">context</span><span class="p">)</span></pre></div>
+        <span class="n">rendering_context</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;post_title&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_title</span><span class="p">,</span> <span class="s2">&quot;links_with_metadata&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">links_with_metadata</span><span class="p">}</span>
+        <span class="n">markdown_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_markdown</span><span class="p">(</span><span class="n">rendering_context</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -590,7 +602,9 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;markdown_text&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">markdown_text</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;markdown_text&quot;</span><span class="p">:</span> <span class="n">markdown_text</span><span class="p">,</span>
+        <span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -627,14 +641,16 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d</p>
 
     # output
     post_file_name = slug(post_title) + ".md"
-    context["post_file_name"] = post_file_name
-    context["post_with_header"] = post_with_header
+    return {
+        "post_file_name": post_file_name,
+        "post_with_header": post_with_header,
+    }
 </code></pre>
 <p>class UpdateLinksInMarkdown(WorkflowBase):
 Use relative links in Markdown to point to images</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">post_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S&quot;</span><span class="p">)</span>
         <span class="n">post_title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markdown_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
@@ -653,13 +669,15 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">    post_with_header: str</span>
 <span class="s2">    target_folder: Path</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def run(self, context):</span>
+<span class="s2">    def execute(self):</span>
 <span class="s2">        thumbnails_directory = self.target_folder / &quot;thumbnails&quot;</span>
 <span class="s2">        replace_from = f&quot;![](</span><span class="si">{</span><span class="n">thumbnails_directory</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="s2">        replace_with = f&quot;![](/</span><span class="si">{</span><span class="n">relative_image_directory</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="s2">        md_with_updated_links = self.post_with_header.replace(replace_from, replace_with)</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">        context[&quot;md_with_updated_links&quot;] = md_with_updated_links</span>
+<span class="s2">        return </span><span class="si">{</span>
+            <span class="s2">&quot;md_with_updated_links&quot;</span><span class="si">:</span><span class="s2"> md_with_updated_links,</span>
+<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">class WriteBlogPost(WorkflowBase):</span>
 <span class="s2">#DIVIDER</span>
@@ -668,12 +686,14 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">    blog_directory: Path</span>
 <span class="s2">    post_file_name: str</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def run(self, context):</span>
+<span class="s2">    def execute(self):</span>
 <span class="s2">        blog_page_path = f&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">blog_directory</span><span class="si">}</span><span class="s2">/content/posts/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">post_file_name</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="s2">        Path(blog_page_path).write_text(self.md_with_updated_links)</span>
 <span class="s2">        logging.info(f&quot;📒 Created note at </span><span class="si">{</span><span class="n">blog_page_path</span><span class="si">}</span><span class="s2">&quot;)</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">        context[&quot;blog_page&quot;] = blog_page_path</span>
+<span class="s2">        return </span><span class="si">{</span>
+            <span class="s2">&quot;blog_page&quot;</span><span class="si">:</span><span class="s2"> blog_page_path,</span>
+<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">class CompressImages(WorkflowBase):</span>
 <span class="s2">#DIVIDER</span>
@@ -681,7 +701,7 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">    blog_directory: Path</span>
 <span class="s2">    target_folder: Path</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def run(self, _):</span>
+<span class="s2">    def execute(self):</span>
 <span class="s2">        for img in self.target_folder.glob(&quot;thumbnails/*&quot;):</span>
 <span class="s2">            img_name = img.name</span>
 <span class="s2">            img_path = img.as_posix()</span>
@@ -704,7 +724,7 @@ Use relative links in Markdown to point to images</p>
 
 <span class="s2">    post_title: str</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def run(self, _):</span>
+<span class="s2">    def execute(self):</span>
 <span class="s2">        pushover_config = </span><span class="si">{</span>
             <span class="s2">&quot;pushover_url&quot;</span><span class="si">:</span><span class="s2"> os.getenv(&quot;PUSHOVER_URL&quot;),</span>
 <span class="s2">            &quot;pushover_token&quot;: os.getenv(&quot;PUSHOVER_TOKEN&quot;),</span>
@@ -718,7 +738,7 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">    open_in_editor: bool</span>
 <span class="s2">    blog_directory: Path</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">    def run(self, _):</span>
+<span class="s2">    def execute(self):</span>
 <span class="s2">        if not self.open_in_editor:</span>
 <span class="s2">            return</span>
 <span class="s2">        editor = os.environ.get(&quot;EDITOR&quot;)</span>
