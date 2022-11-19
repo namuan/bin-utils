@@ -28,13 +28,12 @@ class DoSomething(WorkflowBase):
     """
 
     username: str
-    missing_var: str
 
-    def run(self, context):
+    def execute(self):
         logging.info(f"Hello {self.username}")
 
         # output
-        context["greetings"] = f"Hello {context['username']}"
+        return {"greetings": f"Hello {self.username}"}
 
 
 # Workflow definition

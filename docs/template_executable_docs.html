@@ -78,8 +78,7 @@ Copy the output and paste it into the email</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">missing_var</span><span class="p">:</span> <span class="nb">str</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -91,7 +90,7 @@ Copy the output and paste it into the email</p>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hello </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
@@ -104,7 +103,7 @@ Copy the output and paste it into the email</p>
       <p>output</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;greetings&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Hello </span><span class="si">{</span><span class="n">context</span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;greetings&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Hello </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
