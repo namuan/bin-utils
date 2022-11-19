@@ -23,3 +23,4 @@ dataset
 tweepy
 praw
 pytube
+pytest-playwright # playwright install
