@@ -194,7 +194,7 @@ class GrabScreenThumbnail(WorkflowBase):
     def thumbnail(self, thumbnails_folder, page_link):
         page_slug = slug(page_link)
         target_path = thumbnails_folder / f"{page_slug}.png"
-        cmd = f"./thumbnail_generator.py -i '{page_link}' -o {target_path} --headless"
+        cmd = f"./playwright_thumbnails.py -a auth.json -i '{page_link}' -o {target_path} --headless"
         if target_path.exists():
             logging.info(f"🌕 Thumbnail already exists for {page_link}. Run {cmd} to update it")
             return target_path.as_posix()

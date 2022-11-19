@@ -297,6 +297,26 @@ optional arguments:
   -v, --verbose         Increase verbosity of logging output
 
 ```
+[_playwright_thumbnails.py_](https://namuan.github.io/bin-utils/playwright_thumbnails.html)
+```
+usage: playwright_thumbnails.py [-h] [-v] -i INPUT_URL -o OUTPUT_FILE_PATH
+                                [-a AUTH_SESSION_FILE] [-s]
+                                [-w WAIT_IN_SECS_BEFORE_CAPTURE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of logging output
+  -i INPUT_URL, --input-url INPUT_URL
+                        Web Url
+  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
+                        Output file path
+  -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
+                        Playwright authentication session
+  -s, --headless        Run in headless mode (no browser window)
+  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
+                        Wait (in secs) before capturing screenshot
+
+```
 [_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)
 ```
 usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
