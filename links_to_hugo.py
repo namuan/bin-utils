@@ -81,7 +81,7 @@ class CreateOutputFolder(WorkflowBase):
 
     post_title: str
 
-    def run(self, context):
+    def execute(self):
         blog_title_slug = slug(self.post_title)
         download_folder = f"{os.getcwd()}/.temp"
 
@@ -93,9 +93,11 @@ class CreateOutputFolder(WorkflowBase):
             f.mkdir(parents=True, exist_ok=True)
 
         # output
-        context["target_folder"] = target_folder
-        context["child_links_folder"] = child_links_folder
-        context["thumbnails_folder"] = thumbnails_folder
+        return {
+            "target_folder": target_folder,
+            "child_links_folder": child_links_folder,
+            "thumbnails_folder": thumbnails_folder,
+        }
 
 
 class ExtractAllLinksFromPost(WorkflowBase):
@@ -103,11 +105,13 @@ class ExtractAllLinksFromPost(WorkflowBase):
 
     links_file: str
 
-    def run(self, context):
+    def execute(self):
         all_links = Path(self.links_file).read_text(encoding=UTF_ENCODING).splitlines()
 
         # output
-        context["all_links"] = all_links
+        return {
+            "all_links": all_links,
+        }
 
 
 class KeepValidLinks(WorkflowBase):
@@ -132,14 +136,14 @@ class KeepValidLinks(WorkflowBase):
         return True
 
     def is_valid_link(self, link):
-        known_domains = ["ycombinator", "algolia", "hackernews", "youtube", "twitter", "chrome.google.com", "youtu.be"]
+        known_domains = []
 
         def has_known_domain(post_link):
             return any(map(lambda l: l in post_link.lower(), known_domains))
 
         return link.startswith("http") and not has_known_domain(link)
 
-    def run(self, context):
+    def execute(self):
         valid_links = [
             link
             for link in self.all_links
@@ -147,7 +151,9 @@ class KeepValidLinks(WorkflowBase):
         ]
 
         # output
-        context["valid_links"] = valid_links
+        return {
+            "valid_links": valid_links,
+        }
 
 
 class GrabChildLinkTitle(WorkflowBase):
@@ -168,13 +174,15 @@ class GrabChildLinkTitle(WorkflowBase):
     def stripped(self, page_title: str):
         return page_title.strip()
 
-    def run(self, context):
+    def execute(self):
         links_with_titles = [
             (self.stripped(self.page_title_from(self.child_links_folder, link)), link) for link in self.valid_links
         ]
 
         # output
-        context["links_with_titles"] = links_with_titles
+        return {
+            "links_with_titles": links_with_titles,
+        }
 
 
 class GrabScreenThumbnail(WorkflowBase):
@@ -201,18 +209,23 @@ class GrabScreenThumbnail(WorkflowBase):
 
         return target_path
 
-    def run(self, context):
+    def execute(self):
         links_with_metadata = [
             (page_title, page_link, self.thumbnail(self.thumbnails_folder, page_link))
             for page_title, page_link in self.links_with_titles
         ]
 
         # output
-        context["links_with_metadata"] = links_with_metadata
+        return {
+            "links_with_metadata": links_with_metadata,
+        }
 
 
 class GenerateMarkdown(WorkflowBase):
     """Generate Markdown using the data in context"""
+
+    post_title: str
+    links_with_metadata: list
 
     def setup_template_env(self):
         template_folder = "templates"
@@ -220,15 +233,18 @@ class GenerateMarkdown(WorkflowBase):
         self.jinja_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True, autoescape=True)
 
     def render_markdown(self, context):
-        rendered = self.jinja_env.get_template("hn_post_links.md.j2").render(context)
+        rendered = self.jinja_env.get_template("post_links.md.j2").render(context)
         return rendered
 
-    def run(self, context):
+    def execute(self):
         self.setup_template_env()
-        markdown_text = self.render_markdown(context)
+        rendering_context = {"post_title": self.post_title, "links_with_metadata": self.links_with_metadata}
+        markdown_text = self.render_markdown(rendering_context)
 
         # output
-        context["markdown_text"] = markdown_text
+        return {
+            "markdown_text": markdown_text,
+        }
 
 
 class AddHugoHeader(WorkflowBase):
@@ -236,7 +252,7 @@ class AddHugoHeader(WorkflowBase):
 
     markdown_text: str
 
-    def run(self, context):
+    def execute(self):
         post_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         post_title = self.markdown_text.splitlines()[0].replace("#", "").strip()
 
@@ -255,8 +271,10 @@ class AddHugoHeader(WorkflowBase):
 
         # output
         post_file_name = slug(post_title) + ".md"
-        context["post_file_name"] = post_file_name
-        context["post_with_header"] = post_with_header
+        return {
+            "post_file_name": post_file_name,
+            "post_with_header": post_with_header,
+        }
 
 
 class UpdateLinksInMarkdown(WorkflowBase):
@@ -265,14 +283,16 @@ class UpdateLinksInMarkdown(WorkflowBase):
     post_with_header: str
     target_folder: Path
 
-    def run(self, context):
+    def execute(self):
         thumbnails_directory = self.target_folder / "thumbnails"
         replace_from = f"![]({thumbnails_directory.as_posix()}"
         replace_with = f"![](/{relative_image_directory()}"
         md_with_updated_links = self.post_with_header.replace(replace_from, replace_with)
 
         # output
-        context["md_with_updated_links"] = md_with_updated_links
+        return {
+            "md_with_updated_links": md_with_updated_links,
+        }
 
 
 class WriteBlogPost(WorkflowBase):
@@ -282,13 +302,15 @@ class WriteBlogPost(WorkflowBase):
     blog_directory: Path
     post_file_name: str
 
-    def run(self, context):
+    def execute(self):
         blog_page_path = f"{self.blog_directory}/content/posts/{self.post_file_name}"
         Path(blog_page_path).write_text(self.md_with_updated_links)
         logging.info(f"📒 Created note at {blog_page_path}")
 
         # output
-        context["blog_page"] = blog_page_path
+        return {
+            "blog_page": blog_page_path,
+        }
 
 
 class CompressImages(WorkflowBase):
@@ -297,7 +319,7 @@ class CompressImages(WorkflowBase):
     blog_directory: Path
     target_folder: Path
 
-    def run(self, _):
+    def execute(self):
         for img in self.target_folder.glob("thumbnails/*"):
             img_name = img.name
             img_path = img.as_posix()
@@ -321,7 +343,7 @@ class NotifyMe(WorkflowBase):
 
     post_title: str
 
-    def run(self, _):
+    def execute(self):
         pushover_config = {
             "pushover_url": os.getenv("PUSHOVER_URL"),
             "pushover_token": os.getenv("PUSHOVER_TOKEN"),
@@ -336,7 +358,7 @@ class OpenInEditor(WorkflowBase):
     open_in_editor: bool
     blog_directory: Path
 
-    def run(self, _):
+    def execute(self):
         if not self.open_in_editor:
             return
         editor = os.environ.get("EDITOR")
