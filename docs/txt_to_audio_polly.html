@@ -19,10 +19,10 @@
       </div>
       <p>Convert text to audio using AWS Polly</p>
 <p>Usage:
-./txt_to_audio_polly.py -i input.txt -o output.mp3</p>
+./txt_to_audio_polly.py -i input.txt</p>
 <p>It is also possible to use the AWS_PROFILE environment variable to specify the AWS profile to use.
 Otherwise you can use the -p/&ndash;profile option to specify the profile to use.
-./txt_to_audio_polly.py -i input.txt -o output.mp3 -p my_profile</p>
+./txt_to_audio_polly.py -i input.txt -p my_profile</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
@@ -79,13 +79,6 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input file&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
-        <span class="nb">type</span><span class="o">=</span><span class="n">Path</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output file&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-p&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--profile&quot;</span><span class="p">,</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
@@ -113,14 +106,59 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
       
     </div>
     <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">yield_text_by_paragraphs</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="k">yield from</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">yield_text_by_fullstops</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">para</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">para</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1500</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">para</span><span class="p">,</span> <span class="n">counter</span>
+            <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">para</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">para</span> <span class="o">+=</span> <span class="n">sentence</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+    <span class="k">yield</span> <span class="n">para</span><span class="p">,</span> <span class="n">counter</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
     <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">profile_name</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
     <span class="n">polly</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;polly&quot;</span><span class="p">)</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">input_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">input</span>
+    <span class="n">output_directory_from_input</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">input_file</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">output_file_base</span> <span class="o">=</span> <span class="n">input_file</span><span class="o">.</span><span class="n">stem</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="n">polly</span><span class="o">.</span><span class="n">synthesize_speech</span><span class="p">(</span><span class="n">Text</span><span class="o">=</span><span class="n">text</span><span class="p">,</span> <span class="n">OutputFormat</span><span class="o">=</span><span class="s2">&quot;mp3&quot;</span><span class="p">,</span> <span class="n">VoiceId</span><span class="o">=</span><span class="s2">&quot;Matthew&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;AudioStream&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">para</span><span class="p">,</span> <span class="n">counter</span> <span class="ow">in</span> <span class="n">yield_text_by_fullstops</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">polly</span><span class="o">.</span><span class="n">synthesize_speech</span><span class="p">(</span>
+                <span class="n">OutputFormat</span><span class="o">=</span><span class="s2">&quot;mp3&quot;</span><span class="p">,</span>
+                <span class="n">Text</span><span class="o">=</span><span class="n">para</span><span class="p">,</span>
+                <span class="n">TextType</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+                <span class="n">VoiceId</span><span class="o">=</span><span class="s2">&quot;Matthew&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
+                <span class="n">output_directory_from_input</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_base</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="s2">&quot;wb&quot;</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;AudioStream&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

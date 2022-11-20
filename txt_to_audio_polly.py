@@ -3,11 +3,11 @@
 Convert text to audio using AWS Polly
 
 Usage:
-./txt_to_audio_polly.py -i input.txt -o output.mp3
+./txt_to_audio_polly.py -i input.txt
 
 It is also possible to use the AWS_PROFILE environment variable to specify the AWS profile to use.
 Otherwise you can use the -p/--profile option to specify the profile to use.
-./txt_to_audio_polly.py -i input.txt -o output.mp3 -p my_profile
+./txt_to_audio_polly.py -i input.txt -p my_profile
 """
 import logging
 import os
@@ -45,13 +45,6 @@ def parse_args():
         help="Input file",
     )
     parser.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        required=True,
-        help="Output file",
-    )
-    parser.add_argument(
         "-p",
         "--profile",
         type=str,
@@ -70,14 +63,41 @@ def parse_args():
     return parser.parse_args()
 
 
+def yield_text_by_paragraphs(text):
+    yield from text.splitlines()
+
+
+def yield_text_by_fullstops(text):
+    counter = 1
+    para = ""
+    for sentence in text.split("."):
+        if len(para) + len(sentence) > 1500:
+            yield para, counter
+            counter += 1
+            para = ""
+        para += sentence + "."
+    yield para, counter
+
+
 def main(args):
     session = boto3.Session(profile_name=args.profile)
     polly = session.client("polly")
-    with open(args.input) as f:
+    input_file = args.input
+    output_directory_from_input: Path = input_file.parent
+    output_file_base = input_file.stem
+    with open(input_file) as f:
         text = f.read()
-        response = polly.synthesize_speech(Text=text, OutputFormat="mp3", VoiceId="Matthew")
-        with open(args.output, "wb") as f:
-            f.write(response["AudioStream"].read())
+        for para, counter in yield_text_by_fullstops(text):
+            response = polly.synthesize_speech(
+                OutputFormat="mp3",
+                Text=para,
+                TextType="text",
+                VoiceId="Matthew",
+            )
+            with open(
+                output_directory_from_input.joinpath(f"{output_file_base}-{counter}.mp3").as_posix(), "wb"
+            ) as out:
+                out.write(response["AudioStream"].read())
 
 
 if __name__ == "__main__":
