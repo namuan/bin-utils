@@ -27,6 +27,7 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
     <div class='code'>
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 
@@ -137,6 +138,33 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
       </div>
+      <p>Combine all mp3 files using ffmpeg</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">combine_files</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">output_file_base</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">output_file</span> <span class="o">=</span> <span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_base</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">output_directory</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_base</span><span class="si">}</span><span class="s2">-*.mp3&quot;</span><span class="p">)])</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ffmpeg -y -i &#39;concat:</span><span class="si">{</span><span class="n">files</span><span class="si">}</span><span class="s2">&#39; -c copy </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
       
     </div>
     <div class='code'>
@@ -144,7 +172,7 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
     <span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">profile_name</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">profile</span><span class="p">)</span>
     <span class="n">polly</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s2">&quot;polly&quot;</span><span class="p">)</span>
     <span class="n">input_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">input</span>
-    <span class="n">output_directory_from_input</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">input_file</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">output_directory</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">input_file</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">output_file_base</span> <span class="o">=</span> <span class="n">input_file</span><span class="o">.</span><span class="n">stem</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">input_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">text</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -155,10 +183,9 @@ Otherwise you can use the -p/&ndash;profile option to specify the profile to use
                 <span class="n">TextType</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
                 <span class="n">VoiceId</span><span class="o">=</span><span class="s2">&quot;Matthew&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span>
-                <span class="n">output_directory_from_input</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_base</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="s2">&quot;wb&quot;</span>
-            <span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_directory</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">output_file_base</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">counter</span><span class="si">}</span><span class="s2">.mp3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
                 <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;AudioStream&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="n">combine_files</span><span class="p">(</span><span class="n">output_directory</span><span class="p">,</span> <span class="n">output_file_base</span><span class="p">)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>

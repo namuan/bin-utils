@@ -11,6 +11,7 @@ Otherwise you can use the -p/--profile option to specify the profile to use.
 """
 import logging
 import os
+import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
@@ -79,11 +80,19 @@ def yield_text_by_fullstops(text):
     yield para, counter
 
 
+def combine_files(output_directory, output_file_base):
+    """Combine all mp3 files using ffmpeg"""
+    output_file = output_directory.joinpath(f"{output_file_base}.mp3").as_posix()
+    files = "|".join([f.as_posix() for f in output_directory.glob(f"{output_file_base}-*.mp3")])
+    cmd = f"ffmpeg -y -i 'concat:{files}' -c copy {output_file}"
+    subprocess.run(cmd, shell=True, check=True)
+
+
 def main(args):
     session = boto3.Session(profile_name=args.profile)
     polly = session.client("polly")
     input_file = args.input
-    output_directory_from_input: Path = input_file.parent
+    output_directory: Path = input_file.parent
     output_file_base = input_file.stem
     with open(input_file) as f:
         text = f.read()
@@ -94,10 +103,9 @@ def main(args):
                 TextType="text",
                 VoiceId="Matthew",
             )
-            with open(
-                output_directory_from_input.joinpath(f"{output_file_base}-{counter}.mp3").as_posix(), "wb"
-            ) as out:
+            with open(output_directory.joinpath(f"{output_file_base}-{counter}.mp3").as_posix(), "wb") as out:
                 out.write(response["AudioStream"].read())
+    combine_files(output_directory, output_file_base)
 
 
 if __name__ == "__main__":
