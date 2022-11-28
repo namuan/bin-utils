@@ -163,12 +163,14 @@ class Message:
         self.y = self.y + step_y
 
 
+# Define actors in the diagram
 app_a = Application("Gateway", 100, 100, 50, 100, lime)
 app_b = Application("Payment Service", 400, 100, 50, 100, fuchsia)
 message = Message(app_a)
 message_2 = Message(app_b)
 
 
+# Implement to animate actors
 def draw_scene(screen):
     app_a.draw_on(screen)
     app_b.draw_on(screen)
