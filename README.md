@@ -282,7 +282,7 @@ optional arguments:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.8.12)
+pygame 2.1.2 (SDL 2.0.18, Python 3.9.15)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
@@ -339,12 +339,10 @@ optional arguments:
 ```
 [_rider_brain_bot.py_](https://namuan.github.io/bin-utils/rider_brain_bot.html)
 ```
-usage: rider_brain_bot.py [-h]
 
-🧠 Telegram bot to bookmark stuff
-
-optional arguments:
-  -h, --help  show this help message and exit
+```
+[_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
+```
 
 ```
 [_helium_selenium_wrapper.py_](https://namuan.github.io/bin-utils/helium_selenium_wrapper.html)
