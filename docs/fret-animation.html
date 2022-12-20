@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>fret-animation.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>fret-animation.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+
+<span class="kn">import</span> <span class="nn">flet</span>
+<span class="kn">from</span> <span class="nn">flet</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">ElevatedButton</span><span class="p">,</span> <span class="n">Page</span><span class="p">,</span> <span class="n">Stack</span><span class="p">,</span> <span class="n">colors</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="n">Page</span><span class="p">):</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="mi">40</span>
+    <span class="n">gap</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="mi">2000</span>
+
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">PINK_500</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">AMBER_500</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">LIGHT_GREEN_500</span>
+    <span class="n">c4</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">DEEP_PURPLE_500</span>
+
+    <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">AMBER_400</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">AMBER_ACCENT_400</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">BLUE_400</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">BROWN_400</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">CYAN_700</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">DEEP_ORANGE_500</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">CYAN_500</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">INDIGO_600</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">ORANGE_ACCENT_100</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">PINK</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">RED_600</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">GREEN_400</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">GREEN_ACCENT_200</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">TEAL_ACCENT_200</span><span class="p">,</span>
+        <span class="n">colors</span><span class="o">.</span><span class="n">LIGHT_BLUE_500</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>F</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c1</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>L</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c2</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>E</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c3</span><span class="p">),</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>T</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+        <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">c4</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">width</span> <span class="o">=</span> <span class="mi">16</span> <span class="o">*</span> <span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="n">gap</span><span class="p">)</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="n">gap</span><span class="p">)</span>
+
+    <span class="n">canvas</span> <span class="o">=</span> <span class="n">Stack</span><span class="p">(</span>
+        <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+        <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+        <span class="n">animate_scale</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+        <span class="n">animate_opacity</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+    <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>spread parts randomly</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)):</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">controls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">Container</span><span class="p">(</span>
+                <span class="n">animate</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">animate_position</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+                <span class="n">animate_rotation</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">randomize</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">part_size</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">bgcolor</span> <span class="o">=</span> <span class="n">all_colors</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_colors</span><span class="p">))]</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">part_size</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">part_size</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">border_radius</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">rotate</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">360</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">opacity</span> <span class="o">=</span> <span class="mf">0.3</span>
+        <span class="n">go_button</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">again_button</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">assemble</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">bgcolor</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">controls</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="n">left</span> <span class="o">*</span> <span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="n">gap</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="n">top</span> <span class="o">*</span> <span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="n">gap</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">bgcolor</span> <span class="o">=</span> <span class="n">bgcolor</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">border_radius</span> <span class="o">=</span> <span class="mi">5</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">rotate</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">canvas</span><span class="o">.</span><span class="n">opacity</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">go_button</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">again_button</span><span class="o">.</span><span class="n">visible</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">page</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+
+    <span class="n">go_button</span> <span class="o">=</span> <span class="n">ElevatedButton</span><span class="p">(</span><span class="s2">&quot;Go!&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="n">assemble</span><span class="p">)</span>
+    <span class="n">again_button</span> <span class="o">=</span> <span class="n">ElevatedButton</span><span class="p">(</span><span class="s2">&quot;Again!&quot;</span><span class="p">,</span> <span class="n">on_click</span><span class="o">=</span><span class="n">randomize</span><span class="p">)</span>
+
+    <span class="n">randomize</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">page</span><span class="o">.</span><span class="n">horizontal_alignment</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">vertical_alignment</span> <span class="o">=</span> <span class="s2">&quot;center&quot;</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">spacing</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">canvas</span><span class="p">,</span> <span class="n">go_button</span><span class="p">,</span> <span class="n">again_button</span><span class="p">)</span>
+
+
+<span class="n">flet</span><span class="o">.</span><span class="n">app</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">main</span><span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

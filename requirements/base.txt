@@ -24,4 +24,6 @@ tweepy
 praw
 pytube
 pytest-playwright # playwright install
+flet
+vaderSentiment
 textual[dev]
