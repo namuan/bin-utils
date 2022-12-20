@@ -77,18 +77,28 @@ class CreateMarkdown(WorkflowBase):
 
     comment_id_with_sentiments: dict[str, dict[str, str]]
 
+    @staticmethod
+    def emoji_for_sentiment(sentiment: float) -> str:
+        if sentiment > 0.5:
+            return "😀 👍"
+        elif sentiment < -0.5:
+            return "😡 👎"
+        else:
+            return "😐 🤷"
+
     def execute(self):
         markdown = """
-        # Hacker News Sentiment Analysis
-=============================="""
+### Hacker News Sentiment Analysis
+
+"""
 
         for comment_id, comment in self.comment_id_with_sentiments.items():
             markdown += """
 ----------------
 [Comment ID: {0}](https://news.ycombinator.com/item?id={0})
-Sentiment: {1}
+Sentiment: {1} {2}
 """.format(
-                comment_id, comment["sentiment"]
+                comment_id, comment["sentiment"], self.emoji_for_sentiment(float(comment["sentiment"]))
             )
 
         return {"markdown": markdown}

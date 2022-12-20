@@ -246,18 +246,28 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+      <div class="highlight"><pre>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">emoji_for_sentiment</span><span class="p">(</span><span class="n">sentiment</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sentiment</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;😀 👍&quot;</span>
+        <span class="k">elif</span> <span class="n">sentiment</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;😡 👎&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;😐 🤷&quot;</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">markdown</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">#DIVIDER</span>
-<span class="s2">==============================&quot;&quot;&quot;</span>
+
+<span class="s2">&quot;&quot;&quot;</span>
 
         <span class="k">for</span> <span class="n">comment_id</span><span class="p">,</span> <span class="n">comment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id_with_sentiments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">markdown</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">----------------</span>
 <span class="s2">[Comment ID: </span><span class="si">{0}</span><span class="s2">](https://news.ycombinator.com/item?id=</span><span class="si">{0}</span><span class="s2">)</span>
-<span class="s2">Sentiment: </span><span class="si">{1}</span><span class="s2"></span>
+<span class="s2">Sentiment: </span><span class="si">{1}</span><span class="s2"> </span><span class="si">{2}</span><span class="s2"></span>
 <span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">comment_id</span><span class="p">,</span> <span class="n">comment</span><span class="p">[</span><span class="s2">&quot;sentiment&quot;</span><span class="p">]</span>
+                <span class="n">comment_id</span><span class="p">,</span> <span class="n">comment</span><span class="p">[</span><span class="s2">&quot;sentiment&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">emoji_for_sentiment</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">comment</span><span class="p">[</span><span class="s2">&quot;sentiment&quot;</span><span class="p">]))</span>
             <span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;markdown&quot;</span><span class="p">:</span> <span class="n">markdown</span><span class="p">}</span></pre></div>
@@ -269,7 +279,7 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-18'>#</a>
       </div>
-      <p>Hacker News Sentiment Analysis</p>
+      <h2>Hacker News Sentiment Analysis</h2>
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="k">class</span> <span class="nc">WriteMarkdownToFile</span><span class="p">(</span><span class="n">WorkflowBase</span><span class="p">):</span></pre></div>
