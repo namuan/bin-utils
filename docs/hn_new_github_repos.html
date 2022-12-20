@@ -197,7 +197,7 @@ Send links over Telegram</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>        <span class="k">def</span> <span class="nf">has_known_domain</span><span class="p">(</span><span class="n">post_link</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">post_link</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">known_domains</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">link</span><span class="p">:</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">post_link</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">known_domains</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">link</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">has_known_domain</span><span class="p">(</span><span class="n">link</span><span class="p">)</span></pre></div>
     </div>

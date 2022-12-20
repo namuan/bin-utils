@@ -72,7 +72,7 @@ class SelectRepoLinks(WorkflowBase):
         known_domains = ["github.com", "gitlab.com", "bitbucket.com"]
 
         def has_known_domain(post_link):
-            return any(map(lambda l: l in post_link.lower(), known_domains))
+            return any(map(lambda link: link in post_link.lower(), known_domains))
 
         return link.startswith("http") and has_known_domain(link)
 
