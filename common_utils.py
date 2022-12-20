@@ -128,6 +128,17 @@ def replace_rgx(rgx_to_match, source_str, replacement) -> str:
     return rgx_to_match.sub(replacement, source_str)
 
 
+def http_get_request(url: str, headers: dict = None, timeout: int = 10) -> dict:
+    if headers is None:
+        headers = {}
+    logging.info("Sending GET request to %s", url)
+    response = requests.get(url, headers=headers, timeout=timeout)
+    if response.status_code != 200:
+        raise Exception(f"Failed to get {url} with status code {response.status_code}")
+    else:
+        return response.json()
+
+
 if __name__ == "__main__":
     rgx = re.compile("([\\w.]*reddit.com)")
     incoming = (
