@@ -30,7 +30,7 @@ $ pbpaste | awk -F\/ '{print $6}' | tr -d ')' | while read img; do find . -name 
 Usage:
 $ python hn-links.py -l https://news.ycombinator.com/item?id=25381191 -b <blog_directory> --open-in-editor
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l HN_LINK, --hn-link HN_LINK
                         Link to HN Post
@@ -51,27 +51,13 @@ Usage:
 ./template_py_scripts.py -v # To log INFO messages
 ./template_py_scripts.py -vv # To log DEBUG messages
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -v, --verbose  Increase verbosity of logging output
 
 ```
-[_print_browser.py_](https://namuan.github.io/bin-utils/print_browser.html)
+[_fret-desktop-window.py_](https://namuan.github.io/bin-utils/fret-desktop-window.html)
 ```
-usage: print_browser.py [-h] -u WEBPAGE_URL -o OUTPUT_FILE_PATH
-                        [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
-
-A custom browser for headless printing
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -u WEBPAGE_URL, --webpage-url WEBPAGE_URL
-                        Webpage Url
-  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
-                        Full output file path for PDF
-  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
-                        Wait (in secs) before capturing page
-  -s, --headless        Run headless (no browser window)
 
 ```
 [_txt_to_audio_polly.py_](https://namuan.github.io/bin-utils/txt_to_audio_polly.html)
@@ -82,7 +68,7 @@ optional arguments:
 ```
 usage: twitter_login.py [-h] [-v] [-i]
 
-optional arguments:
+options:
   -h, --help       show this help message and exit
   -v, --verbose    Increase verbosity of logging output
   -i, --invisible  Run session in headless mode
@@ -98,7 +84,7 @@ usage: media_manager.py [-h] [-f SOURCE_FILE] [-s SOURCE_DIRECTORY] -t
 TODO:
 Handle ignored files
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -f SOURCE_FILE, --source-file SOURCE_FILE
                         Source file
@@ -114,7 +100,7 @@ optional arguments:
 usage: thumbnail_generator.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
                               [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i INPUT_URL, --input-url INPUT_URL
                         Web Url
@@ -157,7 +143,7 @@ $ ./unused_files.py -s <blog-root>/static/images -t <blog-root>/content -d
 6. make deploy from blog directory
 7. make commit-all from blog directory
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -l LINKS_FILE, --links-file LINKS_FILE
                         Path to links file
@@ -169,6 +155,10 @@ optional arguments:
   -v, --verbose         Display context variables at each step
 
 ```
+[_fret-animation.py_](https://namuan.github.io/bin-utils/fret-animation.html)
+```
+
+```
 [_publish_vnote_to_hugo.py_](https://namuan.github.io/bin-utils/publish_vnote_to_hugo.html)
 ```
 usage: publish_vnote_to_hugo.py [-h] [-b BLOG_DIRECTORY] -n VNOTE_FILE_PATH
@@ -177,7 +167,7 @@ usage: publish_vnote_to_hugo.py [-h] [-b BLOG_DIRECTORY] -n VNOTE_FILE_PATH
 Publish vNote to Hugo blog post
 $ python publish_vnote_to_hugo.py <<blog-root>> <<vnote-location>>
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -b BLOG_DIRECTORY, --blog-directory BLOG_DIRECTORY
                         Blog directory
@@ -192,8 +182,21 @@ usage: readme_docs.py [-h]
 
 Generates documentation for the readme.md file
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
+
+```
+[_hn-vader-sentiment.py_](https://namuan.github.io/bin-utils/hn-vader-sentiment.html)
+```
+usage: hn-vader-sentiment.py [-h] -s STORY_ID [-v]
+
+Analyse a HackerNews post by looking at the comments and calculating the sentiment
+
+options:
+  -h, --help            show this help message and exit
+  -s STORY_ID, --story-id STORY_ID
+                        Hacker News Story ID
+  -v, --verbose         Display context variables at each step
 
 ```
 [_template_executable_docs.py_](https://namuan.github.io/bin-utils/template_executable_docs.html)
@@ -207,7 +210,7 @@ Usage:
 
 ./executable_docs.py --username johndoe
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -u USERNAME, --username USERNAME
                         User name
@@ -220,7 +223,7 @@ usage: py_carbon_clip.py [-h]
 
 Generate beautiful screenshots of code using carbon.now.sh and puts it on the clipboard.
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
@@ -229,7 +232,7 @@ optional arguments:
 usage: webpage_to_pdf.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
                          [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i INPUT_URL, --input-url INPUT_URL
                         Web Url
@@ -240,13 +243,17 @@ optional arguments:
   -s, --headless        Run headless (no browser window)
 
 ```
+[_fret-play.py_](https://namuan.github.io/bin-utils/fret-play.html)
+```
+
+```
 [_java_parser.py_](https://namuan.github.io/bin-utils/java_parser.html)
 ```
 usage: java_parser.py [-h] -s SOURCE_DIRECTORY
 
 Parses the java files and creates a list of all the classes and their methods.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s SOURCE_DIRECTORY, --source-directory SOURCE_DIRECTORY
                         Input source directory
@@ -262,7 +269,7 @@ Send links over Telegram
 Usage:
 ./hn_new_github_repos.py -h
 
-optional arguments:
+options:
   -h, --help     show this help message and exit
   -v, --verbose  Display context variables at each step
 
@@ -274,7 +281,7 @@ usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]
 Extract all paths from jsondoc file
 Usage: $ curl -s -X GET http://some-url/restapidoc.json | python jsondoc_parser.py
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -i INFILE, --infile INFILE
   -o OUTFILE, --outfile OUTFILE
@@ -282,7 +289,7 @@ optional arguments:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.9.15)
+pygame 2.1.2 (SDL 2.0.18, Python 3.10.9)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
@@ -294,7 +301,7 @@ Requires
 Usage:
 ./arch-animate.py -h
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -c, --convert-to-animation
                         Generate animated gif
@@ -307,7 +314,7 @@ usage: playwright_thumbnails.py [-h] [-v] -i INPUT_URL -o OUTPUT_FILE_PATH
                                 [-a AUTH_SESSION_FILE] [-s]
                                 [-w WAIT_IN_SECS_BEFORE_CAPTURE]
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -v, --verbose         Increase verbosity of logging output
   -i INPUT_URL, --input-url INPUT_URL
@@ -327,7 +334,7 @@ usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
 
 Find/Delete files from source directory that are not used in any file in the target directory.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -s SOURCE, --source SOURCE
                         Source directory
@@ -339,6 +346,12 @@ optional arguments:
 ```
 [_rider_brain_bot.py_](https://namuan.github.io/bin-utils/rider_brain_bot.html)
 ```
+usage: rider_brain_bot.py [-h]
+
+🧠 Telegram bot to bookmark stuff
+
+options:
+  -h, --help  show this help message and exit
 
 ```
 [_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
@@ -351,7 +364,7 @@ usage: helium_selenium_wrapper.py [-h]
 
 Demonstrates how to use helium to automate a web browser.
 
-optional arguments:
+options:
   -h, --help  show this help message and exit
 
 ```
