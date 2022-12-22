@@ -35,7 +35,6 @@ deploy: clean ## Copies any changed file to the server
 		requirements \
 		rider_brain_bot.py \
 		webpage_to_pdf.py \
-		print_browser.py \
 		Readability.js \
 		hn_new_github_repos.py \
 		scripts \
