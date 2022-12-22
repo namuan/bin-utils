@@ -259,21 +259,6 @@ options:
                         Input source directory
 
 ```
-[_hn_new_github_repos.py_](https://namuan.github.io/bin-utils/hn_new_github_repos.html)
-```
-usage: hn_new_github_repos.py [-h] [-v]
-
-Find Links to Github/GitLab and Bitbucket from HN new news
-Send links over Telegram
-
-Usage:
-./hn_new_github_repos.py -h
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Display context variables at each step
-
-```
 [_jsondoc_parser.py_](https://namuan.github.io/bin-utils/jsondoc_parser.html)
 ```
 usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]
@@ -342,16 +327,6 @@ options:
                         Target directory
   -d, --delete          Delete unused files
   -v, --verbose
-
-```
-[_rider_brain_bot.py_](https://namuan.github.io/bin-utils/rider_brain_bot.html)
-```
-usage: rider_brain_bot.py [-h]
-
-🧠 Telegram bot to bookmark stuff
-
-options:
-  -h, --help  show this help message and exit
 
 ```
 [_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
