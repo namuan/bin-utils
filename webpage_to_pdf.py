@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-
+"""
+Generate PDF from a webpage
+"""
 import argparse
 import asyncio
 import logging

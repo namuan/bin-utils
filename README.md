@@ -232,6 +232,8 @@ options:
 usage: webpage_to_pdf.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
                          [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
 
+Generate PDF from a webpage
+
 options:
   -h, --help            show this help message and exit
   -i INPUT_URL, --input-url INPUT_URL
