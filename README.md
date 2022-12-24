@@ -9,7 +9,7 @@ Collection of helpful scripts and apps
 
 ### Scripts
 
-[Lazy Trader] https://namuan.github.io/bin-utils/lazy_trader.html
+[Lazy Trader](https://namuan.github.io/bin-utils/lazy_trader.html)
 
 <!-- START makefile-doc -->
 [_hn_links.py_](https://namuan.github.io/bin-utils/hn_links.html)
