@@ -62,6 +62,25 @@ options:
 ```
 [_txt_to_audio_polly.py_](https://namuan.github.io/bin-utils/txt_to_audio_polly.html)
 ```
+usage: txt_to_audio_polly.py [-h] -i INPUT [-p PROFILE] [-v]
+
+Convert text to audio using AWS Polly
+
+Usage:
+./txt_to_audio_polly.py -i input.txt
+
+It is also possible to use the AWS_PROFILE environment variable to specify the AWS profile to use.
+Otherwise you can use the -p/--profile option to specify the profile to use.
+./txt_to_audio_polly.py -i input.txt -p my_profile
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Input file
+  -p PROFILE, --profile PROFILE
+                        AWS Profile to use. If not provided then it'll use the
+                        AWS_PROFILE environment variable
+  -v, --verbose         Increase verbosity of logging output
 
 ```
 [_twitter_login.py_](https://namuan.github.io/bin-utils/twitter_login.html)
