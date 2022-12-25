@@ -4,9 +4,46 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        .input_container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .input_container > * {
+            margin: 0 10px;
+        }
+        input {
+            height: 30px;
+            font-size: 20px;
+            width: 300px;
+        }
+        .stock_chart_container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+        }
+        .site_links_container {
+            margin: 50px;
+        }
+        .news_link {
+            color: blue;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        .news_link:hover {
+            background-color: blue;
+            color: whitesmoke;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-
 <py-script>
     stock_symbol = Element("stock_symbol")
     stock_chart_img = Element("stock_chart")
@@ -41,7 +78,7 @@
 
     def show_stock():
         symbol_entered = stock_symbol.element.value
-        stock_chart_img.element.src = f"https://charts.finviz.com/chart.ashx?t={symbol_entered}&p=d&ta=sma_20,sma_50,sma_200,macd_b_12_26_9,mfi_b_14"
+        stock_chart_img.element.src = f"https://charts.finviz.com/chart.ashx?t={symbol_entered}&p=d&ta=sma_20,sma_50,sma_200"
 
         site_links.element.innerText = ""
 
@@ -53,24 +90,30 @@
             site_links.element.appendChild(news_link_copy.element)
             site_links.element.appendChild(js.document.createTextNode(" | "))
 
+
+    if js.location.search and len(js.location.search.split("symbol=")) > 1:
+        symbol = js.location.search.split("symbol=")[1].split("&")[0]
+        stock_symbol.element.value = symbol
+        show_stock()
+    else:
+        stock_symbol.element.value = "AAPL"
+        show_stock()
 </py-script>
 
-<div>
-    <label for="stock_symbol">Enter some text:</label><br>
-    <input id="stock_symbol" type="text" value="AAPL"><br>
-    <button id="submit_stock" value="Submit" py-click="show_stock()">Show Details</button>
+<div class="input_container">
+    <label for="stock_symbol"></label><input id="stock_symbol" type="text"><br>
+    <button id="submit_stock" type="submit" value="Submit" py-click="show_stock()">Show Details</button>
 </div>
 
-<div>
-    <img id="stock_chart" src="https://charts.finviz.com/chart.ashx?t=aapl&p=d&ta=sma_20,sma_50,sma_200,macd_b_12_26_9,mfi_b_14" alt="">
+<div class="stock_chart_container">
+    <img id="stock_chart" src="https://charts.finviz.com/chart.ashx?t=aapl&p=d&ta=sma_20,sma_50,sma_200" alt="">
 </div>
 
-<div id="site_links">
+<div id="site_links" class="site_links_container">
 </div>
 
 <template id="site_link_template">
     <a class="news_link" href="https://finviz.com/quote.ashx?t=aapl">Finviz</a>
 </template>
-
 </body>
 </html>
