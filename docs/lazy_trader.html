@@ -51,7 +51,7 @@
             news_link_copy.element.href = site_url.format(symbol_entered)
 
             site_links.element.appendChild(news_link_copy.element)
-            site_links.element.appendChild(js.document.createElement("br"))
+            site_links.element.appendChild(js.document.createTextNode(" | "))
 
 </py-script>
 
