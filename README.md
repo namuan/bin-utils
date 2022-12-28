@@ -246,9 +246,22 @@ options:
   -h, --help  show this help message and exit
 
 ```
+[_playwright_browser.py_](https://namuan.github.io/bin-utils/playwright_browser.html)
+```
+usage: playwright_browser.py [-h] [-v] -i INPUT_URL [-a AUTH_SESSION_FILE]
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of logging output
+  -i INPUT_URL, --input-url INPUT_URL
+                        Web Url
+  -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
+                        Playwright authentication session
+
+```
 [_webpage_to_pdf.py_](https://namuan.github.io/bin-utils/webpage_to_pdf.html)
 ```
-usage: webpage_to_pdf.py [-h] -i INPUT_URL -o OUTPUT_FILE_PATH
+usage: webpage_to_pdf.py [-h] -i INPUT_URL [-o OUTPUT_FILE_PATH]
                          [-w WAIT_IN_SECS_BEFORE_CAPTURE] [-s]
 
 Generate PDF from a webpage
