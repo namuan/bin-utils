@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 from pyppeteer import launch
+from slug import slug
 
 ENCODE_IN = "utf-8"
 ENCODE_OUT = "utf-8"
@@ -22,7 +23,13 @@ def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-i", "--input-url", type=str, required=True, help="Web Url")
-    parser.add_argument("-o", "--output-file-path", type=Path, required=True, help="Full output file path for PDF")
+    parser.add_argument(
+        "-o",
+        "--output-file-path",
+        type=Path,
+        default=Path.cwd().joinpath("target"),
+        help="Full output file path for PDF",
+    )
     parser.add_argument(
         "-w",
         "--wait-in-secs-before-capture",
@@ -84,6 +91,10 @@ async def main():
     args = parse_args()
     website_url = args.input_url
     output_file_path = args.output_file_path
+    if output_file_path.is_dir():
+        web_page_title = slug(website_url)
+        output_file_path = output_file_path.joinpath(f"{web_page_title}.pdf")
+
     wait_in_secs_before_capture = args.wait_in_secs_before_capture
     run_headless = args.headless
 
