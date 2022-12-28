@@ -54,6 +54,10 @@
     <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
     <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">input_url</span><span class="p">)</span>
     <span class="n">page</span><span class="o">.</span><span class="n">wait_for_load_state</span><span class="p">(</span><span class="s2">&quot;networkidle&quot;</span><span class="p">)</span>
+
+    <span class="n">try_action</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">get_by_test_id</span><span class="p">(</span><span class="s2">&quot;close-button&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">click</span><span class="p">())</span>
+    <span class="n">try_action</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">page</span><span class="o">.</span><span class="n">get_by_role</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Accept all cookies&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">click</span><span class="p">())</span>
+
     <span class="n">page</span><span class="o">.</span><span class="n">pause</span><span class="p">()</span></pre></div>
     </div>
   </div>
@@ -62,6 +66,22 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">try_action</span><span class="p">(</span><span class="n">page_action</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">page_action</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
       </div>
       
     </div>
@@ -85,10 +105,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-3'>
+  <div class='section' id='section-4'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-3'>#</a>
+        <a class='octothorpe' href='#section-4'>#</a>
       </div>
       
     </div>
@@ -109,10 +129,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-4'>
+  <div class='section' id='section-5'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-4'>#</a>
+        <a class='octothorpe' href='#section-5'>#</a>
       </div>
       
     </div>

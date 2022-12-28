@@ -25,7 +25,18 @@ def run(playwright: Playwright, args) -> None:
     page = context.new_page()
     page.goto(input_url)
     page.wait_for_load_state("networkidle")
+
+    try_action(lambda: page.get_by_test_id("close-button").click())
+    try_action(lambda: page.get_by_role("button", name="Accept all cookies").click())
+
     page.pause()
+
+
+def try_action(page_action):
+    try:
+        page_action()
+    except Exception as e:
+        logging.debug(e)
 
 
 def setup_logging(verbosity):
