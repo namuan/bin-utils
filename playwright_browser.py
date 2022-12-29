@@ -1,14 +1,32 @@
 #!/usr/bin/env python3
 
 import logging
+import random
+import time
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
 from dotenv import load_dotenv
-from playwright.sync_api import Playwright, sync_playwright
+from playwright.sync_api import Playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 from slug import slug
 
 load_dotenv()
+
+
+def scroll_speed():
+    return random.randint(300, 500)
+
+
+def scroll_to_end(page):
+    current_scroll_position, new_height = 0, 1
+    while current_scroll_position <= new_height:
+        page.evaluate(f"""() => {{ window.scrollTo(0, {current_scroll_position}); }} """)
+        new_height = page.evaluate("""() => { return document.body.scrollHeight; } """)
+        current_scroll_position += scroll_speed()
+        logging.info(f"current_scroll_position: {current_scroll_position}, new_height: {new_height}")
+        time.sleep(2)
 
 
 def run(playwright: Playwright, args) -> None:
@@ -28,9 +46,11 @@ def run(playwright: Playwright, args) -> None:
     page.goto(input_url)
     page.wait_for_load_state("networkidle")
 
-    try_action(lambda: page.get_by_test_id("close-button").click())
-    try_action(lambda: page.get_by_role("button", name="Accept all cookies").click())
-    try_action(lambda: page.get_by_role("button", name="Accept all").click())
+    click_on_element(lambda: page.get_by_test_id("close-button"))
+    click_on_element(lambda: page.get_by_role("button", name="Accept all cookies"))
+    click_on_element(lambda: page.get_by_role("button", name="Accept all"))
+
+    scroll_to_end(page)
 
     if convert_to_pdf:
         output_dir = Path.cwd().joinpath("target")
@@ -41,10 +61,12 @@ def run(playwright: Playwright, args) -> None:
         page.pause()
 
 
-def try_action(page_action):
+def click_on_element(page_action):
     try:
-        page_action()
-    except Exception as e:
+        el = page_action()
+        if el:
+            el.click(timeout=5000)
+    except PlaywrightTimeoutError as e:
         logging.debug(e)
 
 
