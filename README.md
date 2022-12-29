@@ -249,6 +249,7 @@ options:
 [_playwright_browser.py_](https://namuan.github.io/bin-utils/playwright_browser.html)
 ```
 usage: playwright_browser.py [-h] [-v] -i INPUT_URL [-a AUTH_SESSION_FILE]
+                             [-p]
 
 options:
   -h, --help            show this help message and exit
@@ -257,6 +258,7 @@ options:
                         Web Url
   -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
                         Playwright authentication session
+  -p, --convert-to-pdf  Convert to PDF
 
 ```
 [_webpage_to_pdf.py_](https://namuan.github.io/bin-utils/webpage_to_pdf.html)

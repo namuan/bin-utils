@@ -6,6 +6,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from playwright.sync_api import Playwright, sync_playwright
+from slug import slug
 
 load_dotenv()
 
@@ -13,6 +14,7 @@ load_dotenv()
 def run(playwright: Playwright, args) -> None:
     input_url = args.input_url
     auth_session_file = args.auth_session_file
+    convert_to_pdf = args.convert_to_pdf
 
     browser = playwright.chromium.launch(headless=False)
     if auth_session_file and Path.cwd().joinpath(auth_session_file).exists():
@@ -28,8 +30,15 @@ def run(playwright: Playwright, args) -> None:
 
     try_action(lambda: page.get_by_test_id("close-button").click())
     try_action(lambda: page.get_by_role("button", name="Accept all cookies").click())
+    try_action(lambda: page.get_by_role("button", name="Accept all").click())
 
-    page.pause()
+    if convert_to_pdf:
+        output_dir = Path.cwd().joinpath("target")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_file_path = Path("target").joinpath(f"{slug(input_url)}.pdf")
+        page.pdf(path=output_file_path.as_posix(), format="A4")
+    else:
+        page.pause()
 
 
 def try_action(page_action):
@@ -69,6 +78,7 @@ def parse_args():
     )
     parser.add_argument("-i", "--input-url", type=str, required=True, help="Web Url")
     parser.add_argument("-a", "--auth-session-file", type=str, help="Playwright authentication session")
+    parser.add_argument("-p", "--convert-to-pdf", action="store_true", help="Convert to PDF")
     return parser.parse_args()
 
 
