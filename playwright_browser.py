@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import os
 import random
 import time
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -29,36 +30,13 @@ def scroll_to_end(page):
         time.sleep(2)
 
 
-def run(playwright: Playwright, args) -> None:
-    input_url = args.input_url
-    auth_session_file = args.auth_session_file
-    convert_to_pdf = args.convert_to_pdf
-
-    browser = playwright.chromium.launch(headless=False)
-    if auth_session_file and Path.cwd().joinpath(auth_session_file).exists():
-        logging.debug(f"Creating new context with authentication session: {auth_session_file}")
-        context = browser.new_context(storage_state=auth_session_file)
-    else:
-        logging.debug("Creating new context")
-        context = browser.new_context()
-
-    page = context.new_page()
-    page.goto(input_url)
-    page.wait_for_load_state("networkidle")
-
-    click_on_element(lambda: page.get_by_test_id("close-button"))
-    click_on_element(lambda: page.get_by_role("button", name="Accept all cookies"))
-    click_on_element(lambda: page.get_by_role("button", name="Accept all"))
-
-    scroll_to_end(page)
-
-    if convert_to_pdf:
-        output_dir = Path.cwd().joinpath("target")
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_file_path = Path("target").joinpath(f"{slug(input_url)}.pdf")
-        page.pdf(path=output_file_path.as_posix(), format="A4")
-    else:
-        page.pause()
+def urls_to_fetch(input_url: str, input_file: Path) -> list[str]:
+    if not input_url and not input_file:
+        logging.error("No input URL or file provided")
+        raise ValueError("No input URL or file provided")
+    urls_from_file = input_file.read_text().splitlines() if input_file else []
+    urls_from_file.append(input_url) if input_url else None
+    return urls_from_file
 
 
 def click_on_element(page_action):
@@ -68,6 +46,60 @@ def click_on_element(page_action):
             el.click(timeout=5000)
     except PlaywrightTimeoutError as e:
         logging.debug(e)
+
+
+def generate_output_file_name(output_dir, url):
+    url_as_path = Path(url)
+    return output_dir.joinpath(f"{slug(f'{url_as_path.parent.name}-{url_as_path.stem}')}.pdf")
+
+
+def run(playwright: Playwright, args) -> None:
+    auth_session_file = args.auth_session_file
+    convert_to_pdf = args.convert_to_pdf
+    input_url = args.input_url
+    input_file = args.input_file
+
+    urls_from_file = urls_to_fetch(input_url, input_file)
+
+    browser = playwright.chromium.launch(headless=False)
+    for url in urls_from_file:
+        if not url:
+            continue
+
+        logging.info(f"Processing URL: {url}")
+        if auth_session_file and Path.cwd().joinpath(auth_session_file).exists():
+            logging.debug(f"Creating new context with authentication session: {auth_session_file}")
+            context = browser.new_context(storage_state=auth_session_file)
+        else:
+            logging.debug("Creating new context")
+            context = browser.new_context()
+
+        page = context.new_page()
+        page.goto(url)
+        try:
+            page.wait_for_load_state("networkidle")
+        except PlaywrightTimeoutError as e:
+            logging.error(f"Timeout waiting for page: {url} to load", e)
+            continue
+
+        click_on_element(lambda: page.get_by_test_id("close-button"))
+        click_on_element(lambda: page.get_by_role("button", name="Accept all cookies"))
+        click_on_element(lambda: page.get_by_role("button", name="Accept all"))
+
+        scroll_to_end(page)
+
+        if convert_to_pdf:
+            output_dir = Path.cwd().joinpath("target")
+            output_dir.mkdir(parents=True, exist_ok=True)
+            output_file_path = generate_output_file_name(output_dir, url)
+            page.pdf(path=output_file_path.as_posix(), format="A4")
+        else:
+            page.pause()
+
+        if input_file:
+            urls_from_file.remove(url)
+            output_list = os.linesep.join([str(x) for x in urls_from_file])
+            input_file.write_text(output_list)
 
 
 def setup_logging(verbosity):
@@ -98,7 +130,8 @@ def parse_args():
         dest="verbose",
         help="Increase verbosity of logging output",
     )
-    parser.add_argument("-i", "--input-url", type=str, required=True, help="Web Url")
+    parser.add_argument("-f", "--input-file", type=Path, required=False, help="Input file with URLs")
+    parser.add_argument("-i", "--input-url", type=str, required=False, help="Web Url")
     parser.add_argument("-a", "--auth-session-file", type=str, help="Playwright authentication session")
     parser.add_argument("-p", "--convert-to-pdf", action="store_true", help="Convert to PDF")
     return parser.parse_args()

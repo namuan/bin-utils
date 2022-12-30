@@ -248,12 +248,14 @@ options:
 ```
 [_playwright_browser.py_](https://namuan.github.io/bin-utils/playwright_browser.html)
 ```
-usage: playwright_browser.py [-h] [-v] -i INPUT_URL [-a AUTH_SESSION_FILE]
-                             [-p]
+usage: playwright_browser.py [-h] [-v] [-f INPUT_FILE] [-i INPUT_URL]
+                             [-a AUTH_SESSION_FILE] [-p]
 
 options:
   -h, --help            show this help message and exit
   -v, --verbose         Increase verbosity of logging output
+  -f INPUT_FILE, --input-file INPUT_FILE
+                        Input file with URLs
   -i INPUT_URL, --input-url INPUT_URL
                         Web Url
   -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
