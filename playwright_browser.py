@@ -86,10 +86,12 @@ def run(playwright: Playwright, args) -> None:
         click_on_element(lambda: page.get_by_role("button", name="Accept all cookies"))
         click_on_element(lambda: page.get_by_role("button", name="Accept all"))
 
+        page.focus("body")
+
         scroll_to_end(page)
 
         if convert_to_pdf:
-            output_dir = Path.cwd().joinpath("target")
+            output_dir = Path.cwd().joinpath("target/pdfs")
             output_dir.mkdir(parents=True, exist_ok=True)
             output_file_path = generate_output_file_name(output_dir, url)
             page.pdf(path=output_file_path.as_posix(), format="A4")
@@ -100,6 +102,8 @@ def run(playwright: Playwright, args) -> None:
             urls_from_file.remove(url)
             output_list = os.linesep.join([str(x) for x in urls_from_file])
             input_file.write_text(output_list)
+
+        context.close()
 
 
 def setup_logging(verbosity):
