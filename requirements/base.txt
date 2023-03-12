@@ -18,7 +18,7 @@ fire
 pyperclip
 helium
 javalang
-py-executable-checklist==1.2.0
+py-executable-checklist==1.4.0
 dataset
 tweepy
 praw
@@ -26,3 +26,4 @@ pytube
 vaderSentiment
 textual[dev]
 openai
+git+https://github.com/JustAnotherArchivist/snscrape.git

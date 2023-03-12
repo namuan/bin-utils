@@ -218,6 +218,25 @@ options:
   -v, --verbose         Display context variables at each step
 
 ```
+[_twitter_thread.py_](https://namuan.github.io/bin-utils/twitter_thread.html)
+```
+usage: twitter_thread.py [-h] [-v] -u URL [-n TWEETS_TO_FETCH]
+
+Collect tweets from a thread and save them to a file.
+
+Usage:
+./twitter_thread.py -h
+
+./twitter_thread.py -v -u https://twitter.com/elonmusk/status/1320000000000000000 -o elonmusk.txt
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of logging output
+  -u URL, --url URL     URL of the thread to collect
+  -n TWEETS_TO_FETCH, --tweets-to-fetch TWEETS_TO_FETCH
+                        Number of tweets to fetch
+
+```
 [_template_executable_docs.py_](https://namuan.github.io/bin-utils/template_executable_docs.html)
 ```
 usage: template_executable_docs.py [-h] -u USERNAME [-v]
@@ -312,7 +331,7 @@ options:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.10.9)
+pygame 2.1.2 (SDL 2.0.18, Python 3.10.10)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
