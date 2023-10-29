@@ -6,7 +6,6 @@ from flet import Container, ElevatedButton, Page, Stack, colors
 
 
 def main(page: Page):
-
     size = 40
     gap = 6
     duration = 2000

@@ -97,3 +97,4 @@ fireprofile
 .temp/
 output_dir/
 auth.json
+.aider*

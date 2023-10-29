@@ -159,7 +159,6 @@ def create_page(title: str, body: str):
 
 
 def main(page: Page):
-
     pages = [
         (
             NavigationRailDestination(

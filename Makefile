@@ -8,8 +8,9 @@ setup: ## Setup Virtual Env
 	./venv/bin/python3 -m pip install --upgrade pip
 
 deps: ## Install dependencies
-	./venv/bin/pip3 install -r requirements/dev.txt
-	./venv/bin/pip3 install -r requirements/ui.txt
+	./venv/bin/pip3 install --upgrade -r requirements/dev.txt
+	./venv/bin/pip3 install --upgrade -r requirements/ui.txt
+	./venv/bin/python3 -m pip install --upgrade pip
 
 clean: ## Clean package
 	find . -type d -name '__pycache__' | xargs rm -rf

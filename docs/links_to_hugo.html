@@ -655,7 +655,7 @@ Use relative links in Markdown to point to images</p>
         <span class="n">post_title</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">markdown_text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;#&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
         <span class="n">post_header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;+++</span>
-<span class="s2">    date = </span><span class="si">{</span><span class="n">post_date</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    date = </span><span class="si">{</span><span class="n">post_date</span><span class="si">}</span>
 <span class="s2">    title = &quot;</span><span class="si">{</span><span class="n">post_title</span><span class="si">}</span><span class="s2">&quot;</span>
 <span class="s2">    description = &quot;&quot;</span>
 <span class="s2">    slug = &quot;&quot;</span>
@@ -676,8 +676,8 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">        md_with_updated_links = self.post_with_header.replace(replace_from, replace_with)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">        return </span><span class="si">{</span>
-            <span class="s2">&quot;md_with_updated_links&quot;</span><span class="si">:</span><span class="s2"> md_with_updated_links,</span>
-<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
+<span class="w">            </span><span class="s2">&quot;md_with_updated_links&quot;</span><span class="si">:</span><span class="s2"> md_with_updated_links,</span>
+<span class="s2">        </span><span class="si">}</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">class WriteBlogPost(WorkflowBase):</span>
 <span class="s2">#DIVIDER</span>
@@ -692,8 +692,8 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">        logging.info(f&quot;📒 Created note at </span><span class="si">{</span><span class="n">blog_page_path</span><span class="si">}</span><span class="s2">&quot;)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">        return </span><span class="si">{</span>
-            <span class="s2">&quot;blog_page&quot;</span><span class="si">:</span><span class="s2"> blog_page_path,</span>
-<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
+<span class="w">            </span><span class="s2">&quot;blog_page&quot;</span><span class="si">:</span><span class="s2"> blog_page_path,</span>
+<span class="s2">        </span><span class="si">}</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">class CompressImages(WorkflowBase):</span>
 <span class="s2">#DIVIDER</span>
@@ -726,10 +726,10 @@ Use relative links in Markdown to point to images</p>
 <span class="s2">#DIVIDER</span>
 <span class="s2">    def execute(self):</span>
 <span class="s2">        pushover_config = </span><span class="si">{</span>
-            <span class="s2">&quot;pushover_url&quot;</span><span class="si">:</span><span class="s2"> os.getenv(&quot;PUSHOVER_URL&quot;),</span>
+<span class="w">            </span><span class="s2">&quot;pushover_url&quot;</span><span class="si">:</span><span class="s2"> os.getenv(&quot;PUSHOVER_URL&quot;),</span>
 <span class="s2">            &quot;pushover_token&quot;: os.getenv(&quot;PUSHOVER_TOKEN&quot;),</span>
 <span class="s2">            &quot;pushover_user&quot;: os.getenv(&quot;PUSHOVER_USER&quot;),</span>
-<span class="s2">        </span><span class="si">}</span><span class="s2"></span>
+<span class="s2">        </span><span class="si">}</span>
 <span class="s2">        notify_me(f&quot;✅ </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">post_title</span><span class="si">}</span><span class="s2"> done!&quot;, pushover_config)</span>
 <span class="s2">#DIVIDER</span>
 <span class="s2">class OpenInEditor(WorkflowBase):</span>

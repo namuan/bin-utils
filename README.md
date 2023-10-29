@@ -331,7 +331,7 @@ options:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.1.2 (SDL 2.0.18, Python 3.10.10)
+pygame 2.5.1 (SDL 2.28.2, Python 3.10.13)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
@@ -370,6 +370,21 @@ options:
                         Wait (in secs) before capturing screenshot
 
 ```
+[_csv-checker.py_](https://namuan.github.io/bin-utils/csv-checker.html)
+```
+usage: csv-checker.py [-h] start_balance end_balance csv_path
+
+Verify a csv file.
+
+positional arguments:
+  start_balance  The starting balance.
+  end_balance    The ending balance.
+  csv_path       The path to the CSV file.
+
+options:
+  -h, --help     show this help message and exit
+
+```
 [_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)
 ```
 usage: unused_files.py [-h] -s SOURCE -t TARGET [-d] [-v]
@@ -388,6 +403,23 @@ options:
 ```
 [_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
 ```
+
+```
+[_auto-drive-chatgpt.py_](https://namuan.github.io/bin-utils/auto-drive-chatgpt.html)
+```
+usage: auto-drive-chatgpt.py [-h] [-v]
+
+A simple script
+
+Usage:
+./template_py_scripts.py -h
+
+./template_py_scripts.py -v # To log INFO messages
+./template_py_scripts.py -vv # To log DEBUG messages
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
 
 ```
 [_helium_selenium_wrapper.py_](https://namuan.github.io/bin-utils/helium_selenium_wrapper.html)

@@ -1,3 +1,4 @@
 pygame
 pytest-playwright # playwright install
 flet
+pyautogui
