@@ -83,6 +83,23 @@ options:
   -v, --verbose         Increase verbosity of logging output
 
 ```
+[_csv-markwhen.py_](https://namuan.github.io/bin-utils/csv-markwhen.html)
+```
+usage: csv-markwhen.py [-h] csv_file
+
+Process a CSV file and generate formatted output for MarkWhen.
+
+./csv-markwhen.py ~/Downloads/main.csv > ~/Downloads/main_timeline.mw
+npx -i @markwhen/mw ~/Downloads/main_timeline.mw ~/Downloads/main_timeline.html
+open ~/Downloads/main_timeline.html
+
+positional arguments:
+  csv_file    Path to the CSV file
+
+options:
+  -h, --help  show this help message and exit
+
+```
 [_twitter_login.py_](https://namuan.github.io/bin-utils/twitter_login.html)
 ```
 usage: twitter_login.py [-h] [-v] [-i]
