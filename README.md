@@ -89,9 +89,7 @@ usage: csv-markwhen.py [-h] csv_file
 
 Process a CSV file and generate formatted output for MarkWhen.
 
-./csv-markwhen.py ~/Downloads/main.csv > ~/Downloads/main_timeline.mw
-npx -i @markwhen/mw ~/Downloads/main_timeline.mw ~/Downloads/main_timeline.html
-open ~/Downloads/main_timeline.html
+./csv-markwhen.py ~/Downloads/file.csv > ~/Downloads/timeline.mw; npx -i @markwhen/mw ~/Downloads/timeline.mw ~/Downloads/timeline.html; open ~/Downloads/timeline.html
 
 positional arguments:
   csv_file    Path to the CSV file
