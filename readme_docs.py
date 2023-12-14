@@ -40,6 +40,7 @@ def main(args):
         "reddit_api.py",
         "twitter_api.py",
         "yt_api.py",
+        "zoomable-ui.py",
     ]
     py_scripts_with_help = []
     # Grab all the python scripts in the current directory and collect output from running the help command
