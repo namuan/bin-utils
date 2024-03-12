@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Boilerplate</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+        }
+
+        .left-section {
+            flex: 0 0 20%;
+            padding-right: 20px;
+        }
+
+        .right-section {
+            flex: 0 0 80%;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="radio"],
+        input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        select {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+<div class="left-section">
+    <h1>Python Boilerplate</h1>
+
+    <label>
+        <input type="radio" name="pythonVersion" value="2"> Python 2
+    </label>
+    <label>
+        <input type="radio" name="pythonVersion" value="3" checked> Python 3
+    </label>
+
+    <h3>Options</h3>
+    <label>
+        <input type="checkbox" name="options" value="executable"> executable script
+    </label>
+    <label>
+        <input type="checkbox" name="options" value="argparse"> argparse
+    </label>
+    <label>
+        <input type="checkbox" name="options" value="logging"> logging
+    </label>
+    <label>
+        <input type="checkbox" name="options" value="gitignore"> .gitignore
+    </label>
+
+    <h3>Frameworks</h3>
+    <select id="frameworkSelect" multiple>
+        <option value="Flask">Flask</option>
+        <option value="FastAPI">FastAPI</option>
+        <option value="Gradio">Gradio</option>
+        <option value="Spring">Spring</option>
+    </select>
+
+    <h3>Tests</h3>
+    <label>
+        <input type="checkbox" name="tests" value="unittest"> unittest
+    </label>
+    <label>
+        <input type="checkbox" name="tests" value="pytest"> pytest
+    </label>
+    <label>
+        <input type="checkbox" name="tests" value="tox"> tox
+    </label>
+
+    <button id="generateBtn">Generate</button>
+</div>
+
+<div class="right-section">
+    <textarea id="codePreview" readonly></textarea>
+</div>
+
+<script>
+    document.getElementById('generateBtn').addEventListener('click', function() {
+        var pythonVersion = document.querySelector('input[name="pythonVersion"]:checked').value;
+        var options = Array.from(document.querySelectorAll('input[name="options"]:checked')).map(function(checkbox) {
+            return checkbox.value;
+        });
+        var frameworks = Array.from(document.getElementById('frameworkSelect').selectedOptions).map(function(option) {
+            return option.value;
+        });
+        var tests = Array.from(document.querySelectorAll('input[name="tests"]:checked')).map(function(checkbox) {
+            return checkbox.value;
+        });
+
+        var generatedCode = generateBoilerplate(pythonVersion, options, frameworks, tests);
+        document.getElementById('codePreview').value = generatedCode;
+    });
+
+    function generateBoilerplate(pythonVersion, options, frameworks, tests) {
+        var boilerplate = '#!/usr/bin/env python' + pythonVersion + '\n';
+        boilerplate += '"""\nModule Docstring\n"""\n\n';
+        boilerplate += '__author__ = "Your Name"\n';
+        boilerplate += '__version__ = "0.1.0"\n';
+        boilerplate += '__license__ = "MIT"\n\n';
+
+        if (options.includes('argparse')) {
+            boilerplate += 'import argparse\n\n';
+        }
+
+        if (options.includes('logging')) {
+            boilerplate += 'import logging\n\n';
+        }
+
+        if (frameworks.includes('Flask')) {
+            boilerplate += 'from flask import Flask\n\n';
+        }
+
+        if (frameworks.includes('FastAPI')) {
+            boilerplate += 'from fastapi import FastAPI\n\n';
+        }
+
+        if (frameworks.includes('Gradio')) {
+            boilerplate += 'import gradio as gr\n\n';
+        }
+
+        if (frameworks.includes('Spring')) {
+            boilerplate += '# Spring framework not supported in Python\n\n';
+        }
+
+        if (tests.includes('unittest')) {
+            boilerplate += 'import unittest\n\n';
+        }
+
+        if (tests.includes('pytest')) {
+            boilerplate += 'import pytest\n\n';
+        }
+
+        boilerplate += 'def main():\n';
+        boilerplate += '    """ Main entry point of the app """\n';
+        boilerplate += '    print("Hello world")\n\n';
+
+        boilerplate += 'if __name__ == "__main__":\n';
+        boilerplate += '    """ This is executed when run from the command line """\n';
+        boilerplate += '    main()\n';
+
+        return boilerplate;
+    }
+</script>
+</body>
+</html>
