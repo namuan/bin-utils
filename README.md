@@ -270,6 +270,10 @@ options:
   -v, --verbose         Display context variables at each step
 
 ```
+[_snake-game.py_](https://namuan.github.io/bin-utils/snake-game.html)
+```
+
+```
 [_py_carbon_clip.py_](https://namuan.github.io/bin-utils/py_carbon_clip.html)
 ```
 usage: py_carbon_clip.py [-h]
@@ -346,7 +350,7 @@ options:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.5.1 (SDL 2.28.2, Python 3.10.13)
+pygame 2.5.2 (SDL 2.28.3, Python 3.10.14)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
