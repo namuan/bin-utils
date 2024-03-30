@@ -441,6 +441,17 @@ options:
   -v, --verbose  Increase verbosity of logging output
 
 ```
+[_git_log_to_scatter_plot.py_](https://namuan.github.io/bin-utils/git_log_to_scatter_plot.html)
+```
+usage: git_log_to_scatter_plot.py [-h] [-v]
+
+Generate scatter plot based on git commits
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_helium_selenium_wrapper.py_](https://namuan.github.io/bin-utils/helium_selenium_wrapper.html)
 ```
 usage: helium_selenium_wrapper.py [-h]
