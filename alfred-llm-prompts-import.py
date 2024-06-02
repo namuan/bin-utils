@@ -35,29 +35,29 @@ def replace_double_quotes(text):
 
 
 def main():
-    sourceFile = "prompts.csv"
+    source_file = "prompts.csv"
 
     # URL of the CSV file
-    url = f"https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/{sourceFile}"
+    url = f"https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/{source_file}"
     # Download the file
     response = requests.get(url)
     # Save the file locally
-    with open(sourceFile, "wb") as file:
+    with open(source_file, "wb") as file:
         file.write(response.content)
 
     # Main script functionality
-    outputDir = "output"
-    fieldNames = ["name", "keyword", "content"]
+    output_dir = "output"
+    field_names = ["name", "keyword", "content"]
 
     # Ensure the output directory exists
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     # Specify the encoding and error handling
     encoding = "utf-8"  # Change this to the appropriate encoding if needed
 
-    with open(sourceFile, newline="", encoding=encoding, errors="replace") as csvfile:
-        reader = csv.DictReader(csvfile, fieldnames=fieldNames)
+    with open(source_file, newline="", encoding=encoding, errors="replace") as csv_file:
+        reader = csv.DictReader(csv_file, fieldnames=field_names)
         for row in reader:
             uid = str(uuid.uuid4())
             output = json.dumps(
@@ -73,15 +73,15 @@ def main():
                 indent=4,
                 separators=(",", ": "),
             )
-            outputFile = os.path.join(outputDir, f"{uid}.json")
-            with open(outputFile, "w", encoding="utf-8") as f:
+            output_file = os.path.join(output_dir, f"{uid}.json")
+            with open(output_file, "w", encoding="utf-8") as f:
                 f.write(output)
 
     # Zip the output directory
-    shutil.make_archive(outputDir, "zip", outputDir)
+    shutil.make_archive(output_dir, "zip", output_dir)
 
     # Remove the output directory
-    shutil.rmtree(outputDir)
+    shutil.rmtree(output_dir)
     os.unlink("prompts.csv")
     shutil.move("output.zip", Path("target") / "chatgpt-prompts.alfredsnippets")
 
