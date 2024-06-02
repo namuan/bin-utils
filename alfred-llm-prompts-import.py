@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-A simple script
+Import prompts from awesome-chatgpt-prompts as Alfred Snippets
 
 Usage:
-./template_py_scripts.py -h
-
-./template_py_scripts.py -v # To log INFO messages
-./template_py_scripts.py -vv # To log DEBUG messages
+$ ./alfred-llm-prompts-import.py
 """
 import csv
 import json

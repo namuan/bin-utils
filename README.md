@@ -456,13 +456,10 @@ options:
 ```
 usage: alfred-llm-prompts-import.py [-h] [-v]
 
-A simple script
+Import prompts from awesome-chatgpt-prompts as Alfred Snippets
 
 Usage:
-./template_py_scripts.py -h
-
-./template_py_scripts.py -v # To log INFO messages
-./template_py_scripts.py -vv # To log DEBUG messages
+$ ./alfred-llm-prompts-import.py
 
 options:
   -h, --help     show this help message and exit
