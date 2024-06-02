@@ -452,6 +452,23 @@ options:
   -v, --verbose  Increase verbosity of logging output
 
 ```
+[_alfred-llm-prompts-import.py_](https://namuan.github.io/bin-utils/alfred-llm-prompts-import.html)
+```
+usage: alfred-llm-prompts-import.py [-h] [-v]
+
+A simple script
+
+Usage:
+./template_py_scripts.py -h
+
+./template_py_scripts.py -v # To log INFO messages
+./template_py_scripts.py -vv # To log DEBUG messages
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_helium_selenium_wrapper.py_](https://namuan.github.io/bin-utils/helium_selenium_wrapper.html)
 ```
 usage: helium_selenium_wrapper.py [-h]
@@ -460,6 +477,10 @@ Demonstrates how to use helium to automate a web browser.
 
 options:
   -h, --help  show this help message and exit
+
+```
+[_vis-concept.py_](https://namuan.github.io/bin-utils/vis-concept.html)
+```
 
 ```
 <!-- END makefile-doc -->
