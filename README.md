@@ -369,6 +369,18 @@ options:
   -v, --verbose         Increase verbosity of logging output
 
 ```
+[_print-mouse-position.py_](https://namuan.github.io/bin-utils/print-mouse-position.html)
+```
+usage: print-mouse-position.py [-h] [-v]
+
+A simple script to capture mouse position
+# From: https://github.com/renanstn/mouse-screen-position/blob/master/src/screen_position.py
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_playwright_thumbnails.py_](https://namuan.github.io/bin-utils/playwright_thumbnails.html)
 ```
 usage: playwright_thumbnails.py [-h] [-v] -i INPUT_URL -o OUTPUT_FILE_PATH
@@ -474,10 +486,6 @@ Demonstrates how to use helium to automate a web browser.
 
 options:
   -h, --help  show this help message and exit
-
-```
-[_vis-concept.py_](https://namuan.github.io/bin-utils/vis-concept.html)
-```
 
 ```
 <!-- END makefile-doc -->
