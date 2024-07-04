@@ -432,6 +432,54 @@ options:
   -v, --verbose
 
 ```
+[_audio_wave.py_](https://namuan.github.io/bin-utils/audio_wave.html)
+```
+usage: seewav [-h] [-r RATE] [--stereo] [-c COLOR] [-c2 COLOR2] [-o OPACITY]
+              [-b BACKGROUND] [--white] [-i IMAGE] [-B BARS] [-O OVERSAMPLE]
+              [-T TIME] [-S SPEED] [-W WIDTH] [-H HEIGHT] [-C CENTER]
+              [-s SEEK] [-d DURATION]
+              audio [out]
+
+Generate a nice mp4 animation from an audio file.
+
+positional arguments:
+  audio                 Path to audio file
+  out                   Path to output file. Default is ./out.mp4
+
+options:
+  -h, --help            show this help message and exit
+  -r RATE, --rate RATE  Video framerate.
+  --stereo              Create 2 waveforms for stereo files.
+  -c COLOR, --color COLOR
+                        Color of the bars as `r,g,b` in [0, 1].
+  -c2 COLOR2, --color2 COLOR2
+                        Color of the second waveform as `r,g,b` in [0, 1] (for
+                        stereo).
+  -o OPACITY, --opacity OPACITY
+                        The opacity of the waveform on the background.
+  -b BACKGROUND, --background BACKGROUND
+                        Set the background. r,g,b` in [0, 1]. Default is black
+                        (0,0,0).
+  --white               Use white background. Default is black.
+  -i IMAGE, --image IMAGE
+                        Set the background image.
+  -B BARS, --bars BARS  Number of bars on the video at once
+  -O OVERSAMPLE, --oversample OVERSAMPLE
+                        Lower values will feel less reactive.
+  -T TIME, --time TIME  Amount of audio shown at once on a frame.
+  -S SPEED, --speed SPEED
+                        Higher values means faster transitions between frames.
+  -W WIDTH, --width WIDTH
+                        width in pixels of the animation
+  -H HEIGHT, --height HEIGHT
+                        height in pixels of the animation
+  -C CENTER, --center CENTER
+                        The center of the bars relative to the image.
+  -s SEEK, --seek SEEK  Seek to time in seconds in video.
+  -d DURATION, --duration DURATION
+                        Duration in seconds from seek time.
+
+```
 [_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
 ```
 
