@@ -18,8 +18,6 @@ import numpy as np
 import PIL.Image as Image
 import tqdm
 
-_is_main = False
-
 
 def colorize(text, color):
     """
@@ -33,15 +31,14 @@ def colorize(text, color):
 
 def fatal(msg):
     """
-    Something bad happened. Does nothing if this module is not __main__.
+    Something bad happened.
     Display an error message and abort.
     """
-    if _is_main:
-        head = "error: "
-        if sys.stderr.isatty():
-            head = colorize("error: ", 1)
-        print(head + str(msg), file=sys.stderr)
-        sys.exit(1)
+    head = "error: "
+    if sys.stderr.isatty():
+        head = colorize("error: ", 1)
+    print(head + str(msg), file=sys.stderr)
+    sys.exit(1)
 
 
 def read_info(media):
@@ -409,5 +406,4 @@ def main():
 
 
 if __name__ == "__main__":
-    _is_main = True
     main()
