@@ -2,3 +2,4 @@ pygame
 pytest-playwright # playwright install
 flet
 pyautogui
+moviepy==1.0.3

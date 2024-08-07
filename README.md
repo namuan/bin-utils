@@ -98,6 +98,34 @@ options:
   -h, --help  show this help message and exit
 
 ```
+[_text_to_video.py_](https://namuan.github.io/bin-utils/text_to_video.html)
+```
+usage: text_to_video.py [-h] -i INPUT [INPUT ...] -o OUTPUT [-v]
+
+Text-to-Video Generator
+
+This script converts text files into a video where each word appears sequentially.
+It uses MoviePy to create video clips for each word and concatenates them into a final video.
+
+Examples:
+    Basic usage:
+    python text_to_video.py -i input.txt -o output.mp4
+
+    With verbose logging:
+    python text_to_video.py -i input.txt -o output.mp4 -v
+
+    Multiple input files:
+    python text_to_video.py -i file1.txt file2.txt -o output.mp4
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT [INPUT ...], --input INPUT [INPUT ...]
+                        Input text file(s)
+  -o OUTPUT, --output OUTPUT
+                        Output video file
+  -v, --verbose         Enable verbose logging
+
+```
 [_twitter_login.py_](https://namuan.github.io/bin-utils/twitter_login.html)
 ```
 usage: twitter_login.py [-h] [-v] [-i]
@@ -350,7 +378,7 @@ options:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.5.2 (SDL 2.28.3, Python 3.10.14)
+pygame 2.6.0 (SDL 2.28.4, Python 3.10.14)
 Hello from the pygame community. https://www.pygame.org/contribute.html
 usage: arch-animate.py [-h] [-c] [-v]
 
