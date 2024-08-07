@@ -48,7 +48,12 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">cpu_count</span>
 
-<span class="kn">from</span> <span class="nn">moviepy.editor</span> <span class="kn">import</span> <span class="n">ColorClip</span><span class="p">,</span> <span class="n">TextClip</span><span class="p">,</span> <span class="n">concatenate_videoclips</span></pre></div>
+<span class="kn">from</span> <span class="nn">moviepy.editor</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ColorClip</span><span class="p">,</span>
+    <span class="n">CompositeVideoClip</span><span class="p">,</span>
+    <span class="n">TextClip</span><span class="p">,</span>
+    <span class="n">concatenate_videoclips</span><span class="p">,</span>
+<span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -60,8 +65,16 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_word_clip</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">0.3</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">TextClip</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set_duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_word_clip</span><span class="p">(</span>
+    <span class="n">word</span><span class="p">,</span>
+    <span class="n">duration</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">fontsize</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+    <span class="n">font</span><span class="o">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span>
+    <span class="n">text_color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span>
+    <span class="n">border_color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">border_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">fade_duration</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+<span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -73,8 +86,13 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_pause_clip</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">ColorClip</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">set_duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_text_clip</span><span class="p">(</span><span class="n">color</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TextClip</span><span class="p">(</span><span class="n">word</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">font</span><span class="o">=</span><span class="n">font</span><span class="p">,</span> <span class="n">stroke_color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">stroke_width</span><span class="o">=</span><span class="n">border_width</span><span class="p">)</span>
+
+    <span class="n">txt_clip</span> <span class="o">=</span> <span class="n">create_text_clip</span><span class="p">(</span><span class="n">text_color</span><span class="p">)</span>
+    <span class="n">border_clip</span> <span class="o">=</span> <span class="n">create_text_clip</span><span class="p">(</span><span class="n">border_color</span><span class="p">)</span>
+
+    <span class="n">composed_clip</span> <span class="o">=</span> <span class="n">CompositeVideoClip</span><span class="p">([</span><span class="n">border_clip</span><span class="p">,</span> <span class="n">txt_clip</span><span class="p">])</span><span class="o">.</span><span class="n">set_duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -82,6 +100,31 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>Add fade in and fade out</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">return</span> <span class="n">composed_clip</span><span class="o">.</span><span class="n">fadein</span><span class="p">(</span><span class="n">fade_duration</span><span class="p">)</span><span class="o">.</span><span class="n">fadeout</span><span class="p">(</span><span class="n">fade_duration</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_pause_clip</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ColorClip</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">500</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">set_duration</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
       </div>
       
     </div>
@@ -97,15 +140,17 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
                 <span class="n">words</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">words</span><span class="p">):</span>
                     <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating clip for word: </span><span class="si">{</span><span class="n">word</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="n">clip</span> <span class="o">=</span> <span class="n">create_word_clip</span><span class="p">(</span><span class="n">word</span><span class="p">)</span>
+                    <span class="n">clip</span> <span class="o">=</span> <span class="n">create_word_clip</span><span class="p">(</span>
+                        <span class="n">word</span><span class="p">,</span> <span class="n">text_color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">,</span> <span class="n">border_color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">border_width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">fade_duration</span><span class="o">=</span><span class="mf">0.3</span>
+                    <span class="p">)</span>
                     <span class="n">clips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clip</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-5'>
+  <div class='section' id='section-7'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-5'>#</a>
+        <a class='octothorpe' href='#section-7'>#</a>
       </div>
       <p>Add a small pause after each word</p>
     </div>
@@ -114,10 +159,10 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-6'>
+  <div class='section' id='section-8'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-6'>#</a>
+        <a class='octothorpe' href='#section-8'>#</a>
       </div>
       <p>Add a longer pause at the end of each sentence</p>
     </div>
@@ -130,16 +175,16 @@ python text_to_video.py -i file1.txt file2.txt -o output.mp4
 
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing video file: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">final_clip</span><span class="o">.</span><span class="n">write_videofile</span><span class="p">(</span>
-        <span class="n">output_file</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">codec</span><span class="o">=</span><span class="s2">&quot;mpeg4&quot;</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;superfast&quot;</span><span class="p">,</span> <span class="n">audio</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="n">output_file</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">codec</span><span class="o">=</span><span class="s2">&quot;libx264&quot;</span><span class="p">,</span> <span class="n">preset</span><span class="o">=</span><span class="s2">&quot;superfast&quot;</span><span class="p">,</span> <span class="n">audio</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">threads</span><span class="o">=</span><span class="n">cpu_count</span><span class="p">()</span>
     <span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Video creation completed.&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-7'>
+  <div class='section' id='section-9'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-7'>#</a>
+        <a class='octothorpe' href='#section-9'>#</a>
       </div>
       
     </div>

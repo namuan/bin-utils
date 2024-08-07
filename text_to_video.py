@@ -22,11 +22,34 @@ import logging
 import re
 from multiprocessing import cpu_count
 
-from moviepy.editor import ColorClip, TextClip, concatenate_videoclips
+from moviepy.editor import (
+    ColorClip,
+    CompositeVideoClip,
+    TextClip,
+    concatenate_videoclips,
+)
 
 
-def create_word_clip(word, duration=0.3):
-    return TextClip(word, fontsize=70, color="white", font="Arial").set_duration(duration)
+def create_word_clip(
+    word,
+    duration=0.5,
+    fontsize=70,
+    font="Arial",
+    text_color="white",
+    border_color="black",
+    border_width=2,
+    fade_duration=0.1,
+):
+    def create_text_clip(color):
+        return TextClip(word, fontsize=fontsize, color=color, font=font, stroke_color=color, stroke_width=border_width)
+
+    txt_clip = create_text_clip(text_color)
+    border_clip = create_text_clip(border_color)
+
+    composed_clip = CompositeVideoClip([border_clip, txt_clip]).set_duration(duration)
+
+    # Add fade in and fade out
+    return composed_clip.fadein(fade_duration).fadeout(fade_duration)
 
 
 def create_pause_clip(duration=1.0):
@@ -44,7 +67,9 @@ def create_video_from_text_files(file_names, output_file):
                 words = sentence.split()
                 for i, word in enumerate(words):
                     logging.debug(f"Creating clip for word: {word}")
-                    clip = create_word_clip(word)
+                    clip = create_word_clip(
+                        word, text_color="white", border_color="black", border_width=2, fade_duration=0.3
+                    )
                     clips.append(clip)
 
                     # Add a small pause after each word
@@ -59,7 +84,7 @@ def create_video_from_text_files(file_names, output_file):
 
     logging.info(f"Writing video file: {output_file}")
     final_clip.write_videofile(
-        output_file, fps=120, codec="mpeg4", preset="superfast", audio=False, threads=cpu_count()
+        output_file, fps=120, codec="libx264", preset="superfast", audio=False, threads=cpu_count()
     )
     logging.info("Video creation completed.")
 
