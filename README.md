@@ -302,6 +302,27 @@ options:
 ```
 
 ```
+[_ico_to_icns.py_](https://namuan.github.io/bin-utils/ico_to_icns.html)
+```
+usage: ico_to_icns.py [-h] [-v] source target
+
+A script to convert ICO files to ICNS format.
+
+Usage:
+./ico_to_icns.py -h
+
+./ico_to_icns.py input.ico output.icns -v # To log INFO messages
+./ico_to_icns.py input.ico output.icns -vv # To log DEBUG messages
+
+positional arguments:
+  source         Path to the source ICO file
+  target         Path for the target ICNS file
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_py_carbon_clip.py_](https://namuan.github.io/bin-utils/py_carbon_clip.html)
 ```
 usage: py_carbon_clip.py [-h]
