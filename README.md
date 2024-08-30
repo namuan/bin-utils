@@ -450,6 +450,26 @@ options:
                         Wait (in secs) before capturing screenshot
 
 ```
+[_download-urls.py_](https://namuan.github.io/bin-utils/download-urls.html)
+```
+usage: download-urls.py [-h] [-v] file
+
+A script to download web pages using Vivaldi browser and SingleFile extension
+
+Usage:
+./download-urls.py -h
+
+./download-urls.py -v file.txt # To log INFO messages
+./download-urls.py -vv file.txt # To log DEBUG messages
+
+positional arguments:
+  file           File containing list of URLs
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+
+```
 [_csv-checker.py_](https://namuan.github.io/bin-utils/csv-checker.html)
 ```
 usage: csv-checker.py [-h] start_balance end_balance csv_path
