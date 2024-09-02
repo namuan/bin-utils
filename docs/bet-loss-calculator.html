@@ -1,0 +1,133 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' https://fonts.gstatic.com; img-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com; media-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org; frame-src 'self' https://www.youtube.com; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loss Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        label, input, button, select {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input, button, select {
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Loss Calculator</h1>
+    <label for="initialInvestment">Initial Investment:</label>
+    <input type="number" id="initialInvestment" value="100000">
+    <label for="initialBet">Initial Bet:</label>
+    <input type="number" id="initialBet" value="300">
+    <label for="multiplier">Bet Multiplier:</label>
+    <select id="multiplier">
+        <option value="1.5">1.5x</option>
+        <option value="2" selected="">2x (Double)</option>
+        <option value="2.5">2.5x</option>
+        <option value="3">3x (Triple)</option>
+        <option value="custom">Custom</option>
+    </select>
+    <input type="number" id="customMultiplier" placeholder="Enter custom multiplier" style="display: none;">
+    <button onclick="calculate()">Calculate</button>
+    <div id="result"></div>
+    <div id="stepsTable"></div>
+
+    <script>
+        document.getElementById('multiplier').addEventListener('change', function() {
+            const customMultiplier = document.getElementById('customMultiplier');
+            if (this.value === 'custom') {
+                customMultiplier.style.display = 'block';
+            } else {
+                customMultiplier.style.display = 'none';
+            }
+        });
+
+        function calculateLossesWithSteps(initialInvestment, initialBet, multiplier) {
+            let currentBet = initialBet;
+            let remainingFunds = initialInvestment;
+            let losses = 0;
+            let steps = [];
+
+            while (remainingFunds >= currentBet) {
+                steps.push({
+                    loss: losses + 1,
+                    betAmount: currentBet,
+                    remainingFunds: remainingFunds
+                });
+                remainingFunds -= currentBet;
+                currentBet *= multiplier;
+                losses++;
+            }
+
+            return { losses, steps };
+        }
+
+        function calculate() {
+            const initialInvestment = parseFloat(document.getElementById('initialInvestment').value);
+            const initialBet = parseFloat(document.getElementById('initialBet').value);
+            let multiplier = parseFloat(document.getElementById('multiplier').value);
+            
+            if (isNaN(multiplier)) {
+                multiplier = parseFloat(document.getElementById('customMultiplier').value);
+            }
+            
+            if (isNaN(initialInvestment) || isNaN(initialBet) || isNaN(multiplier) || 
+                initialInvestment <= 0 || initialBet <= 0 || multiplier <= 1) {
+                document.getElementById('result').textContent = 'Please enter valid positive numbers. Multiplier must be greater than 1.';
+                document.getElementById('stepsTable').innerHTML = '';
+                return;
+            }
+
+            const { losses, steps } = calculateLossesWithSteps(initialInvestment, initialBet, multiplier);
+            document.getElementById('result').textContent = `You can take ${losses} losses before using up your initial investment.`;
+
+            let tableHTML = `
+                <table>
+                    <tr>
+                        <th>Loss #</th>
+                        <th>Bet Amount</th>
+                        <th>Remaining Funds</th>
+                    </tr>
+            `;
+
+            steps.forEach(step => {
+                tableHTML += `
+                    <tr>
+                        <td>${step.loss}</td>
+                        <td>$${step.betAmount.toFixed(2)}</td>
+                        <td>$${step.remainingFunds.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</table>';
+            document.getElementById('stepsTable').innerHTML = tableHTML;
+        }
+    </script>
+
+
+</body></html>
