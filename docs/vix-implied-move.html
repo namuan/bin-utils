@@ -20,12 +20,12 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        label, input, select {
+        label, input {
             display: block;
             width: 100%;
             margin-bottom: 10px;
         }
-        input, select {
+        input {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
@@ -42,10 +42,18 @@
         button:hover {
             background-color: #45a049;
         }
-        #result {
+        table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 20px;
-            font-weight: bold;
-            text-align: center;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
@@ -55,41 +63,49 @@
         <label for="vix">Current VIX:</label>
         <input type="number" id="vix" step="0.01" required="">
         
-        <label for="timeframe">Timeframe:</label>
-        <select id="timeframe">
-            <option value="year">1 Year</option>
-            <option value="month">1 Month</option>
-            <option value="week">1 Week</option>
-            <option value="day">1 Day</option>
-        </select>
+        <button onclick="calculateImpliedMoves()">Calculate Implied Moves</button>
         
-        <button onclick="calculateImpliedMove()">Calculate Implied Move</button>
-        
-        <div id="result"></div>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>Timeframe</th>
+                    <th>Implied Move</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1 Year</td>
+                    <td id="yearMove">-</td>
+                </tr>
+                <tr>
+                    <td>1 Month</td>
+                    <td id="monthMove">-</td>
+                </tr>
+                <tr>
+                    <td>1 Week</td>
+                    <td id="weekMove">-</td>
+                </tr>
+                <tr>
+                    <td>1 Day</td>
+                    <td id="dayMove">-</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
     <script>
-        function calculateImpliedMove() {
+        function calculateImpliedMoves() {
             const vix = parseFloat(document.getElementById('vix').value);
-            const timeframe = document.getElementById('timeframe').value;
-            let impliedMove;
-
-            switch(timeframe) {
-                case 'year':
-                    impliedMove = vix;
-                    break;
-                case 'month':
-                    impliedMove = vix / 3.46;
-                    break;
-                case 'week':
-                    impliedMove = vix / 7.21;
-                    break;
-                case 'day':
-                    impliedMove = vix / 15.87;
-                    break;
+            
+            if (isNaN(vix)) {
+                alert("Please enter a valid VIX value.");
+                return;
             }
 
-            document.getElementById('result').innerHTML = `Implied Move: ${impliedMove.toFixed(2)}%`;
+            document.getElementById('yearMove').textContent = vix.toFixed(2) + '%';
+            document.getElementById('monthMove').textContent = (vix / 3.46).toFixed(2) + '%';
+            document.getElementById('weekMove').textContent = (vix / 7.21).toFixed(2) + '%';
+            document.getElementById('dayMove').textContent = (vix / 15.87).toFixed(2) + '%';
         }
     </script>
 
