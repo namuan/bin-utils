@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' 'unsafe-inline' https://fonts.gstatic.com; img-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com; media-src 'self' data: blob: https://pfst.cf2.poecdn.net https://i.imgur.com https://wikimedia.org; frame-src 'self' https://www.youtube.com; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIX Implied Move Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .calculator {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label, input, select {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        input, select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>VIX Implied Move Calculator</h1>
+    <div class="calculator">
+        <label for="vix">Current VIX:</label>
+        <input type="number" id="vix" step="0.01" required="">
+        
+        <label for="timeframe">Timeframe:</label>
+        <select id="timeframe">
+            <option value="year">1 Year</option>
+            <option value="month">1 Month</option>
+            <option value="week">1 Week</option>
+            <option value="day">1 Day</option>
+        </select>
+        
+        <button onclick="calculateImpliedMove()">Calculate Implied Move</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function calculateImpliedMove() {
+            const vix = parseFloat(document.getElementById('vix').value);
+            const timeframe = document.getElementById('timeframe').value;
+            let impliedMove;
+
+            switch(timeframe) {
+                case 'year':
+                    impliedMove = vix;
+                    break;
+                case 'month':
+                    impliedMove = vix / 3.46;
+                    break;
+                case 'week':
+                    impliedMove = vix / 7.21;
+                    break;
+                case 'day':
+                    impliedMove = vix / 15.87;
+                    break;
+            }
+
+            document.getElementById('result').innerHTML = `Implied Move: ${impliedMove.toFixed(2)}%`;
+        }
+    </script>
+
+
+</body></html>
