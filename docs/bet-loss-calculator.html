@@ -5,18 +5,50 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .calculator {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             padding: 20px;
+            width: 400px;
         }
-        label, input, button, select {
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+        label {
+            font-weight: bold;
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        input, button, select {
+        input, select {
             width: 100%;
-            padding: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
         }
         #result {
             margin-top: 20px;
@@ -28,33 +60,36 @@
             margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ddd;
+            text-align: left;
             padding: 8px;
-            text-align: right;
+            border-bottom: 1px solid #ddd;
         }
         th {
             background-color: #f2f2f2;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Loss Calculator</h1>
-    <label for="initialInvestment">Initial Investment:</label>
-    <input type="number" id="initialInvestment" value="100000">
-    <label for="initialBet">Initial Bet:</label>
-    <input type="number" id="initialBet" value="300">
-    <label for="multiplier">Bet Multiplier:</label>
-    <select id="multiplier">
-        <option value="1.5">1.5x</option>
-        <option value="2" selected="">2x (Double)</option>
-        <option value="2.5">2.5x</option>
-        <option value="3">3x (Triple)</option>
-        <option value="custom">Custom</option>
-    </select>
-    <input type="number" id="customMultiplier" placeholder="Enter custom multiplier" style="display: none;">
-    <button onclick="calculate()">Calculate</button>
-    <div id="result"></div>
-    <div id="stepsTable"></div>
+    <div class="calculator">
+        <h1>Loss Calculator</h1>
+        <label for="initialInvestment">Initial Investment:</label>
+        <input type="number" id="initialInvestment" value="100000">
+        <label for="initialBet">Initial Bet:</label>
+        <input type="number" id="initialBet" value="300">
+        <label for="multiplier">Bet Multiplier:</label>
+        <select id="multiplier">
+            <option value="1.5">1.5x</option>
+            <option value="2" selected="">2x (Double)</option>
+            <option value="2.5">2.5x</option>
+            <option value="3">3x (Triple)</option>
+            <option value="custom">Custom</option>
+        </select>
+        <input type="number" id="customMultiplier" placeholder="Enter custom multiplier" style="display: none;">
+        <button onclick="calculate()">Calculate Losses</button>
+        <div id="result"></div>
+        <table id="stepsTable"></table>
+    </div>
 
     <script>
         document.getElementById('multiplier').addEventListener('change', function() {
@@ -106,12 +141,11 @@
             document.getElementById('result').textContent = `You can take ${losses} losses before using up your initial investment.`;
 
             let tableHTML = `
-                <table>
-                    <tr>
-                        <th>Loss #</th>
-                        <th>Bet Amount</th>
-                        <th>Remaining Funds</th>
-                    </tr>
+                <tr>
+                    <th>Loss #</th>
+                    <th>Bet Amount</th>
+                    <th>Remaining Funds</th>
+                </tr>
             `;
 
             steps.forEach(step => {
@@ -124,7 +158,6 @@
                 `;
             });
 
-            tableHTML += '</table>';
             document.getElementById('stepsTable').innerHTML = tableHTML;
         }
     </script>
