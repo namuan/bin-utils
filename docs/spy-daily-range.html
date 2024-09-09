@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPY Daily Range</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .controls label {
+            margin-right: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="controls">
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="0" checked> ±0.2%</label>
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="1" checked> ±0.5%</label>
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="2" checked> ±0.7%</label>
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="3" checked> ±1%</label>
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="4" checked> ±2%</label>
+    <label><input type="checkbox" class="bucket-checkbox" data-bucket="5" checked> ±3%</label>
+</div>
+<div style="width: 95%; margin: auto;">
+    <canvas id="myChart"></canvas>
+</div>
+<script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    const originalData = {
+        labels: ['2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+        datasets: [
+            {
+                label: '±0.2%',
+                data: [33.77, 26.59, 32.67, 27.09, 11.86, 14.68, 23.41, 17.86, 27.20, 22.22, 31.75, 22.22, 30.16, 49.40, 24.30, 28.57, 12.65, 25.00, 10.36, 22.80, 27.91],
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            },
+            {
+                label: '±0.5%',
+                data: [55.84, 54.37, 64.54, 48.21, 27.27, 34.92, 49.60, 38.10, 55.60, 57.14, 56.35, 50.00, 57.94, 79.28, 47.41, 55.95, 32.41, 51.59, 27.49, 47.60, 50.00],
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            },
+            {
+                label: '±0.7%',
+                data: [70.13, 73.02, 75.30, 58.17, 35.18, 42.86, 60.71, 49.60, 66.80, 73.02, 73.41, 59.92, 69.84, 89.24, 63.35, 69.05, 43.87, 61.90, 35.86, 61.20, 64.53],
+                backgroundColor: 'rgba(255, 206, 86, 0.8)',
+            },
+            {
+                label: '±1%',
+                data: [84.42, 85.32, 88.45, 73.71, 45.85, 55.95, 69.44, 62.70, 80.40, 84.92, 85.71, 71.03, 81.75, 96.41, 74.90, 84.92, 56.92, 78.17, 51.00, 74.80, 80.81],
+                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+            },
+            {
+                label: '±2%',
+                data: [98.70, 100.00, 99.20, 94.42, 72.33, 79.76, 91.27, 86.90, 97.20, 98.41, 98.41, 95.63, 96.03, 100.00, 92.43, 97.22, 83.40, 96.83, 81.67, 99.20, 97.09],
+                backgroundColor: 'rgba(153, 102, 255, 0.8)',
+            },
+            {
+                label: '±3%',
+                data: [98.70, 100.00, 100.00, 98.80, 83.79, 92.06, 96.83, 94.84, 100.00, 100.00, 100.00, 98.81, 99.60, 100.00, 97.61, 99.21, 89.72, 100.00, 94.82, 100.00, 100.00],
+                backgroundColor: 'rgba(255, 159, 64, 0.8)',
+            }
+        ]
+    };
+
+    let chart = new Chart(ctx, {
+        type: 'bar',
+        data: JSON.parse(JSON.stringify(originalData)),
+        options: {
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'SPY Closing Range Percentages (2004-2024)',
+                    font: {
+                        size: 16
+                    }
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+            },
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: false,
+                },
+                y: {
+                    stacked: false,
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Percentage of Trading Days'
+                    }
+                }
+            }
+        }
+    });
+
+    function updateChart() {
+        const checkboxes = document.querySelectorAll('.bucket-checkbox');
+        const newData = {
+            labels: originalData.labels,
+            datasets: []
+        };
+
+        checkboxes.forEach((checkbox, index) => {
+            if (checkbox.checked) {
+                newData.datasets.push(originalData.datasets[index]);
+            }
+        });
+
+        chart.data = newData;
+        chart.update();
+    }
+
+    document.querySelectorAll('.bucket-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateChart);
+    });
+</script>
+</body>
+</html>
