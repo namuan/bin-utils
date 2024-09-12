@@ -29,3 +29,4 @@ openai
 git+https://github.com/JustAnotherArchivist/snscrape.git
 requests
 langchain
+opencv-python

@@ -333,6 +333,33 @@ options:
   -h, --help  show this help message and exit
 
 ```
+[_animate_pngs.py_](https://namuan.github.io/bin-utils/animate_pngs.html)
+```
+usage: animate_pngs.py [-h] -i INPUT_DIR [-o OUTPUT_FILE] [--fps FPS]
+                       [--codec CODEC] [--open-dir] [-v] [--font FONT]
+
+Create a video sequence from PNG files in a directory, with a date frame at the start.
+
+Usage:
+./animate_pngs.py -h
+./animate_pngs.py -i /path/to/png/directory
+./animate_pngs.py -i /path/to/png/directory -o custom_output.mp4
+./animate_pngs.py -i /path/to/png/directory -f 30 -v
+./animate_pngs.py -i /path/to/png/directory --open-dir
+
+options:
+  -h, --help            show this help message and exit
+  -i INPUT_DIR, --input-dir INPUT_DIR
+                        Directory containing PNG files
+  -o OUTPUT_FILE, --output-file OUTPUT_FILE
+                        Output video file name
+  --fps FPS             Frames per second (default: 30)
+  --codec CODEC         Codec to use (default: mp4v)
+  --open-dir            Open the input directory after processing
+  -v, --verbose         Increase verbosity of logging output
+  --font FONT           Path to a TrueType font file to use for the date frame
+
+```
 [_playwright_browser.py_](https://namuan.github.io/bin-utils/playwright_browser.html)
 ```
 usage: playwright_browser.py [-h] [-v] [-f INPUT_FILE] [-i INPUT_URL]
