@@ -43,7 +43,12 @@ def setup_logging(verbosity):
 def get_sorted_png_files(directory):
     """Get a sorted list of PNG files from the specified directory."""
     png_files = glob.glob(os.path.join(directory, "*.png"))
-    return sorted(png_files)
+    sorted_files = sorted(png_files)
+    logging.info(f"Found {len(sorted_files)} PNG files")
+    logging.debug("Sorted PNG files:")
+    for file in sorted_files:
+        logging.debug(f"  {os.path.basename(file)}")
+    return sorted_files
 
 
 def generate_default_output_filename(input_dir):
@@ -132,7 +137,7 @@ def resize_image(img, size):
     return new_img
 
 
-def create_video(png_files, output_file, fps, start_date, codec="mp4v", duration=30, font_file=None):
+def create_video(png_files, output_file, fps, start_date, codec="mp4v", font_file=None):
     """Create a video from the list of PNG files, including a date frame at the start."""
     images = []
 
@@ -160,26 +165,17 @@ def create_video(png_files, output_file, fps, start_date, codec="mp4v", duration
         # Convert to numpy arrays
         np_images = [cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR) for img in resized_images]
 
-        # Calculate frames per image to achieve desired duration
-        total_frames = int(duration * fps)
-        frames_per_image = max(1, total_frames // len(np_images))
-
         # Create video writer
         fourcc = cv2.VideoWriter_fourcc(*codec)
         out = cv2.VideoWriter(output_file, fourcc, fps, common_size)
 
         logging.info(f"Creating video: {output_file}")
         for img in np_images:
-            for _ in range(frames_per_image):
-                out.write(img)
-
-        # If there's remaining time, loop the images
-        remaining_frames = total_frames - (len(np_images) * frames_per_image)
-        for i in range(remaining_frames):
-            out.write(np_images[i % len(np_images)])
+            out.write(img)
 
         out.release()
-        logging.info("Video created successfully")
+        actual_duration = len(np_images) / fps
+        logging.info(f"Video created successfully. Duration: {actual_duration:.2f} seconds")
     else:
         logging.error("Not enough valid images to create a video")
 
@@ -226,7 +222,9 @@ def main(args):
         logging.error(f"No PNG files found in directory: {args.input_dir}")
         return
 
-    logging.info(f"Found {len(png_files)} PNG files")
+    logging.info("Files to be processed (in order):")
+    for file in png_files:
+        logging.info(f"  {os.path.basename(file)}")
 
     if args.output_file:
         output_file = args.output_file
@@ -240,7 +238,7 @@ def main(args):
         first_file = os.path.basename(png_files[0])
         start_date = datetime.strptime(first_file[:8], "%Y%m%d")
 
-        create_video(png_files, output_file, args.fps, start_date, args.codec, duration=30, font_file=args.font)
+        create_video(png_files, output_file, args.fps, start_date, args.codec, font_file=args.font)
 
         if args.open_dir:
             open_directory(args.input_dir)

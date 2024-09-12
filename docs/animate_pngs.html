@@ -87,7 +87,12 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">png_files</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="s2">&quot;*.png&quot;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">png_files</span><span class="p">)</span></pre></div>
+    <span class="n">sorted_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">png_files</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sorted_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> PNG files&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Sorted PNG files:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">sorted_files</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sorted_files</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -327,7 +332,7 @@
       <p>Create a video from the list of PNG files, including a date frame at the start.</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_video</span><span class="p">(</span><span class="n">png_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">codec</span><span class="o">=</span><span class="s2">&quot;mp4v&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">font_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">create_video</span><span class="p">(</span><span class="n">png_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">fps</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">codec</span><span class="o">=</span><span class="s2">&quot;mp4v&quot;</span><span class="p">,</span> <span class="n">font_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -418,19 +423,6 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-26'>#</a>
       </div>
-      <p>Calculate frames per image to achieve desired duration</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>        <span class="n">total_frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span> <span class="o">*</span> <span class="n">fps</span><span class="p">)</span>
-        <span class="n">frames_per_image</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">total_frames</span> <span class="o">//</span> <span class="nb">len</span><span class="p">(</span><span class="n">np_images</span><span class="p">))</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-27'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-27'>#</a>
-      </div>
       <p>Create video writer</p>
     </div>
     <div class='code'>
@@ -439,34 +431,20 @@
 
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating video: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">np_images</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frames_per_image</span><span class="p">):</span>
-                <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">img</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-28'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-28'>#</a>
-      </div>
-      <p>If there&rsquo;s remaining time, loop the images</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>        <span class="n">remaining_frames</span> <span class="o">=</span> <span class="n">total_frames</span> <span class="o">-</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">np_images</span><span class="p">)</span> <span class="o">*</span> <span class="n">frames_per_image</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">remaining_frames</span><span class="p">):</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">np_images</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">np_images</span><span class="p">)])</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
         <span class="n">out</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Video created successfully&quot;</span><span class="p">)</span>
+        <span class="n">actual_duration</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np_images</span><span class="p">)</span> <span class="o">/</span> <span class="n">fps</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Video created successfully. Duration: </span><span class="si">{</span><span class="n">actual_duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Not enough valid images to create a video&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-29'>
+  <div class='section' id='section-27'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-29'>#</a>
+        <a class='octothorpe' href='#section-27'>#</a>
       </div>
       <p>Open the specified directory using the default file manager.</p>
     </div>
@@ -475,10 +453,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-30'>
+  <div class='section' id='section-28'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-30'>#</a>
+        <a class='octothorpe' href='#section-28'>#</a>
       </div>
       
     </div>
@@ -495,10 +473,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-31'>
+  <div class='section' id='section-29'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-31'>#</a>
+        <a class='octothorpe' href='#section-29'>#</a>
       </div>
       
     </div>
@@ -523,10 +501,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-32'>
+  <div class='section' id='section-30'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-32'>#</a>
+        <a class='octothorpe' href='#section-30'>#</a>
       </div>
       
     </div>
@@ -541,7 +519,9 @@
         <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No PNG files found in directory: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">input_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span>
 
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">png_files</span><span class="p">)</span><span class="si">}</span><span class="s2"> PNG files&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Files to be processed (in order):&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">png_files</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">output_file</span><span class="p">:</span>
         <span class="n">output_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">output_file</span>
@@ -554,10 +534,10 @@
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-33'>
+  <div class='section' id='section-31'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-33'>#</a>
+        <a class='octothorpe' href='#section-31'>#</a>
       </div>
       <p>Extract date from the first PNG file</p>
     </div>
@@ -565,7 +545,7 @@
       <div class="highlight"><pre>        <span class="n">first_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">png_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">start_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">first_file</span><span class="p">[:</span><span class="mi">8</span><span class="p">],</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="n">create_video</span><span class="p">(</span><span class="n">png_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">codec</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">font_file</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
+        <span class="n">create_video</span><span class="p">(</span><span class="n">png_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">fps</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">codec</span><span class="p">,</span> <span class="n">font_file</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">font</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">open_dir</span><span class="p">:</span>
             <span class="n">open_directory</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">input_dir</span><span class="p">)</span>
