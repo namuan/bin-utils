@@ -149,10 +149,14 @@ def create_video(png_files, output_file, fps, start_date, codec="mp4v", font_fil
     for png_file in png_files:
         logging.info(f"Processing file: {png_file}")
         try:
-            img = Image.open(png_file)
-            images.append(img)
+            with Image.open(png_file) as img:
+                # Verify the image by loading it completely
+                img.load()
+                images.append(img.copy())
+        except OSError as e:
+            logging.error(f"Error processing {png_file}: {str(e)}. Skipping this file.")
         except Exception as e:
-            logging.error(f"Error processing {png_file}: {str(e)}")
+            logging.error(f"Unexpected error processing {png_file}: {str(e)}. Skipping this file.")
 
     if len(images) > 1:
         # Determine common size
@@ -246,6 +250,8 @@ def main(args):
         logging.error(f"Error parsing date from filename: {str(e)}")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {str(e)}")
+    finally:
+        logging.info("Processing completed. Check the logs for any skipped files or errors.")
 
 
 if __name__ == "__main__":
