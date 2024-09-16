@@ -608,6 +608,30 @@ options:
   -v, --verbose  Increase verbosity of logging output
 
 ```
+[_json_to_markdown.py_](https://namuan.github.io/bin-utils/json_to_markdown.html)
+```
+usage: json_to_markdown.py [-h] [-v] -i INPUT -o OUTPUT -t TITLE
+
+A script to convert JSON file to PDF with embedded images using pandoc
+
+Usage:
+./json_to_pdf_pandoc.py -h
+
+./json_to_pdf_pandoc.py -i input.json -o output.pdf -t "Your Custom Title"
+./json_to_pdf_pandoc.py -i input.json -o output.pdf -t "Your Custom Title" -v # To log INFO messages
+./json_to_pdf_pandoc.py -i input.json -o output.pdf -t "Your Custom Title" -vv # To log DEBUG messages
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of logging output
+  -i INPUT, --input INPUT
+                        Input JSON file
+  -o OUTPUT, --output OUTPUT
+                        Output PDF file
+  -t TITLE, --title TITLE
+                        Title for the document
+
+```
 [_alfred-llm-prompts-import.py_](https://namuan.github.io/bin-utils/alfred-llm-prompts-import.html)
 ```
 usage: alfred-llm-prompts-import.py [-h] [-v]

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>json_to_markdown.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>json_to_markdown.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>A script to convert JSON file to PDF with embedded images using pandoc</p>
+<p>Usage:
+./json_to_pdf_pandoc.py -h</p>
+<p>./json_to_pdf_pandoc.py -i input.json -o output.pdf -t &ldquo;Your Custom Title&rdquo;
+./json_to_pdf_pandoc.py -i input.json -o output.pdf -t &ldquo;Your Custom Title&rdquo; -v # To log INFO messages
+./json_to_pdf_pandoc.py -i input.json -o output.pdf -t &ldquo;Your Custom Title&rdquo; -vv # To log DEBUG messages</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+
+<span class="kn">import</span> <span class="nn">requests</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_logging</span><span class="p">(</span><span class="n">verbosity</span><span class="p">):</span>
+    <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
+    <span class="k">if</span> <span class="n">verbosity</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+    <span class="k">elif</span> <span class="n">verbosity</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logging_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+        <span class="n">handlers</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(),</span>
+        <span class="p">],</span>
+        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(filename)s</span><span class="s2">:</span><span class="si">%(lineno)d</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">datefmt</span><span class="o">=</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">,</span>
+        <span class="n">level</span><span class="o">=</span><span class="n">logging_level</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">captureWarnings</span><span class="p">(</span><span class="n">capture</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Increase verbosity of logging output&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--input&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Input JSON file&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-o&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--output&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output PDF file&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-t&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--title&quot;</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Title for the document&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">get_image_as_base64</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="n">image_content</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span>
+        <span class="n">image_base64</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">image_content</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">file_extension</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">file_extension</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;jpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;png&quot;</span><span class="p">,</span> <span class="s2">&quot;gif&quot;</span><span class="p">]:</span>
+            <span class="n">file_extension</span> <span class="o">=</span> <span class="s2">&quot;png&quot;</span>  <span class="c1"># Default to PNG if extension is not recognized</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;data:image/</span><span class="si">{</span><span class="n">file_extension</span><span class="si">}</span><span class="s2">;base64,</span><span class="si">{</span><span class="n">image_base64</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error fetching image from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">json_to_markdown</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting JSON to Markdown with embedded images&quot;</span><span class="p">)</span>
+    <span class="n">markdown</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;---</span>
+<span class="s2">geometry: margin=1in</span>
+<span class="s2">title: &quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">---</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">#DIVIDER</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>{title}</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <pre><code>for item in json_data:
+    text = item["text"].strip()
+    images = item.get("images", [])
+
+    logging.debug(f"Processing text: {text[:50]}...")
+
+    # Remove numbering from the beginning of the text
+    text = re.sub(r"^\d+\s*\/?\s*", "", text)
+
+    # Convert URLs to markdown links
+    text = re.sub(r"(https?://\S+)", r"[\1](\1)", text)
+
+    # Handle headers
+    if text.startswith("If you like such threads"):
+        logging.debug("Skipping last repeated tweet")
+        continue  # Skip the last repeated tweet
+    elif re.match(r"^[\d.]+\s*[)/]?\s*", text):
+        markdown += f"## {text}\n\n"
+    else:
+        markdown += f"{text}\n\n"
+
+    # Add images
+    for image_url in images:
+        if image_url.endswith(".svg"):
+            logging.debug(f"Skipping SVG image: {image_url}")
+            continue  # Skip SVG images
+
+        image_base64 = get_image_as_base64(image_url)
+        if image_base64:
+            markdown += f"![Image]({image_base64})\n\n"
+        else:
+            logging.warning(f"Failed to embed image: {image_url}")
+            markdown += f"![Image]({image_url})\n\n"
+
+logging.info("JSON to Markdown conversion with embedded images completed")
+return markdown
+</code></pre>
+<p>def markdown_to_pdf(markdown_content, output_file):
+    logging.info(&ldquo;Converting Markdown to PDF using pandoc&rdquo;)</p>
+<pre><code>with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as temp_md:
+    temp_md.write(markdown_content)
+    temp_md_path = temp_md.name
+
+try:
+    subprocess.run(["pandoc", temp_md_path, "-o", output_file, "--pdf-engine=xelatex"], check=True)
+    logging.info(f"PDF file '{output_file}' has been created.")
+except subprocess.CalledProcessError as e:
+    logging.error(f"Error during PDF conversion: {e}")
+finally:
+    os.unlink(temp_md_path)
+    logging.debug(f"Temporary file {temp_md_path} has been removed.")
+</code></pre>
+<p>def main(args):
+    logging.info(f&rdquo;Reading JSON file: {args.input}&rdquo;)
+    with open(args.input) as file:
+        json_data = json.load(file)</p>
+<pre><code>markdown_content = json_to_markdown(json_data, args.title)
+markdown_to_pdf(markdown_content, args.output)
+</code></pre>
+<p>if <strong>name</strong> == &ldquo;<strong>main</strong>&rdquo;:
+    args = parse_args()
+    setup_logging(args.verbose)
+    main(args)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>
