@@ -61,6 +61,11 @@ function updateTweets() {
         const time = tweetElement.querySelector('time').getAttribute('datetime');
         const postUrl = tweetElement.querySelector('.css-175oi2r.r-18u37iz.r-1q142lx a')?.href;
 
+        // Extract and separate profile image and tweet images
+        const allImages = Array.from(tweetElement.querySelectorAll('img')).map(img => img.src);
+        const profileImage = allImages.find(src => src.startsWith('https://pbs.twimg.com/profile_images')) || '';
+        const tweetImages = allImages.filter(src => src.startsWith('https://pbs.twimg.com/media'));
+
         // Filter and extract interaction data in an enhanced way
         const interactionInfo = [...tweetElement.querySelectorAll('[aria-label]')]
             .map(element => element.getAttribute('aria-label'))
@@ -88,9 +93,11 @@ function updateTweets() {
                 tweetText,
                 time,
                 postUrl,
+                profileImage,
+                tweetImages,
                 interaction: {replies, reposts, likes, bookmarks, views}
             });
-            console.log("Tweets capturados: ", tweets.length);
+            console.log("Tweets captured: ", tweets.length);
         }
     });
 }
@@ -117,7 +124,6 @@ function extractInteractionDataFromString(infoString) {
     return {replies, reposts, likes, bookmarks, views};
 }
 
-
 // Initially populate the tweets array
 updateTweets();
 
@@ -134,7 +140,7 @@ const observer = new MutationObserver(mutations => {
 observer.observe(document.body, {childList: true, subtree: true});
 
 function downloadTweetsAsJson(tweetsArray) {
-    const jsonData = JSON.stringify(tweetsArray); // Convert the array to JSON
+    const jsonData = JSON.stringify(tweetsArray, null, 2); // Convert the array to JSON with indentation
     const blob = new Blob([jsonData], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
