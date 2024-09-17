@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>process-tweets.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>process-tweets.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>A script to process a JSON file containing tweet data, extract tweet text and images,
+identify book titles using Ollama LLM and vision models, and find Goodreads links for the books.</p>
+<p>Usage:
+python process_tweets.py <path_to_json_file> [&ndash;text-model TEXT_MODEL_NAME] [&ndash;vision-model VISION_MODEL_NAME]</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">httpx</span>
+<span class="kn">import</span> <span class="nn">ollama</span>
+<span class="kn">from</span> <span class="nn">googlesearch</span> <span class="kn">import</span> <span class="n">search</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>Constants</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">NUM_SEARCH</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">SEARCH_TIME_LIMIT</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># seconds</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>Set up basic logging configuration.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">setup_logging</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> - </span><span class="si">%(levelname)s</span><span class="s2"> - </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>Read and parse the JSON file.</p>
+<p>Args:
+    file_path (str): Path to the JSON file.</p>
+<p>Returns:
+    List[Dict]: List of tweet data dictionaries.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">read_json_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error decoding JSON from file: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading file: </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>Extract book titles from tweet text using Ollama LLM.</p>
+<p>Args:
+    tweet_text (str): The text of the tweet.
+    model (str): The name of the Ollama model to use.</p>
+<p>Returns:
+    List[str]: A list of extracted book titles or [&ldquo;No book titles found&rdquo;] if none are detected.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">extract_book_titles_from_text</span><span class="p">(</span><span class="n">tweet_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">prompt</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Extract and list all book titles mentioned in the following tweet.</span>
+<span class="s2">If no book titles are found, respond with exactly &#39;No book titles found&#39;.</span>
+<span class="s2">Otherwise, only return the list of book titles, one per line.</span>
+<span class="s2">Be sure to capture complete titles, even if they span multiple words:</span>
+
+<span class="si">{</span><span class="n">tweet_text</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">ollama</span><span class="o">.</span><span class="n">chat</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">prompt</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;content&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">content</span> <span class="o">==</span> <span class="s2">&quot;No book titles found&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">book_titles</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">book_titles</span> <span class="k">if</span> <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in book title extraction from text: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>try:
+    with httpx.Client() as client:
+        response = client.get(image_url)
+        response.raise_for_status()
+        return response.content
+except httpx.RequestError as e:
+    logging.error(f&rdquo;Error downloading image from {image_url}: {str(e)}&rdquo;)
+    return b&rdquo;&ldquo;</p>
+<p>def extract_book_titles_from_image(image_data: bytes, model: str) -&gt; List[str] | None:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">download_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Download an image from a URL.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_url (str): The URL of the image to download.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bytes: The raw image data.</span>
+<span class="sd">#DIVIDER</span>
+<span class="sd">    Extract book titles from an image using a vision-capable Ollama model.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        image_data (bytes): The raw image data.</span>
+<span class="sd">        model (str): The name of the vision-capable Ollama model to use.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List[str]: A list of extracted book titles or [&quot;No book titles found&quot;] if none are detected.</span>
+<span class="sd">Otherwise, only return the list of book titles, one per line.&quot;&quot;&quot;</span>
+
+        <span class="n">response</span> <span class="o">=</span> <span class="n">ollama</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="p">[</span><span class="n">image_data</span><span class="p">])</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">content</span> <span class="o">==</span> <span class="s2">&quot;No book titles found&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">book_titles</span> <span class="o">=</span> <span class="n">content</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">title</span> <span class="ow">in</span> <span class="n">book_titles</span> <span class="k">if</span> <span class="n">title</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in book title extraction from image: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>try:
+    prompt = &ldquo;&rdquo;&ldquo;Analyze this image and list all book titles visible in it.
+If no book titles are found, respond with exactly &lsquo;No book titles found&rsquo;.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">process_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">vision_model</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    Process a single image URL to extract book titles.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        image_url (str): The URL of the image to process.</span>
+<span class="s2">        vision_model (str): The name of the vision-capable Ollama model to use.</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    Process a list of tweets to extract book titles from text and images.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        tweets (List[Dict]): A list of tweet data dictionaries.</span>
+<span class="s2">        text_model (str): The name of the Ollama text model to use.</span>
+<span class="s2">        vision_model (str): The name of the vision-capable Ollama model to use.</span>
+
+<span class="s2">    Returns:</span>
+<span class="s2">        List[str]: A list of all unique book titles found.</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    Perform a Google search and return the top results.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        query (str): The search query.</span>
+
+<span class="s2">    Returns:</span>
+<span class="s2">        List[str]: A list of URLs from the search results.</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    Extract the Goodreads link from a list of URLs.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        urls (List[str]): A list of URLs.</span>
+
+<span class="s2">    Returns:</span>
+<span class="s2">        str: The Goodreads link or an empty string if not found.</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    Process the list of books and find Goodreads links for each.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        books (List[str]): A list of book titles.</span>
+
+<span class="s2">    Returns:</span>
+<span class="s2">        List[Tuple[str, str]]: A list of tuples containing book titles and their Goodreads links.</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">    Main function to orchestrate the tweet processing, book title extraction, and Goodreads link finding.</span>
+
+<span class="s2">    Args:</span>
+<span class="s2">        file_path (str): Path to the JSON file containing tweet data.</span>
+<span class="s2">        text_model (str): The name of the Ollama text model to use.</span>
+<span class="s2">        vision_model (str): The name of the vision-capable Ollama model to use.</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>image_data = download_image(image_url)
+if image_data:
+    image_titles = extract_book_titles_from_image(image_data, vision_model)
+    if image_titles:
+        print(f&rdquo;Book Titles from Image: {&lsquo;, &lsquo;.join(image_titles)}&rdquo;)
+        return image_titles
+return []</p>
+<p>def process_tweets(tweets: List[Dict], text_model: str, vision_model: str) -&gt; List[str]:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>all_books = set()
+for tweet in tweets:
+    tweet_text = tweet.get(&ldquo;tweetText&rdquo;, &ldquo;&rdquo;).strip()
+    tweet_images = tweet.get(&ldquo;tweetImages&rdquo;, [])</p>
+<pre><code>if tweet_text:
+    print(f"Tweet: {tweet_text}")
+    # Extract book titles from text
+    text_titles = extract_book_titles_from_text(tweet_text, text_model)
+    if text_titles:
+        print(f"📚 Books extracted fom Text: {', '.join(text_titles)}")
+        all_books.update(text_titles)
+    else:
+        logging.info("No books found in text")
+elif tweet_images:
+    image_titles = None
+    if isinstance(tweet_images, list) and tweet_images:
+        logging.info(f"Image URL: {tweet_images[0]}")
+        image_titles = process_image(tweet_images[0], vision_model)
+    elif isinstance(tweet_images, str) and tweet_images:
+        logging.info(f"Image URL: {tweet_images}")
+        image_titles = process_image(tweet_images, vision_model)
+
+    if image_titles:
+        print(f"🪩 Books extracted from Image: {', '.join(image_titles)}")
+        all_books.update(image_titles)
+else:
+    print("No text or images in this tweet")
+</code></pre>
+<p>return list(all_books)</p>
+<p>def google_search(query: str) -&gt; List[str]:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>try:
+    return list(search(f&rdquo;{query} site:goodreads.com&rdquo;, num_results=NUM_SEARCH))
+except Exception as e:
+    logging.error(f&rdquo;Error performing Google search: {str(e)}&rdquo;)
+    return []</p>
+<p>def extract_goodreads_link(urls: List[str]) -&gt; str:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>for url in urls:
+    if &ldquo;goodreads.com/book/show/&rdquo; in url:
+        return url
+return &ldquo;&rdquo;</p>
+<p>def process_books_with_goodreads(books: List[str]) -&gt; List[Tuple[str, str]]:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>books_with_links = []
+for book in books:
+    logging.info(f&rdquo;Searching for Goodreads link for: {book}&rdquo;)
+    search_results = google_search(book)
+    goodreads_link = extract_goodreads_link(search_results)
+    books_with_links.append((book, goodreads_link))
+return books_with_links</p>
+<p>def main(file_path: str, text_model: str, vision_model: str):</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      <p>tweets = read_json_file(file_path)
+print(f&rdquo;Total tweets loaded: {len(tweets)}&rdquo;)
+print(&ldquo;Processing the first 10 tweets for testing purposes&hellip;&rdquo;)
+all_books = process_tweets(tweets, text_model, vision_model)</p>
+<p>print(&ldquo;\nAll Books Found:&rdquo;)
+if all_books:
+    books_with_links = process_books_with_goodreads(all_books)
+    for i, (book, link) in enumerate(books_with_links, 1):
+        if link:
+            print(f&rdquo;{i}. {book}: {link}&rdquo;)
+        else:
+            print(f&rdquo;{i}. {book}: No Goodreads link found&rdquo;)
+else:
+    print(&ldquo;No books were found in any of the processed tweets.&rdquo;)</p>
+<p>if <strong>name</strong> == &ldquo;<strong>main</strong>&rdquo;:
+setup_logging()
+parser = argparse.ArgumentParser(
+    description=&rdquo;Process tweets, extract book titles using Ollama LLM, and find Goodreads links.&rdquo;
+)
+parser.add_argument(&ldquo;file_path&rdquo;, help=&rdquo;Path to the JSON file containing tweet data&rdquo;)
+parser.add_argument(&ldquo;&ndash;text-model&rdquo;, default=&rdquo;llama2&rdquo;, help=&rdquo;Name of the Ollama text model to use (default: llama2)&rdquo;)
+parser.add_argument(
+    &ldquo;&ndash;vision-model&rdquo;, default=&rdquo;llava&rdquo;, help=&rdquo;Name of the vision-capable Ollama model to use (default: llava)&rdquo;
+)
+args = parser.parse_args()</p>
+<p>main(args.file_path, args.text_model, args.vision_model)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

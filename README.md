@@ -98,6 +98,27 @@ options:
   -h, --help  show this help message and exit
 
 ```
+[_process-tweets.py_](https://namuan.github.io/bin-utils/process-tweets.html)
+```
+usage: process-tweets.py [-h] [--text-model TEXT_MODEL]
+                         [--vision-model VISION_MODEL]
+                         file_path
+
+Process tweets, extract book titles using Ollama LLM, and find Goodreads
+links.
+
+positional arguments:
+  file_path             Path to the JSON file containing tweet data
+
+options:
+  -h, --help            show this help message and exit
+  --text-model TEXT_MODEL
+                        Name of the Ollama text model to use (default: llama2)
+  --vision-model VISION_MODEL
+                        Name of the vision-capable Ollama model to use
+                        (default: llava)
+
+```
 [_text_to_video.py_](https://namuan.github.io/bin-utils/text_to_video.html)
 ```
 usage: text_to_video.py [-h] -i INPUT [INPUT ...] -o OUTPUT [-v]

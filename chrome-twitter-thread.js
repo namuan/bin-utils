@@ -1,57 +1,54 @@
-/* Enhancements to the Twitter Scraping Script:
-
-This update to the script introduces a more robust mechanism for extracting detailed interaction data from tweets as they are scraped from Twitter. Previously, the script focused on collecting basic content such as the tweet's text. Now, it has been augmented to include a comprehensive extraction of interaction metrics, including replies, reposts, likes, bookmarks, and views, for each tweet.
-
-Key Changes:
-
-1. Improved Data Extraction:
-   - The script now searches through all elements within a tweet that have an `aria-label` attribute, filtering for labels that contain key interaction terms (replies, reposts, likes, bookmarks, views). This ensures that only relevant `aria-labels` are considered for data extraction.
-
-2. Flexible Interaction Data Parsing:
-   - A new function, `extractInteractionDataFromString`, has been added. It uses regular expressions to parse the consolidated interaction data string found in the `aria-label`. This approach allows for a more accurate extraction of numeric values corresponding to each type of interaction, regardless of slight variations in the `aria-label` text format.
-
-3. Auxiliary Function for Numeric Extraction:
-   - An auxiliary function, `extractNumberForKeyword`, has been introduced to extract numbers based on specific keywords within the interaction data string. This function enhances the script's ability to accurately parse and convert interaction metrics from textual descriptions to numeric values.
-
-4. MutationObserver Integration:
-   - The use of `MutationObserver` remains to monitor DOM changes dynamically, ensuring that the script continues to capture tweets as the user scrolls through Twitter. The observer triggers the `updateTweets` function to process newly loaded tweets.
-
-5. Efficient Tweet Uniqueness Check:
-   - The logic for determining whether a tweet is new (and thus should be added to the collection) has been refined. This check now ensures that duplicates are effectively filtered out, maintaining the integrity of the scraped data set.
-
-6. JSON Download Functionality:
-   - The final step of the script, which involves compiling the scraped tweets into a JSON file and downloading it, has been preserved. This feature provides users with a convenient way to export the collected data for further analysis or archiving.
-
-By implementing these enhancements, the script now offers a comprehensive solution for scraping detailed interaction data from X, making it a valuable tool for social media analysis, research, and data collection projects.
-
-*/
-
-let tweets = []; // Initialize an empty array to hold all tweet elements
+let tweets = new Map(); // Initialize a Map to hold all tweet elements, keyed by tweetId
 
 const scrollInterval = 2000;
-const scrollStep = 5000; // Pixels to scroll on each step
+const scrollStep = 1000; // Pixels to scroll on each step
 
 let previousTweetCount = 0;
 let unchangedCount = 0;
 
-const scrollToEndIntervalID = setInterval(() => {
-    window.scrollBy(0, scrollStep);
-    const currentTweetCount = tweets.length;
-    if (currentTweetCount === previousTweetCount) {
-        unchangedCount++;
-        if (unchangedCount >= 2) { // Stop if the count has not changed 5 times
-            console.log('Scraping complete');
-            console.log('Total tweets scraped: ', tweets.length);
-            console.log('Downloading tweets as JSON...');
-            clearInterval(scrollToEndIntervalID); // Stop scrolling
-            observer.disconnect(); // Stop observing DOM changes
-            downloadTweetsAsJson(tweets); // Download the tweets list as a JSON file
+// Function to scroll to the top of the page
+function scrollToTop() {
+    window.scrollTo(0, 0);
+}
+
+// Function to start the scraping process
+function startScraping() {
+    console.log("Starting the scraping process...");
+
+    const scrollToEndIntervalID = setInterval(() => {
+        window.scrollBy(0, scrollStep);
+        const currentTweetCount = tweets.size;
+        if (currentTweetCount === previousTweetCount) {
+            unchangedCount++;
+            if (unchangedCount >= 2) { // Stop if the count has not changed 5 times
+                console.log('Scraping complete');
+                console.log('Total tweets scraped: ', tweets.size);
+                console.log('Downloading tweets as JSON...');
+                clearInterval(scrollToEndIntervalID); // Stop scrolling
+                observer.disconnect(); // Stop observing DOM changes
+                downloadTweetsAsJson(tweets); // Download the tweets Map as a JSON file
+            }
+        } else {
+            unchangedCount = 0; // Reset counter if new tweets were added
         }
-    } else {
-        unchangedCount = 0; // Reset counter if new tweets were added
-    }
-    previousTweetCount = currentTweetCount; // Update previous count for the next check
-}, scrollInterval);
+        previousTweetCount = currentTweetCount; // Update previous count for the next check
+    }, scrollInterval);
+
+    // Initially populate the tweets Map
+    updateTweets();
+
+    // Create a MutationObserver to observe changes in the DOM
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            if (mutation.addedNodes.length) {
+                updateTweets(); // Call updateTweets whenever new nodes are added to the DOM
+            }
+        });
+    });
+
+    // Start observing the document body for child list changes
+    observer.observe(document.body, {childList: true, subtree: true});
+}
 
 function updateTweets() {
     document.querySelectorAll('article[data-testid="tweet"]').forEach(tweetElement => {
@@ -61,10 +58,21 @@ function updateTweets() {
         const time = tweetElement.querySelector('time').getAttribute('datetime');
         const postUrl = tweetElement.querySelector('.css-175oi2r.r-18u37iz.r-1q142lx a')?.href;
 
+        // Extract tweet ID from the href attribute
+        const tweetIdLink = tweetElement.querySelector('a[href*="/status/"]');
+        const tweetId = tweetIdLink ? tweetIdLink.href.split('/').pop() : null;
+
+        if (!tweetId) {
+            console.log("Skipping tweet without ID");
+            return;
+        }
+
+        console.log(`Author: ${authorName}, Handle: @${handle}, Tweet ID: ${tweetId}`);
+
         // Extract and separate profile image and tweet images
         const allImages = Array.from(tweetElement.querySelectorAll('img')).map(img => img.src);
         const profileImage = allImages.find(src => src.startsWith('https://pbs.twimg.com/profile_images')) || '';
-        const tweetImages = allImages.filter(src => src.startsWith('https://pbs.twimg.com/media'));
+        const tweetImages = allImages.find(src => src.startsWith('https://pbs.twimg.com/media')) || [];
 
         // Filter and extract interaction data in an enhanced way
         const interactionInfo = [...tweetElement.querySelectorAll('[aria-label]')]
@@ -85,20 +93,20 @@ function updateTweets() {
             views: 0
         };
 
-        const isTweetNew = !tweets.some(tweet => tweet.postUrl === postUrl);
-        if (isTweetNew) {
-            tweets.push({
-                authorName,
-                handle,
-                tweetText,
-                time,
-                postUrl,
-                profileImage,
-                tweetImages,
-                interaction: {replies, reposts, likes, bookmarks, views}
-            });
-            console.log("Tweets captured: ", tweets.length);
-        }
+        const tweetData = {
+            authorName,
+            handle,
+            tweetText,
+            time,
+            postUrl,
+            tweetId,
+            profileImage,
+            tweetImages,
+            interaction: {replies, reposts, likes, bookmarks, views}
+        };
+
+        tweets.set(tweetId, tweetData);
+        console.log("Tweets captured: ", tweets.size);
     });
 }
 
@@ -124,29 +132,27 @@ function extractInteractionDataFromString(infoString) {
     return {replies, reposts, likes, bookmarks, views};
 }
 
-// Initially populate the tweets array
-updateTweets();
+function downloadTweetsAsJson(tweetsMap) {
+    const sortedTweets = Array.from(tweetsMap.values())
+        .sort((a, b) => new Date(a.time) - new Date(b.time));
 
-// Create a MutationObserver to observe changes in the DOM
-const observer = new MutationObserver(mutations => {
-    mutations.forEach(mutation => {
-        if (mutation.addedNodes.length) {
-            updateTweets(); // Call updateTweets whenever new nodes are added to the DOM
-        }
-    });
-});
-
-// Start observing the document body for child list changes
-observer.observe(document.body, {childList: true, subtree: true});
-
-function downloadTweetsAsJson(tweetsArray) {
-    const jsonData = JSON.stringify(tweetsArray, null, 2); // Convert the array to JSON with indentation
+    const jsonData = JSON.stringify(sortedTweets, null, 2);
     const blob = new Blob([jsonData], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'tweets.json'; // Specify the file name
+
+    // Create a formatted date-time string for the filename
+    const now = new Date();
+    const formattedDateTime = now.toISOString().replace(/[:.]/g, '-').slice(0, 19); // Format: YYYY-MM-DDTHH-mm-ss
+
+    link.download = `tweets.json`; // Use the formatted date-time in the filename
     document.body.appendChild(link); // Append the link to the document
     link.click(); // Programmatically click the link to trigger the download
     document.body.removeChild(link); // Clean up and remove the link
 }
+
+// Main execution
+scrollToTop(); // Scroll to the top of the page
+console.log("Scrolled to the top of the page. Waiting for 1 second...");
+setTimeout(startScraping, 1000); // Wait for 1 second before starting the scraping process

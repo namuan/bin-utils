@@ -114,6 +114,10 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre><span class="k">def</span> <span class="nf">get_image_as_base64</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty URL provided&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
@@ -137,17 +141,14 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">json_to_markdown</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting JSON to Markdown with embedded images&quot;</span><span class="p">)</span>
-    <span class="n">markdown</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;---</span>
-<span class="s2">geometry: margin=1in</span>
-<span class="s2">title: &quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="s2">---</span>
-<span class="s2">#DIVIDER</span>
-
-<span class="s2">#DIVIDER</span>
-
-</pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">detect_json_format</span><span class="p">(</span><span class="n">json_data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">first_item</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;authorName&quot;</span> <span class="ow">in</span> <span class="n">first_item</span> <span class="ow">and</span> <span class="s2">&quot;tweetText&quot;</span> <span class="ow">in</span> <span class="n">first_item</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;new&quot;</span>
+        <span class="k">elif</span> <span class="s2">&quot;text&quot;</span> <span class="ow">in</span> <span class="n">first_item</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;old&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;unknown&quot;</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -156,10 +157,99 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
       </div>
-      <p>{title}</p>
+      
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">json_to_markdown_old_format</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting JSON to Markdown with embedded images (old format)&quot;</span><span class="p">)</span>
+    <span class="n">markdown</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;---</span>
+<span class="s2">geometry: margin=1in</span>
+<span class="s2">title: &quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="s2">---</span>
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">#DIVIDER</span>
+
+<span class="s2">    for item in json_data:</span>
+<span class="s2">        handle = item.get(&quot;handle&quot;, &quot;unknown_handle&quot;)</span>
+<span class="s2">        tweet_text = item.get(&quot;tweetText&quot;, &quot;&quot;).strip()</span>
+<span class="s2">        tweet_images = item.get(&quot;tweetImages&quot;, [])</span>
+
+<span class="s2">        logging.debug(f&quot;Processing tweet from: @</span><span class="si">{</span><span class="n">handle</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        markdown += f&quot;**@</span><span class="si">{</span><span class="n">handle</span><span class="si">}</span><span class="s2">**</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        if tweet_text:</span>
+<span class="s2">            markdown += f&quot;</span><span class="si">{</span><span class="n">tweet_text</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="s2">        else:</span>
+<span class="s2">            markdown += &quot;*(No tweet text)*</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        for image_url in tweet_images:</span>
+<span class="s2">            image_base64 = get_image_as_base64(image_url)</span>
+<span class="s2">            if image_base64:</span>
+<span class="s2">                markdown += f&quot;![Tweet Image](</span><span class="si">{</span><span class="n">image_base64</span><span class="si">}</span><span class="s2">)</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="s2">            else:</span>
+<span class="s2">                logging.warning(f&quot;Failed to embed tweet image: </span><span class="si">{</span><span class="n">image_url</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">                markdown += f&quot;![Tweet Image](</span><span class="si">{</span><span class="n">image_url</span><span class="si">}</span><span class="s2">)</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">        markdown += &quot;---</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+
+<span class="s2">    logging.info(&quot;JSON to Markdown conversion completed&quot;)</span>
+<span class="s2">    return markdown</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def json_to_markdown(json_data, title):</span>
+<span class="s2">    format_type = detect_json_format(json_data)</span>
+<span class="s2">    if format_type == &quot;new&quot;:</span>
+<span class="s2">        return json_to_markdown_new_format(json_data, title)</span>
+<span class="s2">    elif format_type == &quot;old&quot;:</span>
+<span class="s2">        return json_to_markdown_old_format(json_data, title)</span>
+<span class="s2">    else:</span>
+<span class="s2">        raise ValueError(&quot;Unknown JSON format&quot;)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def markdown_to_pdf(markdown_content, output_file):</span>
+<span class="s2">    logging.info(&quot;Converting Markdown to PDF using pandoc&quot;)</span>
+
+<span class="s2">    with tempfile.NamedTemporaryFile(mode=&quot;w&quot;, suffix=&quot;.md&quot;, delete=False) as temp_md:</span>
+<span class="s2">        temp_md.write(markdown_content)</span>
+<span class="s2">        temp_md_path = temp_md.name</span>
+
+<span class="s2">    try:</span>
+<span class="s2">        subprocess.run(</span>
+<span class="s2">            [</span>
+<span class="s2">                &quot;pandoc&quot;,</span>
+<span class="s2">                temp_md_path,</span>
+<span class="s2">                &quot;-o&quot;,</span>
+<span class="s2">                output_file,</span>
+<span class="s2">                &quot;--pdf-engine=xelatex&quot;,</span>
+<span class="s2">                &quot;--css=&quot;,  # This enables the CSS styles in the markdown</span>
+<span class="s2">                &quot;-V&quot;,</span>
+<span class="s2">                &quot;geometry:margin=1in&quot;,</span>
+<span class="s2">                &quot;--highlight-style=tango&quot;,</span>
+<span class="s2">            ],</span>
+<span class="s2">            check=True,</span>
+<span class="s2">        )</span>
+<span class="s2">        logging.info(f&quot;PDF file &#39;</span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&#39; has been created.&quot;)</span>
+<span class="s2">    except subprocess.CalledProcessError as e:</span>
+<span class="s2">        logging.error(f&quot;Error during PDF conversion: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">    finally:</span>
+<span class="s2">        os.unlink(temp_md_path)</span>
+<span class="s2">        logging.debug(f&quot;Temporary file </span><span class="si">{</span><span class="n">temp_md_path</span><span class="si">}</span><span class="s2"> has been removed.&quot;)</span>
+<span class="s2">#DIVIDER</span>
+<span class="s2">def main(args):</span>
+<span class="s2">    logging.info(f&quot;Reading JSON file: </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">input</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">    with open(args.input) as file:</span>
+<span class="s2">        json_data = json.load(file)</span>
+
+<span class="s2">    markdown_content = json_to_markdown(json_data, args.title)</span>
+<span class="s2">    markdown_to_pdf(markdown_content, args.output)</span>
+
+
+<span class="s2">if __name__ == &quot;__main__&quot;:</span>
+<span class="s2">    args = parse_args()</span>
+<span class="s2">    setup_logging(args.verbose)</span>
+<span class="s2">    main(args)</span>
+
+</pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -167,6 +257,18 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>{title}</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
       </div>
       <pre><code>for item in json_data:
     text = item["text"].strip()
@@ -202,35 +304,105 @@
             logging.warning(f"Failed to embed image: {image_url}")
             markdown += f"![Image]({image_url})\n\n"
 
-logging.info("JSON to Markdown conversion with embedded images completed")
+logging.info("JSON to Markdown conversion with embedded images completed (old format)")
 return markdown
 </code></pre>
-<p>def markdown_to_pdf(markdown_content, output_file):
-    logging.info(&ldquo;Converting Markdown to PDF using pandoc&rdquo;)</p>
-<pre><code>with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as temp_md:
-    temp_md.write(markdown_content)
-    temp_md_path = temp_md.name
-
-try:
-    subprocess.run(["pandoc", temp_md_path, "-o", output_file, "--pdf-engine=xelatex"], check=True)
-    logging.info(f"PDF file '{output_file}' has been created.")
-except subprocess.CalledProcessError as e:
-    logging.error(f"Error during PDF conversion: {e}")
-finally:
-    os.unlink(temp_md_path)
-    logging.debug(f"Temporary file {temp_md_path} has been removed.")
-</code></pre>
-<p>def main(args):
-    logging.info(f&rdquo;Reading JSON file: {args.input}&rdquo;)
-    with open(args.input) as file:
-        json_data = json.load(file)</p>
-<pre><code>markdown_content = json_to_markdown(json_data, args.title)
-markdown_to_pdf(markdown_content, args.output)
-</code></pre>
-<p>if <strong>name</strong> == &ldquo;<strong>main</strong>&rdquo;:
-    args = parse_args()
-    setup_logging(args.verbose)
-    main(args)</p>
+<p>def json_to_markdown_new_format(json_data, title):
+    logging.info(&ldquo;Converting JSON to Markdown with minimal content&rdquo;)
+    markdown = f&rdquo;&ldquo;&rdquo;&mdash;
+geometry: margin=1in
+title: &ldquo;{title}&rdquo;
+header-includes:
+    - \usepackage{{fancyhdr}}
+    - \pagestyle{{fancy}}
+    - \fancyhead[L]{{{title}}}
+    - \fancyfoot[C]{{Page \thepage}}</p>
+<hr />
+<h1>{title}</h1>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>Add Twitter handle</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>Add tweet text</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>Add tweet images</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>Add horizontal line as separator</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
