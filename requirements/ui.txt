@@ -1,5 +1,6 @@
 pygame
-pytest-playwright # playwright install
+playwright # playwright install
+pytest-playwright
 flet
 pyautogui
 moviepy==1.0.3

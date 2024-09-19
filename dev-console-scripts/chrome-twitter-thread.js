@@ -142,11 +142,14 @@ function downloadTweetsAsJson(tweetsMap) {
     const link = document.createElement('a');
     link.href = url;
 
-    // Create a formatted date-time string for the filename
-    const now = new Date();
-    const formattedDateTime = now.toISOString().replace(/[:.]/g, '-').slice(0, 19); // Format: YYYY-MM-DDTHH-mm-ss
+    // Extract the identifier from the current URL
+    const currentUrl = window.location.href;
+    const urlParts = currentUrl.split('/');
+    const identifier = urlParts[urlParts.length - 1];
 
-    link.download = `tweets.json`; // Use the formatted date-time in the filename
+    // Create the filename using the identifier
+    link.download = `tweets_${identifier}.json`;
+
     document.body.appendChild(link); // Append the link to the document
     link.click(); // Programmatically click the link to trigger the download
     document.body.removeChild(link); // Clean up and remove the link
