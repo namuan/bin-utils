@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profit Take Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        #result {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Profit Take Calculator</h1>
+<input type="number" id="initialNumber" placeholder="Enter a number">
+<button onclick="calculate()">Calculate</button>
+<div id="result"></div>
+
+<script>
+    function calculate() {
+        const initialNumber = parseFloat(document.getElementById('initialNumber').value);
+        if (isNaN(initialNumber)) {
+            document.getElementById('result').textContent = 'Please enter a valid number.';
+            return;
+        }
+
+        const fifteenPercent = initialNumber * 0.15;
+        const afterSubtraction = initialNumber - fifteenPercent;
+        const finalResult = afterSubtraction * 2;
+
+        document.getElementById('result').textContent = `Result: ${finalResult.toFixed(2)}`;
+    }
+</script>
+</body>
+</html>
