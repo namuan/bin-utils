@@ -13,6 +13,7 @@ Usage:
 import glob
 import logging
 import os
+import re
 import subprocess
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from datetime import datetime
@@ -38,6 +39,11 @@ def setup_logging(verbosity):
         level=logging_level,
     )
     logging.captureWarnings(capture=True)
+
+
+def check_file_name_pattern(filename):
+    pattern = r"^animated_\d{8}_\d{6}\.mp4$"
+    return re.match(pattern, os.path.basename(filename)) is not None
 
 
 def get_sorted_png_files(directory):
@@ -236,6 +242,11 @@ def main(args):
         output_file = generate_default_output_filename(args.input_dir)
 
     logging.info(f"Output file: {output_file}")
+
+    # Check if the output file already exists and matches the pattern
+    if os.path.exists(output_file) or check_file_name_pattern(output_file):
+        logging.info("Animated file already exists and matches the expected pattern. Skipping video creation.")
+        return
 
     try:
         # Extract date from the first PNG file
