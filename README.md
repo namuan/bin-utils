@@ -39,6 +39,32 @@ options:
   -v, --verbose         Display context variables at each step
 
 ```
+[_web_content_summarizer.py_](https://namuan.github.io/bin-utils/web_content_summarizer.html)
+```
+usage: web_content_summarizer.py [-h] [-v] -i INPUT -o OUTPUT [-m MODEL]
+
+Web Content Summarizer
+
+This script takes a file containing a list of URLs, extracts the content using JINA API,
+summarizes it using Ollama via the litellm package, and generates a markdown file with the results.
+
+Usage:
+./web_content_summarizer.py -h
+./web_content_summarizer.py -i input_links.txt -o output_summary.md -m ollama_chat/llama3.2
+
+Note: Set the JINA_API_KEY environment variable before running the script.
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Increase verbosity of logging output
+  -i INPUT, --input INPUT
+                        Input file with list of links
+  -o OUTPUT, --output OUTPUT
+                        Output markdown file to write
+  -m MODEL, --model MODEL
+                        Ollama model to use
+
+```
 [_template_py_scripts.py_](https://namuan.github.io/bin-utils/template_py_scripts.html)
 ```
 usage: template_py_scripts.py [-h] [-v]
