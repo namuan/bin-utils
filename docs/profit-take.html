@@ -11,7 +11,7 @@
             margin: 0 auto;
             padding: 20px;
         }
-        input, button {
+        input, button, select {
             display: block;
             width: 100%;
             margin-bottom: 10px;
@@ -22,24 +22,54 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        .note {
+            font-size: 0.9em;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
 <h1>Profit Take Calculator</h1>
 <input type="number" id="initialNumber" placeholder="Enter a number">
+<select id="percentageSelect">
+    <option value="0.05">5%</option>
+    <option value="0.10">10%</option>
+    <option value="0.15" selected>15%</option>
+    <option value="0.20">20%</option>
+    <option value="0.25">25%</option>
+</select>
 <button onclick="calculate()">Calculate</button>
 <div id="result"></div>
+
+<div class="note">
+    <h3>How the calculation works:</h3>
+    <ol>
+        <li>Subtract the selected percentage from the initial number.</li>
+        <li>Multiply the result by 2 to get the final profit take value.</li>
+    </ol>
+    <p>For example, with an initial value of 100 and 15% selected:</p>
+    <ul>
+        <li>100 - (100 * 15%) = 85</li>
+        <li>85 * 2 = 170 (final result)</li>
+    </ul>
+</div>
 
 <script>
     function calculate() {
         const initialNumber = parseFloat(document.getElementById('initialNumber').value);
+        const percentageSelect = document.getElementById('percentageSelect');
+        const selectedPercentage = parseFloat(percentageSelect.value);
+
         if (isNaN(initialNumber)) {
             document.getElementById('result').textContent = 'Please enter a valid number.';
             return;
         }
 
-        const fifteenPercent = initialNumber * 0.15;
-        const afterSubtraction = initialNumber - fifteenPercent;
+        const subtractAmount = initialNumber * selectedPercentage;
+        const afterSubtraction = initialNumber - subtractAmount;
         const finalResult = afterSubtraction * 2;
 
         document.getElementById('result').textContent = `Result: ${finalResult.toFixed(2)}`;
