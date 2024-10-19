@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaikin's Algorithm Demonstration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        .left-column {
+            flex: 2;
+            padding: 20px;
+        }
+
+        .right-column {
+            flex: 1;
+            padding: 20px;
+            background-color: #f0f0f0;
+            overflow-y: auto;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        #iterationCount {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="left-column">
+        <h1>Chaikin's Algorithm Demonstration</h1>
+        <canvas id="chaikinCanvas" width="400" height="400"></canvas>
+        <div class="button-container">
+            <button id="resetBtn">Reset</button>
+            <button id="iterateBtn">Iterate</button>
+        </div>
+        <div id="iterationCount">Iterations: 0</div>
+    </div>
+    <div class="right-column">
+        <h2>Instructions</h2>
+        <ul>
+            <li>The canvas starts with four points connected by straight lines (a polyline).</li>
+            <li>Click the "Iterate" button to apply Chaikin's algorithm:</li>
+            <ul>
+                <li>For each pair of adjacent points, two new points are calculated:</li>
+                <ul>
+                    <li>One at 1/4 of the distance from the first point to the second.</li>
+                    <li>Another at 3/4 of the distance from the first point to the second.</li>
+                </ul>
+                <li>These new points replace the original pair.</li>
+            </ul>
+            <li>The new curve (in blue) becomes smoother with each iteration.</li>
+            <li>The previous iteration's curve is shown in gray for comparison.</li>
+            <li>Use the "Reset" button to return to the original polyline.</li>
+            <li>Notice how the curve becomes progressively smoother but always remains within the original shape's
+                bounds.
+            </li>
+        </ul>
+    </div>
+</div>
+<script>
+    const canvas = document.getElementById('chaikinCanvas');
+    const ctx = canvas.getContext('2d');
+    const resetBtn = document.getElementById('resetBtn');
+    const iterateBtn = document.getElementById('iterateBtn');
+    const iterationCountEl = document.getElementById('iterationCount');
+
+    let points = [
+        {x: 50, y: 350},
+        {x: 150, y: 50},
+        {x: 250, y: 350},
+        {x: 350, y: 50}
+    ];
+    let iterations = 0;
+    let previousPoints = [];
+
+    function drawPoints(points, color) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+            ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle = color;
+        ctx.stroke();
+    }
+
+    function chaikinIteration(points) {
+        let newPoints = [];
+        for (let i = 0; i < points.length - 1; i++) {
+            let p0 = points[i];
+            let p1 = points[i + 1];
+            newPoints.push({
+                x: p0.x * 0.75 + p1.x * 0.25,
+                y: p0.y * 0.75 + p1.y * 0.25
+            });
+            newPoints.push({
+                x: p0.x * 0.25 + p1.x * 0.75,
+                y: p0.y * 0.25 + p1.y * 0.75
+            });
+        }
+        return newPoints;
+    }
+
+    function reset() {
+        points = [
+            {x: 50, y: 350},
+            {x: 150, y: 50},
+            {x: 250, y: 350},
+            {x: 350, y: 50}
+        ];
+        iterations = 0;
+        previousPoints = [];
+        draw();
+    }
+
+    function iterate() {
+        previousPoints = [...points];
+        points = chaikinIteration(points);
+        iterations++;
+        draw();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (previousPoints.length > 0) {
+            drawPoints(previousPoints, 'gray');
+        }
+        drawPoints(points, 'blue');
+        iterationCountEl.textContent = `Iterations: ${iterations}`;
+    }
+
+    resetBtn.addEventListener('click', reset);
+    iterateBtn.addEventListener('click', iterate);
+
+    reset();
+</script>
+</body>
+</html>
