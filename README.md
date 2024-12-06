@@ -41,28 +41,6 @@ options:
 ```
 [_web_content_summarizer.py_](https://namuan.github.io/bin-utils/web_content_summarizer.html)
 ```
-usage: web_content_summarizer.py [-h] [-v] -i INPUT -o OUTPUT [-m MODEL]
-
-Web Content Summarizer
-
-This script takes a file containing a list of URLs, extracts the content using JINA API,
-summarizes it using Ollama via the litellm package, and generates a markdown file with the results.
-
-Usage:
-./web_content_summarizer.py -h
-./web_content_summarizer.py -i input_links.txt -o output_summary.md -m ollama_chat/llama3.2
-
-Note: Set the JINA_API_KEY environment variable before running the script.
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Increase verbosity of logging output
-  -i INPUT, --input INPUT
-                        Input file with list of links
-  -o OUTPUT, --output OUTPUT
-                        Output markdown file to write
-  -m MODEL, --model MODEL
-                        Ollama model to use
 
 ```
 [_template_py_scripts.py_](https://namuan.github.io/bin-utils/template_py_scripts.html)
@@ -111,76 +89,18 @@ options:
 ```
 [_csv-markwhen.py_](https://namuan.github.io/bin-utils/csv-markwhen.html)
 ```
-usage: csv-markwhen.py [-h] csv_file
-
-Process a CSV file and generate formatted output for MarkWhen.
-
-./csv-markwhen.py ~/Downloads/file.csv > ~/Downloads/timeline.mw; npx -i @markwhen/mw ~/Downloads/timeline.mw ~/Downloads/timeline.html; open ~/Downloads/timeline.html
-
-positional arguments:
-  csv_file    Path to the CSV file
-
-options:
-  -h, --help  show this help message and exit
 
 ```
 [_process-tweets.py_](https://namuan.github.io/bin-utils/process-tweets.html)
 ```
-usage: process-tweets.py [-h] [--text-model TEXT_MODEL]
-                         [--vision-model VISION_MODEL]
-                         file_path
-
-Process tweets, extract book titles using Ollama LLM, and find Goodreads
-links.
-
-positional arguments:
-  file_path             Path to the JSON file containing tweet data
-
-options:
-  -h, --help            show this help message and exit
-  --text-model TEXT_MODEL
-                        Name of the Ollama text model to use (default: llama2)
-  --vision-model VISION_MODEL
-                        Name of the vision-capable Ollama model to use
-                        (default: llava)
 
 ```
 [_text_to_video.py_](https://namuan.github.io/bin-utils/text_to_video.html)
 ```
-usage: text_to_video.py [-h] -i INPUT [INPUT ...] -o OUTPUT [-v]
-
-Text-to-Video Generator
-
-This script converts text files into a video where each word appears sequentially.
-It uses MoviePy to create video clips for each word and concatenates them into a final video.
-
-Examples:
-    Basic usage:
-    python text_to_video.py -i input.txt -o output.mp4
-
-    With verbose logging:
-    python text_to_video.py -i input.txt -o output.mp4 -v
-
-    Multiple input files:
-    python text_to_video.py -i file1.txt file2.txt -o output.mp4
-
-options:
-  -h, --help            show this help message and exit
-  -i INPUT [INPUT ...], --input INPUT [INPUT ...]
-                        Input text file(s)
-  -o OUTPUT, --output OUTPUT
-                        Output video file
-  -v, --verbose         Enable verbose logging
 
 ```
 [_twitter_login.py_](https://namuan.github.io/bin-utils/twitter_login.html)
 ```
-usage: twitter_login.py [-h] [-v] [-i]
-
-options:
-  -h, --help       show this help message and exit
-  -v, --verbose    Increase verbosity of logging output
-  -i, --invisible  Run session in headless mode
 
 ```
 [_media_manager.py_](https://namuan.github.io/bin-utils/media_manager.html)
@@ -409,19 +329,6 @@ options:
 ```
 [_playwright_browser.py_](https://namuan.github.io/bin-utils/playwright_browser.html)
 ```
-usage: playwright_browser.py [-h] [-v] [-f INPUT_FILE] [-i INPUT_URL]
-                             [-a AUTH_SESSION_FILE] [-p]
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Increase verbosity of logging output
-  -f INPUT_FILE, --input-file INPUT_FILE
-                        Input file with URLs
-  -i INPUT_URL, --input-url INPUT_URL
-                        Web Url
-  -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
-                        Playwright authentication session
-  -p, --convert-to-pdf  Convert to PDF
 
 ```
 [_webpage_to_pdf.py_](https://namuan.github.io/bin-utils/webpage_to_pdf.html)
@@ -473,90 +380,22 @@ options:
 ```
 [_arch-animate.py_](https://namuan.github.io/bin-utils/arch-animate.html)
 ```
-pygame 2.6.0 (SDL 2.28.4, Python 3.10.15)
-Hello from the pygame community. https://www.pygame.org/contribute.html
-usage: arch-animate.py [-h] [-c] [-v]
-
-Simple script to demonstrate animating software architecture diagrams using PyGame
-
-Requires
-* brew install imagemagick
-
-Usage:
-./arch-animate.py -h
-
-options:
-  -h, --help            show this help message and exit
-  -c, --convert-to-animation
-                        Generate animated gif
-  -v, --verbose         Increase verbosity of logging output
 
 ```
 [_print-mouse-position.py_](https://namuan.github.io/bin-utils/print-mouse-position.html)
 ```
-usage: print-mouse-position.py [-h] [-v]
-
-A simple script to capture mouse position
-# From: https://github.com/renanstn/mouse-screen-position/blob/master/src/screen_position.py
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Increase verbosity of logging output
 
 ```
 [_playwright_thumbnails.py_](https://namuan.github.io/bin-utils/playwright_thumbnails.html)
 ```
-usage: playwright_thumbnails.py [-h] [-v] -i INPUT_URL -o OUTPUT_FILE_PATH
-                                [-a AUTH_SESSION_FILE] [-s]
-                                [-w WAIT_IN_SECS_BEFORE_CAPTURE]
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Increase verbosity of logging output
-  -i INPUT_URL, --input-url INPUT_URL
-                        Web Url
-  -o OUTPUT_FILE_PATH, --output-file-path OUTPUT_FILE_PATH
-                        Output file path
-  -a AUTH_SESSION_FILE, --auth-session-file AUTH_SESSION_FILE
-                        Playwright authentication session
-  -s, --headless        Run in headless mode (no browser window)
-  -w WAIT_IN_SECS_BEFORE_CAPTURE, --wait-in-secs-before-capture WAIT_IN_SECS_BEFORE_CAPTURE
-                        Wait (in secs) before capturing screenshot
 
 ```
 [_download-urls.py_](https://namuan.github.io/bin-utils/download-urls.html)
 ```
-usage: download-urls.py [-h] [-v] file
-
-A script to download web pages using Vivaldi browser and SingleFile extension
-
-Usage:
-./download-urls.py -h
-
-./download-urls.py -v file.txt # To log INFO messages
-./download-urls.py -vv file.txt # To log DEBUG messages
-
-positional arguments:
-  file           File containing list of URLs
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Increase verbosity of logging output
 
 ```
 [_csv-checker.py_](https://namuan.github.io/bin-utils/csv-checker.html)
 ```
-usage: csv-checker.py [-h] start_balance end_balance csv_path
-
-Verify a csv file.
-
-positional arguments:
-  start_balance  The starting balance.
-  end_balance    The ending balance.
-  csv_path       The path to the CSV file.
-
-options:
-  -h, --help     show this help message and exit
 
 ```
 [_unused_files.py_](https://namuan.github.io/bin-utils/unused_files.html)
@@ -577,50 +416,6 @@ options:
 ```
 [_audio_wave.py_](https://namuan.github.io/bin-utils/audio_wave.html)
 ```
-usage: seewav [-h] [-r RATE] [--stereo] [-c COLOR] [-c2 COLOR2] [-o OPACITY]
-              [-b BACKGROUND] [--white] [-i IMAGE] [-B BARS] [-O OVERSAMPLE]
-              [-T TIME] [-S SPEED] [-W WIDTH] [-H HEIGHT] [-C CENTER]
-              [-s SEEK] [-d DURATION]
-              audio [out]
-
-Generate a nice mp4 animation from an audio file.
-
-positional arguments:
-  audio                 Path to audio file
-  out                   Path to output file. Default is ./out.mp4
-
-options:
-  -h, --help            show this help message and exit
-  -r RATE, --rate RATE  Video framerate.
-  --stereo              Create 2 waveforms for stereo files.
-  -c COLOR, --color COLOR
-                        Color of the bars as `r,g,b` in [0, 1].
-  -c2 COLOR2, --color2 COLOR2
-                        Color of the second waveform as `r,g,b` in [0, 1] (for
-                        stereo).
-  -o OPACITY, --opacity OPACITY
-                        The opacity of the waveform on the background.
-  -b BACKGROUND, --background BACKGROUND
-                        Set the background. r,g,b` in [0, 1]. Default is black
-                        (0,0,0).
-  --white               Use white background. Default is black.
-  -i IMAGE, --image IMAGE
-                        Set the background image.
-  -B BARS, --bars BARS  Number of bars on the video at once
-  -O OVERSAMPLE, --oversample OVERSAMPLE
-                        Lower values will feel less reactive.
-  -T TIME, --time TIME  Amount of audio shown at once on a frame.
-  -S SPEED, --speed SPEED
-                        Higher values means faster transitions between frames.
-  -W WIDTH, --width WIDTH
-                        width in pixels of the animation
-  -H HEIGHT, --height HEIGHT
-                        height in pixels of the animation
-  -C CENTER, --center CENTER
-                        The center of the bars relative to the image.
-  -s SEEK, --seek SEEK  Seek to time in seconds in video.
-  -d DURATION, --duration DURATION
-                        Duration in seconds from seek time.
 
 ```
 [_textual-rich-play.py_](https://namuan.github.io/bin-utils/textual-rich-play.html)
@@ -629,30 +424,10 @@ options:
 ```
 [_auto-drive-chatgpt.py_](https://namuan.github.io/bin-utils/auto-drive-chatgpt.html)
 ```
-usage: auto-drive-chatgpt.py [-h] [-v]
-
-A simple script
-
-Usage:
-./template_py_scripts.py -h
-
-./template_py_scripts.py -v # To log INFO messages
-./template_py_scripts.py -vv # To log DEBUG messages
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Increase verbosity of logging output
 
 ```
 [_git_log_to_scatter_plot.py_](https://namuan.github.io/bin-utils/git_log_to_scatter_plot.html)
 ```
-usage: git_log_to_scatter_plot.py [-h] [-v]
-
-Generate scatter plot based on git commits
-
-options:
-  -h, --help     show this help message and exit
-  -v, --verbose  Increase verbosity of logging output
 
 ```
 [_json_to_markdown.py_](https://namuan.github.io/bin-utils/json_to_markdown.html)
@@ -701,6 +476,25 @@ Demonstrates how to use helium to automate a web browser.
 
 options:
   -h, --help  show this help message and exit
+
+```
+
+[_goodreads-link-finder.py_](https://namuan.github.io/bin-utils/goodreads-link-finder.html)
+
+```
+usage: goodreads-link-finder.py [-h] [-v]
+
+A script to find Goodreads URLs for a list of book titles using Google search.
+
+Usage:
+./goodreads-link-finder.py -h
+
+./goodreads-link-finder.py -v  # To log INFO messages
+./goodreads-link-finder.py -vv # To log DEBUG messages
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
 
 ```
 <!-- END makefile-doc -->
