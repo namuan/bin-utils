@@ -478,9 +478,7 @@ options:
   -h, --help  show this help message and exit
 
 ```
-
 [_goodreads-link-finder.py_](https://namuan.github.io/bin-utils/goodreads-link-finder.html)
-
 ```
 usage: goodreads-link-finder.py [-h] [-v]
 
