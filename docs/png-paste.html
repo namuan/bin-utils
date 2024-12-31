@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <title>png-paste.py</title>
+    <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+    <div id="background"></div>
+    <div class='section'>
+        <div class='docs'><h1>png-paste.py</h1></div>
+    </div>
+    <div class='clearall'>
+        <div class='section' id='section-0'>
+            <div class='docs'>
+                <div class='octowrap'>
+                    <a class='octothorpe' href='#section-0'>#</a>
+                </div>
+                <p>/// script
+                    dependencies = [
+                    &ldquo;pandas&rdquo;,
+                    &ldquo;pillow&rdquo;,
+                    ]
+                    ///</p>
+                <p>A simple script to save an image from the clipboard to a temporary PNG file.</p>
+                <p>This script checks the clipboard for an image. If an image is found, it saves the image
+                    to a temporary PNG file and prints the full path to the file. If the clipboard does not
+                    contain an image, a warning message is logged.</p>
+                <p>Recommended to create a symlink to a folder which is included in $PATH
+                    $ ln -s ~/workspace/bin-utils/png-paste.py ~/bin/png-paste</p>
+                <p>So that it can be run from anywhere with just <code>png-paste</code></p>
+                <p>Usage:
+                    png-paste
+                    or
+                    ./png-paste.py</p>
+            </div>
+            <div class='code'>
+                <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span><span
+                            class="p">,</span> <span class="n">RawDescriptionHelpFormatter</span>
+
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span
+                            class="n">Image</span><span class="p">,</span> <span class="n">ImageGrab</span></pre>
+                </div>
+            </div>
+        </div>
+        <div class='clearall'></div>
+        <div class='section' id='section-1'>
+            <div class='docs'>
+                <div class='octowrap'>
+                    <a class='octothorpe' href='#section-1'>#</a>
+                </div>
+
+            </div>
+            <div class='code'>
+                <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_args</span><span
+                        class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span><span
+                            class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span
+                            class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span
+                            class="n">RawDescriptionHelpFormatter</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;-v&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;--verbose&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;count&quot;</span><span
+                            class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;verbose&quot;</span><span
+                            class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Increase verbosity of logging output&quot;</span><span
+                            class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--compress&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span
+                            class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;compress&quot;</span><span
+                            class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Compress the image before saving (default: True)&quot;</span><span
+                            class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span
+                            class="p">()</span></pre>
+                </div>
+            </div>
+        </div>
+        <div class='clearall'></div>
+        <div class='section' id='section-2'>
+            <div class='docs'>
+                <div class='octowrap'>
+                    <a class='octothorpe' href='#section-2'>#</a>
+                </div>
+
+            </div>
+            <div class='code'>
+                <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span
+                        class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">clipboard_item</span> <span class="o">=</span> <span class="n">ImageGrab</span><span
+                            class="o">.</span><span class="n">grabclipboard</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span
+                            class="n">clipboard_item</span><span class="p">,</span> <span class="n">Image</span><span
+                            class="o">.</span><span class="n">Image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span
+                            class="n">compress</span><span class="p">:</span>
+            <span class="n">clipboard_item</span> <span class="o">=</span> <span class="n">clipboard_item</span><span
+                            class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">clipboard_item</span> <span class="o">=</span> <span class="n">clipboard_item</span><span
+                            class="o">.</span><span class="n">resize</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">clipboard_item</span><span class="o">.</span><span class="n">width</span><span
+                            class="p">,</span> <span class="n">clipboard_item</span><span class="o">.</span><span
+                            class="n">height</span><span class="p">),</span> <span class="n">Image</span><span
+                            class="o">.</span><span class="n">Resampling</span><span class="o">.</span><span class="n">LANCZOS</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span
+                            class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.png&quot;</span><span
+                            class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span
+                            class="p">)</span> <span class="k">as</span> <span class="n">temp_file</span><span
+                            class="p">:</span>
+            <span class="n">clipboard_item</span><span class="o">.</span><span class="n">save</span><span
+                            class="p">(</span><span class="n">temp_file</span><span class="o">.</span><span class="n">name</span><span
+                            class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;PNG&quot;</span><span
+                            class="p">,</span> <span class="n">optimize</span><span class="o">=</span><span class="kc">True</span><span
+                            class="p">,</span> <span class="n">compress_level</span><span class="o">=</span><span
+                            class="mi">9</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">temp_file</span><span
+                            class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span
+                            class="p">(</span><span
+                            class="s2">&quot;Clipboard does not contain an image.&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span
+                            class="p">:</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+</pre>
+                </div>
+            </div>
+        </div>
+        <div class='clearall'></div>
+    </div>
+</body>

@@ -365,6 +365,34 @@ options:
                         Input source directory
 
 ```
+
+[_png-paste.py_](https://namuan.github.io/bin-utils/png-paste.html)
+
+```
+usage: png-paste.py [-h] [-v] [--compress]
+
+A simple script to save an image from the clipboard to a temporary PNG file.
+
+This script checks the clipboard for an image. If an image is found, it saves the image
+to a temporary PNG file and prints the full path to the file. If the clipboard does not
+contain an image, a warning message is logged.
+
+Recommended to create a symlink to a folder which is included in $PATH
+$ ln -s ~/workspace/bin-utils/png-paste.py ~/bin/png-paste
+
+So that it can be run from anywhere with just `png-paste`
+
+Usage:
+png-paste
+or
+./png-paste.py
+
+options:
+  -h, --help     show this help message and exit
+  -v, --verbose  Increase verbosity of logging output
+  --compress     Compress the image before saving (default: True)
+
+```
 [_jsondoc_parser.py_](https://namuan.github.io/bin-utils/jsondoc_parser.html)
 ```
 usage: jsondoc_parser.py [-h] [-i INFILE] [-o OUTFILE]
