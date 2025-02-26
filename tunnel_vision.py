@@ -7,174 +7,143 @@
 
 import sys
 
-from PyQt6.QtCore import QRect, QRectF, Qt
-from PyQt6.QtGui import (
-    QColor,
-    QGuiApplication,
-    QKeyEvent,
-    QMouseEvent,
-    QPainter,
-    QPainterPath,
-    QPen,
-)
+from PyQt6.QtCore import Qt, QRect, QRectF, QEvent
+from PyQt6.QtGui import QPainter, QPainterPath, QColor, QPen
 from PyQt6.QtWidgets import QApplication, QWidget
 
-# Color constants
-OVERLAY_COLOR = QColor(0, 0, 0, 150)  # Semi-transparent dark overlay
-BORDER_COLOR = QColor(255, 255, 255)  # White border for the focus rectangle
-FOCUS_RECT_FILL_COLOR = QColor(0, 0, 0, 30)  # Fully transparent fill for focus area
 
+class FocusOverlayWidget(QWidget):
+    def __init__(self):
+        super().__init__()
 
-class FocusOverlay(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        # Remove window decorations and set the widget to be transparent.
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        # Set window flags: frameless and always on top, and enable attribute for translucent background.
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint  # | Qt.WindowType.WindowStaysOnTopHint
+        )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        # Initialize the focus rectangle in the center of the available screen.
-        screen = QGuiApplication.primaryScreen()
-        if screen is None:
-            available_rect = QRect(100, 100, 800, 600)
-        else:
-            available_rect = screen.availableGeometry()
-        init_width = available_rect.width() // 3
-        init_height = available_rect.height() // 3
-        init_x = (available_rect.width() - init_width) // 2
-        init_y = (available_rect.height() - init_height) // 2
-        self.focusRect = QRect(init_x, init_y, init_width, init_height)
-        self.cornerRadius = 20  # Rounded corner radius
+        # Define the focus rectangle (the area that is "cut out") with rounded corners.
+        self.focus_rect = QRect(200, 150, 800, 500)
+        self.corner_radius = 20  # radius for rounded corners
 
-        # Variables for resizing only.
-        self._dragMode = None  # "resize"
-        self._resizeCorner = None  # "top_left", "top_right", "bottom_left", or "bottom_right"
-        self.setMouseTracking(True)  # Allow cursor changes even when not pressing buttons
+        # Variables to manage dragging of the corners.
+        self.dragging = False
+        self.drag_corner = None  # possible values: 'top-left', 'top-right', 'bottom-left', 'bottom-right'
+        self.drag_start_pos = None
+        self.original_rect = QRect()
+
+        # The size in pixels around a corner that will be sensitive to dragging.
+        self.hit_threshold = 10
 
     def paintEvent(self, event):
-        """Paints the translucent overlay with a cleared (transparent) focus hole and a border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Fill the whole widget with the overlay color.
-        painter.fillRect(self.rect(), OVERLAY_COLOR)
+        # Fill the entire window with a semi-transparent dark overlay.
+        overlay_color = QColor(0, 0, 0, 150)
+        painter.fillRect(self.rect(), overlay_color)
 
-        # Clear the focus rectangle area so it remains fully transparent.
-        # (Using CompositionMode_Clear ensures that no extra brush–color gets blended in.)
+        # Set the composition mode to clear so that the focus rectangle becomes transparent.
         painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
-        rounded_rect_path = QPainterPath()
-        rounded_rect_path.addRoundedRect(QRectF(self.focusRect), self.cornerRadius, self.cornerRadius)
-        painter.fillPath(rounded_rect_path, FOCUS_RECT_FILL_COLOR)
 
-        # Restore composition mode for normal painting.
-        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        # Create a path with a rounded rectangle for the focus area.
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(self.focus_rect), self.corner_radius, self.corner_radius)
+        painter.fillPath(path, QColor(0, 0, 0, 0))
 
-        # Draw a white border around the focus rectangle.
-        border_pen = QPen(BORDER_COLOR, 2)
+        # Draw an outline around the focus rectangle.
+        # painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        border_pen = QPen(QColor(255, 255, 255), 2)
         painter.setPen(border_pen)
-        painter.drawRoundedRect(QRectF(self.focusRect), self.cornerRadius, self.cornerRadius)
-        print(f"Focus Rect is {self.focusRect}")
+        painter.drawRoundedRect(self.focus_rect, self.corner_radius, self.corner_radius)
 
-    def mousePressEvent(self, event: QMouseEvent):
-        if event.button() != Qt.MouseButton.LeftButton:
+    def mousePressEvent(self, event):
+        pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
+
+        # Check whether we have pressed near one of the four corners.
+        corners = {
+            'top-left': self.focus_rect.topLeft(),
+            'top-right': self.focus_rect.topRight(),
+            'bottom-left': self.focus_rect.bottomLeft(),
+            'bottom-right': self.focus_rect.bottomRight(),
+        }
+        for corner, point in corners.items():
+            if abs(point.x() - pos.x()) <= self.hit_threshold and abs(point.y() - pos.y()) <= self.hit_threshold:
+                self.dragging = True
+                self.drag_corner = corner
+                self.drag_start_pos = pos
+                self.original_rect = QRect(self.focus_rect)
+                return  # Only one corner action
+
+    def mouseMoveEvent(self, event):
+        if not self.dragging:
             return
 
         pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
-        handle_size = 10  # Tolerance for detecting corner handles
-        self._dragMode = None
+        dx = pos.x() - self.drag_start_pos.x()
+        dy = pos.y() - self.drag_start_pos.y()
+        rect = QRect(self.original_rect)
 
-        # Check if we are near any of the four corners for resizing.
-        if abs(pos.x() - self.focusRect.left()) <= handle_size and abs(pos.y() - self.focusRect.top()) <= handle_size:
-            self._dragMode = "resize"
-            self._resizeCorner = "top_left"
-        elif (
-                abs(pos.x() - self.focusRect.right()) <= handle_size and abs(
-            pos.y() - self.focusRect.top()) <= handle_size
-        ):
-            self._dragMode = "resize"
-            self._resizeCorner = "top_right"
-        elif (
-                abs(pos.x() - self.focusRect.left()) <= handle_size
-                and abs(pos.y() - self.focusRect.bottom()) <= handle_size
-        ):
-            self._dragMode = "resize"
-            self._resizeCorner = "bottom_left"
-        elif (
-                abs(pos.x() - self.focusRect.right()) <= handle_size
-                and abs(pos.y() - self.focusRect.bottom()) <= handle_size
-        ):
-            self._dragMode = "resize"
-            self._resizeCorner = "bottom_right"
+        # Minimum allowed dimensions for the focus rectangle.
+        min_width = 50
+        min_height = 50
 
-        self._lastMousePos = pos
+        # Update the rectangle based on which corner is being dragged.
+        if self.drag_corner == 'top-left':
+            new_x = rect.x() + dx
+            new_y = rect.y() + dy
+            new_width = rect.width() - dx
+            new_height = rect.height() - dy
+            if new_width < min_width:
+                new_x = rect.x() + (rect.width() - min_width)
+                new_width = min_width
+            if new_height < min_height:
+                new_y = rect.y() + (rect.height() - min_height)
+                new_height = min_height
+            self.focus_rect = QRect(new_x, new_y, new_width, new_height)
 
-    def mouseMoveEvent(self, event: QMouseEvent):
-        pos = event.position().toPoint() if hasattr(event, "position") else event.pos()
-        handle_size = 10
+        elif self.drag_corner == 'top-right':
+            new_y = rect.y() + dy
+            new_width = rect.width() + dx
+            new_height = rect.height() - dy
+            if new_width < min_width:
+                new_width = min_width
+            if new_height < min_height:
+                new_y = rect.y() + (rect.height() - min_height)
+                new_height = min_height
+            self.focus_rect = QRect(rect.x(), new_y, new_width, new_height)
 
-        # Update the cursor shape when near the resize handles.
-        if abs(pos.x() - self.focusRect.left()) <= handle_size and abs(pos.y() - self.focusRect.top()) <= handle_size:
-            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
-        elif (
-                abs(pos.x() - self.focusRect.right()) <= handle_size and abs(
-            pos.y() - self.focusRect.top()) <= handle_size
-        ):
-            self.setCursor(Qt.CursorShape.SizeBDiagCursor)
-        elif (
-                abs(pos.x() - self.focusRect.left()) <= handle_size
-                and abs(pos.y() - self.focusRect.bottom()) <= handle_size
-        ):
-            self.setCursor(Qt.CursorShape.SizeBDiagCursor)
-        elif (
-                abs(pos.x() - self.focusRect.right()) <= handle_size
-                and abs(pos.y() - self.focusRect.bottom()) <= handle_size
-        ):
-            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
-        else:
-            self.unsetCursor()
+        elif self.drag_corner == 'bottom-left':
+            new_x = rect.x() + dx
+            new_width = rect.width() - dx
+            new_height = rect.height() + dy
+            if new_width < min_width:
+                new_x = rect.x() + (rect.width() - min_width)
+                new_width = min_width
+            if new_height < min_height:
+                new_height = min_height
+            self.focus_rect = QRect(new_x, rect.y(), new_width, new_height)
 
-        # Handle resizing of the rectangle.
-        if self._dragMode == "resize":
-            min_width = 50
-            min_height = 50
-            new_rect = QRect(self.focusRect)  # copy current focusRect
-            if self._resizeCorner == "top_left":
-                new_left = min(pos.x(), self.focusRect.right() - min_width)
-                new_top = min(pos.y(), self.focusRect.bottom() - min_height)
-                new_rect.setLeft(new_left)
-                new_rect.setTop(new_top)
-            elif self._resizeCorner == "top_right":
-                new_right = max(pos.x(), self.focusRect.left() + min_width)
-                new_top = min(pos.y(), self.focusRect.bottom() - min_height)
-                new_rect.setRight(new_right)
-                new_rect.setTop(new_top)
-            elif self._resizeCorner == "bottom_left":
-                new_left = min(pos.x(), self.focusRect.right() - min_width)
-                new_bottom = max(pos.y(), self.focusRect.top() + min_height)
-                new_rect.setLeft(new_left)
-                new_rect.setBottom(new_bottom)
-            elif self._resizeCorner == "bottom_right":
-                new_right = max(pos.x(), self.focusRect.left() + min_width)
-                new_bottom = max(pos.y(), self.focusRect.top() + min_height)
-                new_rect.setRight(new_right)
-                new_rect.setBottom(new_bottom)
-            self.focusRect = new_rect
-            self.update()
+        elif self.drag_corner == 'bottom-right':
+            new_width = rect.width() + dx
+            new_height = rect.height() + dy
+            if new_width < min_width:
+                new_width = min_width
+            if new_height < min_height:
+                new_height = min_height
+            self.focus_rect = QRect(rect.x(), rect.y(), new_width, new_height)
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        self._dragMode = None
-        self._resizeCorner = None
         self.update()
 
-    def keyPressEvent(self, event: QKeyEvent):
-        # Press Escape to exit the application.
-        if event.key() == Qt.Key.Key_Escape:
-            QApplication.quit()
+    def mouseReleaseEvent(self, event):
+        self.dragging = False
+        self.drag_corner = None
 
 
 def main():
     app = QApplication(sys.argv)
-    overlay = FocusOverlay()
-    overlay.showMaximized()
+    widget = FocusOverlayWidget()
+    widget.showMaximized()
     sys.exit(app.exec())
 
 
