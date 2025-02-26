@@ -18,7 +18,7 @@ class FocusOverlayWidget(QWidget):
 
         # Set window flags: frameless and always on top, and enable attribute for translucent background.
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint  # | Qt.WindowType.WindowStaysOnTopHint
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -40,7 +40,7 @@ class FocusOverlayWidget(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
         # Fill the entire window with a semi-transparent dark overlay.
-        overlay_color = QColor(0, 0, 0, 150)
+        overlay_color = QColor(0, 0, 0, 200)
         painter.fillRect(self.rect(), overlay_color)
 
         # Set the composition mode to clear so that the focus rectangle becomes transparent.
@@ -52,7 +52,7 @@ class FocusOverlayWidget(QWidget):
         painter.fillPath(path, QColor(0, 0, 0, 0))
 
         # Draw an outline around the focus rectangle.
-        # painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
+        painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
         border_pen = QPen(QColor(255, 255, 255), 2)
         painter.setPen(border_pen)
         painter.drawRoundedRect(self.focus_rect, self.corner_radius, self.corner_radius)
