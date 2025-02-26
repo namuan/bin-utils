@@ -16,9 +16,8 @@ class FocusOverlayWidget(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Set window flags: frameless and always on top, and enable attribute for translucent background.
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.Tool
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
