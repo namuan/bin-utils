@@ -8,10 +8,9 @@ class Missile:
     def __init__(self, start_pos, target_pos):
         self.pos = QPointF(start_pos.x(), start_pos.y())
         self.target = QPointF(target_pos.x(), target_pos.y())
-        self.speed = 5  # Pixels per frame
-        self.width = 4   # Width of the missile (short axis)
-        self.length = 12 # Length of the missile (long axis)
-        # Calculate direction vector
+        self.speed = 5
+        self.width = 4
+        self.length = 12
         direction = self.target - self.pos
         distance = (direction.x() ** 2 + direction.y() ** 2) ** 0.5
         if distance > 0:
@@ -19,7 +18,6 @@ class Missile:
                 direction.x() * self.speed / distance,
                 direction.y() * self.speed / distance
             )
-            # Calculate angle for rotation (in degrees)
             self.angle = math.degrees(math.atan2(direction.y(), direction.x()))
         else:
             self.velocity = QPointF(0, 0)
@@ -28,12 +26,10 @@ class Missile:
 
     def update(self, mouse_pos):
         self.pos += self.velocity
-        # Check if missile hits the mouse position (within a small radius)
         distance_to_mouse = ((mouse_pos.x() - self.pos.x()) ** 2 + (mouse_pos.y() - self.pos.y()) ** 2) ** 0.5
-        if distance_to_mouse < self.width + 10:  # Adjusted hitbox for missile shape
+        if distance_to_mouse < self.width + 10:
             self.active = False
-            return True  # Indicates a hit
-        # Mark missile as inactive if it reaches the target
+            return True
         distance_to_target = ((self.target.x() - self.pos.x()) ** 2 + (self.target.y() - self.pos.y()) ** 2) ** 0.5
         if distance_to_target < self.speed:
             self.active = False
@@ -42,14 +38,11 @@ class Missile:
     def draw(self, painter):
         if self.active:
             painter.save()
-            # Translate to missile position
             painter.translate(self.pos.x(), self.pos.y())
-            # Rotate to align with velocity
             painter.rotate(self.angle)
             pen = QPen(QColor(0, 255, 0, 200), 1)
             painter.setPen(pen)
             painter.setBrush(QColor(0, 255, 0, 100))
-            # Draw elongated ellipse centered at (0,0)
             painter.drawEllipse(QPoint(0, 0), int(self.length / 2), int(self.width / 2))
             painter.restore()
 
@@ -99,11 +92,12 @@ class TransparentCharacter(QWidget):
         self.char_pos = QPointF(200, 150)
         self.char_radius = 20
         self.move_speed = 2
+        self.pulse_phase = 0  # Tracks sine wave phase for pulsing
 
     def initTimer(self):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.updateCharacter)
-        self.timer.start(16)  # ~60 FPS
+        self.timer.start(16)
 
     def updateCharacter(self):
         global_mouse_pos = QCursor.pos()
@@ -119,6 +113,9 @@ class TransparentCharacter(QWidget):
             self.char_pos += direction
             self.char_pos.setX(max(self.char_radius, min(self.screen().size().width() - self.char_radius, self.char_pos.x())))
             self.char_pos.setY(max(self.char_radius, min(self.screen().size().height() - self.char_radius, self.char_pos.y())))
+
+        # Update pulse phase
+        self.pulse_phase += 0.1  # Adjust for pulse speed
 
         # Handle missile firing
         if self.fire_cooldown <= 0:
@@ -145,12 +142,15 @@ class TransparentCharacter(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Draw character (filled circle)
+        # Calculate dynamic radius for pulsing effect
+        current_radius = self.char_radius + 2 * math.sin(self.pulse_phase)
+
+        # Draw character with pulsing radius
         pen = QPen(QColor(255, 0, 0, 200), 2)
         painter.setPen(pen)
-        painter.setBrush(QColor(255, 0, 0, 100))  # Semi-transparent red fill
+        painter.setBrush(QColor(255, 0, 0, 100))
         render_pos = QPoint(int(self.char_pos.x()), int(self.char_pos.y()))
-        painter.drawEllipse(render_pos, self.char_radius, self.char_radius)
+        painter.drawEllipse(render_pos, int(current_radius), int(current_radius))
 
         # Draw missiles
         for missile in self.missiles:
