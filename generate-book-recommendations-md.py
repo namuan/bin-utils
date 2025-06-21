@@ -16,6 +16,7 @@ import json
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
+
 def extract_book_info(tweet):
     """
     Extract book information from tweet text or image.
@@ -23,13 +24,14 @@ def extract_book_info(tweet):
     """
     return (tweet.get("tweetText")), (tweet.get("tweetImages"))
 
+
 def generate_markdown(tweet_file):
     """
     Generate Markdown content from a JSON file of tweets.
     """
     logging.info(f"Processing file: {tweet_file}")
     try:
-        with open(tweet_file, 'r', encoding='utf-8') as f:
+        with open(tweet_file, "r", encoding="utf-8") as f:
             tweets = json.load(f)
     except FileNotFoundError:
         logging.error(f"Error: File '{tweet_file}' not found.")
@@ -41,7 +43,7 @@ def generate_markdown(tweet_file):
     markdown_content = "# Book Suggestions from Tweets\n\n"
 
     for tweet in tweets:
-        author_name = tweet.get('authorName', 'Unknown Author').split('\n@')[0].strip()
+        author_name = tweet.get("authorName", "Unknown Author").split("\n@")[0].strip()
         book_title, image_url = extract_book_info(tweet)
 
         logging.debug(f"Processing tweet by {author_name}: title={book_title}, image={image_url}")
@@ -56,13 +58,14 @@ def generate_markdown(tweet_file):
         if image_url:
             markdown_content += f"![Book Image]({image_url})\n\n"
 
-    output_file = Path(tweet_file).with_suffix('.md')
+    output_file = Path(tweet_file).with_suffix(".md")
     try:
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             f.write(markdown_content)
         logging.info(f"Markdown file generated: {output_file}")
     except IOError as e:
         logging.error(f"Error writing to Markdown file: {e}")
+
 
 def setup_logging(verbosity):
     logging_level = logging.WARNING
@@ -81,6 +84,7 @@ def setup_logging(verbosity):
     )
     logging.captureWarnings(capture=True)
 
+
 def parse_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument(
@@ -91,17 +95,15 @@ def parse_args():
         dest="verbose",
         help="Increase verbosity of logging output",
     )
-    parser.add_argument(
-        "json_file",
-        type=str,
-        help="Path to the JSON file containing tweet data"
-    )
+    parser.add_argument("json_file", type=str, help="Path to the JSON file containing tweet data")
     return parser.parse_args()
+
 
 def main(args):
     logging.debug(f"Starting script with verbosity level: {args.verbose}")
     logging.info(f"Processing JSON file: {args.json_file}")
     generate_markdown(args.json_file)
+
 
 if __name__ == "__main__":
     args = parse_args()
