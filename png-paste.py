@@ -50,18 +50,31 @@ def parse_args():
 
 
 def main(args):
+    log_level = logging.WARNING
+    if args.verbose == 1:
+        log_level = logging.INFO
+    elif args.verbose >= 2:
+        log_level = logging.DEBUG
+
+    logging.basicConfig(level=log_level, format="%(asctime)s - %(levelname)s - %(message)s")
+
+    logging.debug("Checking clipboard for an image")
     clipboard_item = ImageGrab.grabclipboard()
 
     if isinstance(clipboard_item, Image.Image):
+        logging.info("Image found on clipboard")
         if args.compress:
+            logging.debug("Compressing image")
             clipboard_item = clipboard_item.copy()
             clipboard_item = clipboard_item.resize(
                 (clipboard_item.width, clipboard_item.height), Image.Resampling.LANCZOS
             )
 
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
+            logging.debug(f"Saving image to temporary file: {temp_file.name}")
             clipboard_item.save(temp_file.name, format="PNG", optimize=True, compress_level=9)
             print(temp_file.name)
+            logging.info(f"Image saved to {temp_file.name}")
     else:
         logging.warning("Clipboard does not contain an image.")
 
