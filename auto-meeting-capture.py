@@ -70,6 +70,7 @@ class Application:
 
 
 class AudioRecorderThread(Thread):
+
     def __init__(
         self, device: AudioDevice, chunk_duration: int, output_dir: str, audio_queue: queue.Queue, stop_event: Event
     ):
