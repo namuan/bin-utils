@@ -5,19 +5,22 @@
 #   "PyAudio",
 # ]
 # ///
-import pyaudio
-import wave
-import time
 import os
-from threading import Thread, Event
 import queue
+import time
+import wave
 from datetime import datetime
+from threading import Event, Thread
+
+import pyaudio
 import whisper  # Assuming openai-whisper is installed
+
 
 class AudioDevice:
     def __init__(self, name: str, id: int):
         self.name = name
         self.id = id
+
 
 class Application:
     def __init__(self, output_dir: str = "./audio_chunks"):
@@ -35,8 +38,8 @@ class Application:
         self.devices = []
         for i in range(p.get_device_count()):
             info = p.get_device_info_by_index(i)
-            if info['maxInputChannels'] > 0:  # Input devices only
-                self.devices.append(AudioDevice(info['name'], info['index']))
+            if info["maxInputChannels"] > 0:  # Input devices only
+                self.devices.append(AudioDevice(info["name"], info["index"]))
         p.terminate()
         return self.devices
 
@@ -51,7 +54,9 @@ class Application:
         if not self.selected_device:
             raise ValueError("No device selected")
         self.stop_event.clear()
-        self.recorder_thread = AudioRecorderThread(self.selected_device, 10, self.output_dir, self.audio_queue, self.stop_event)
+        self.recorder_thread = AudioRecorderThread(
+            self.selected_device, 10, self.output_dir, self.audio_queue, self.stop_event
+        )
         self.transcriber_thread = AudioTranscriberThread(self.audio_queue, self.output_dir, self.stop_event)
         self.recorder_thread.start()
         self.transcriber_thread.start()
@@ -63,8 +68,11 @@ class Application:
         if self.transcriber_thread:
             self.transcriber_thread.join()
 
+
 class AudioRecorderThread(Thread):
-    def __init__(self, device: AudioDevice, chunk_duration: int, output_dir: str, audio_queue: queue.Queue, stop_event: Event):
+    def __init__(
+        self, device: AudioDevice, chunk_duration: int, output_dir: str, audio_queue: queue.Queue, stop_event: Event
+    ):
         super().__init__()
         self.device = device
         self.chunk_duration = chunk_duration
@@ -78,8 +86,14 @@ class AudioRecorderThread(Thread):
 
     def run(self):
         p = pyaudio.PyAudio()
-        stream = p.open(format=self.format, channels=self.channels, rate=self.rate,
-                        input=True, input_device_index=self.device.id, frames_per_buffer=self.chunk)
+        stream = p.open(
+            format=self.format,
+            channels=self.channels,
+            rate=self.rate,
+            input=True,
+            input_device_index=self.device.id,
+            frames_per_buffer=self.chunk,
+        )
         while not self.stop_event.is_set():
             file_path = self.record_chunk(stream)
             if file_path:
@@ -97,14 +111,15 @@ class AudioRecorderThread(Thread):
         if frames:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             file_path = os.path.join(self.output_dir, f"chunk_{timestamp}.wav")
-            wf = wave.open(file_path, 'wb')
+            wf = wave.open(file_path, "wb")
             wf.setnchannels(self.channels)
             wf.setsampwidth(pyaudio.get_sample_size(self.format))
             wf.setframerate(self.rate)
-            wf.writeframes(b''.join(frames))
+            wf.writeframes(b"".join(frames))
             wf.close()
             return file_path
         return None
+
 
 class AudioTranscriberThread(Thread):
     def __init__(self, audio_queue: queue.Queue, output_dir: str, stop_event: Event):
@@ -130,8 +145,9 @@ class AudioTranscriberThread(Thread):
     def save_transcription(self, text: str, original_file: str):
         base_name = os.path.splitext(os.path.basename(original_file))[0]
         txt_path = os.path.join(self.output_dir, f"{base_name}.txt")
-        with open(txt_path, 'w') as f:
+        with open(txt_path, "w") as f:
             f.write(text)
+
 
 if __name__ == "__main__":
     import sys
