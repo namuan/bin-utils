@@ -128,7 +128,7 @@ class AudioTranscriberThread(Thread):
         self.audio_queue = audio_queue
         self.output_dir = output_dir
         self.stop_event = stop_event
-        self.model = whisper.load_model("base")  # Load Whisper model, e.g., 'base'
+        self.model = whisper.load_model("turbo")  # Load Whisper model, e.g., 'base'
 
     def run(self):
         while not self.stop_event.is_set() or not self.audio_queue.empty():
