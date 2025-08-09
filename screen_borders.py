@@ -5,7 +5,6 @@
 # ]
 # ///
 """A PyQt6 script to draw a gradient border around the edges of the current screen using cool colors, with a styled notification bar in the middle of the top border. The bar displays custom text plus an interactive countdown timer (default 25 minutes) and Pause/Resume and Reset buttons.
-
 Usage:
 ./screen_borders.py -h
 ./screen_borders.py -v  # To log INFO messages.
@@ -13,11 +12,45 @@ Usage:
 ./screen_borders.py "Your custom notification text"  # default 25 min countdown.
 ./screen_borders.py "Focus time" 1800                # 30 min countdown (in seconds)
 """
+import json
+
+# =============================================================================
+import logging
+import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
+
+from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer
+from PyQt6.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QFontMetrics,
+    QKeySequence,
+    QLinearGradient,
+    QPainter,
+    QPen,
+    QShortcut,
+)
+from PyQt6.QtWidgets import (
+    QApplication,
+    QColorDialog,
+    QComboBox,
+    QDialog,
+    QFormLayout,
+    QFrame,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+)
+from PyQt6.QtWidgets import QPushButton
+from PyQt6.QtWidgets import QPushButton as DialogButton
+from PyQt6.QtWidgets import QSpinBox, QVBoxLayout, QWidget
 
 # =============================================================================
 # THEME AND COLOR CONFIGURATION
 # =============================================================================
-
 # Default theme configuration
 DEFAULT_THEME = {
     # Border gradient colors (RGB + Alpha)
@@ -52,7 +85,6 @@ DEFAULT_THEME = {
     "button_spacing": 6,
     "button_container_padding": 10,
 }
-
 # Predefined themes
 PREDEFINED_THEMES = {
     "Default (Blue-Cyan)": DEFAULT_THEME,
@@ -98,42 +130,48 @@ PREDEFINED_THEMES = {
         "notification_bg_end": (255, 206, 84, 240),
     },
 }
-
 # Current active theme
 current_theme = DEFAULT_THEME.copy()
 
-# =============================================================================
 
-import logging
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+# Determine OS-specific config directory
+def get_config_dir():
+    if sys.platform == "win32":
+        config_dir = Path.home() / "AppData" / "Roaming"
+    elif sys.platform == "darwin":
+        config_dir = Path.home() / "Library" / "Application Support"
+    else:  # Linux and other Unix-like
+        config_dir = Path.home() / ".config"
+    config_dir = config_dir / "screen_borders"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
 
-from PyQt6.QtCore import QPointF, QRectF, Qt, QTimer
-from PyQt6.QtGui import (
-    QBrush,
-    QColor,
-    QFont,
-    QFontMetrics,
-    QKeySequence,
-    QLinearGradient,
-    QPainter,
-    QPen,
-    QShortcut,
-)
-from PyQt6.QtWidgets import (
-    QApplication,
-    QColorDialog,
-    QComboBox,
-    QDialog,
-    QFormLayout,
-    QGroupBox,
-    QHBoxLayout,
-    QLabel,
-    QLineEdit,
-    QFrame,
-)
-from PyQt6.QtWidgets import QPushButton
-from PyQt6.QtWidgets import QPushButton as DialogButton
-from PyQt6.QtWidgets import QSpinBox, QVBoxLayout, QWidget
+
+CONFIG_FILE = get_config_dir() / "config.json"
+
+
+def load_config():
+    """Load configuration from the OS-standard config location."""
+    global current_theme
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, encoding="utf-8") as f:
+                saved_config = json.load(f)
+            # Update only the keys that exist in the saved config
+            current_theme.update(saved_config)
+            logging.info(f"Configuration loaded from {CONFIG_FILE}")
+        except Exception as e:
+            logging.warning(f"Failed to load config from {CONFIG_FILE}: {e}")
+
+
+def save_config():
+    """Save current configuration to the OS-standard config location."""
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(current_theme, f, indent=2)
+        logging.info(f"Configuration saved to {CONFIG_FILE}")
+    except Exception as e:
+        logging.error(f"Failed to save config to {CONFIG_FILE}: {e}")
 
 
 def setup_logging(verbosity):
@@ -202,12 +240,10 @@ class ConfigDialog(QDialog):
         self.setWindowTitle("Screen Border Configuration")
         self.setModal(True)
         self.setFixedSize(500, 600)
-
         # Store original theme for cancel functionality
         self.original_theme = current_theme.copy()
         # Store original timer for cancel functionality
         self.original_timer_seconds = getattr(parent, "countdown_seconds", 25 * 60)
-
         self.init_ui()
 
     def _separator(self):
@@ -218,16 +254,13 @@ class ConfigDialog(QDialog):
 
     def init_ui(self):
         layout = QVBoxLayout()
-
         # Predefined themes section
         theme_group = QGroupBox("Predefined Themes")
         theme_layout = QVBoxLayout()
-
         self.theme_combo = QComboBox()
         self.theme_combo.addItems(PREDEFINED_THEMES.keys())
         self.theme_combo.currentTextChanged.connect(self.load_predefined_theme)
         theme_layout.addWidget(self.theme_combo)
-
         theme_group.setLayout(theme_layout)
         layout.addWidget(theme_group)
 
@@ -238,7 +271,6 @@ class ConfigDialog(QDialog):
         # Border colors
         border_label = QLabel("Border Colors:")
         custom_layout.addRow(border_label)
-
         border_layout = QHBoxLayout()
         self.border_start_btn = ColorButton(current_theme["border_color_start"])
         self.border_end_btn = ColorButton(current_theme["border_color_end"])
@@ -253,7 +285,6 @@ class ConfigDialog(QDialog):
         self.border_width_spin.setValue(current_theme["border_width"])
         border_layout.addWidget(QLabel("Border Width:"))
         border_layout.addWidget(self.border_width_spin)
-
         border_layout.addStretch()
         custom_layout.addRow(border_layout)
         custom_layout.addRow(self._separator())
@@ -261,7 +292,6 @@ class ConfigDialog(QDialog):
         # Notification background colors
         notif_label = QLabel("Notification Background:")
         custom_layout.addRow(notif_label)
-
         notif_layout = QHBoxLayout()
         self.notif_start_btn = ColorButton(current_theme["notification_bg_start"])
         self.notif_end_btn = ColorButton(current_theme["notification_bg_end"])
@@ -274,7 +304,6 @@ class ConfigDialog(QDialog):
         notif_layout.addWidget(self.text_color_btn)
         notif_layout.addStretch()
         custom_layout.addRow(notif_layout)
-
         custom_layout.addRow(self._separator())
 
         # Button Icons - Changed to use QFormLayout rows instead of QGridLayout
@@ -309,17 +338,14 @@ class ConfigDialog(QDialog):
         self.font_size_spin = QSpinBox()
         self.font_size_spin.setRange(8, 72)
         self.font_size_spin.setValue(current_theme["main_font_size"])
-
         font_layout = QHBoxLayout()
         font_layout.addWidget(QLabel("Family:"))
         font_layout.addWidget(self.font_family_edit)
         font_layout.addWidget(QLabel("Size:"))
         font_layout.addWidget(self.font_size_spin)
         font_layout.addStretch()
-
         main_font_label = QLabel("Main Font:")
         custom_layout.addRow(main_font_label)
-
         custom_layout.addRow("", font_layout)
         custom_layout.addRow(self._separator())
 
@@ -336,22 +362,18 @@ class ConfigDialog(QDialog):
 
         # Buttons
         button_layout = QHBoxLayout()
-
         apply_btn = DialogButton("Apply")
         apply_btn.clicked.connect(self.apply_changes)
-
         ok_btn = DialogButton("OK")
         ok_btn.clicked.connect(self.accept_changes)
-
         cancel_btn = DialogButton("Cancel")
         cancel_btn.clicked.connect(self.reject)
-
         button_layout.addWidget(apply_btn)
         button_layout.addStretch()
         button_layout.addWidget(ok_btn)
         button_layout.addWidget(cancel_btn)
-
         layout.addLayout(button_layout)
+
         self.setLayout(layout)
 
     def load_predefined_theme(self, theme_name):
@@ -365,20 +387,16 @@ class ConfigDialog(QDialog):
         self.border_end_btn.color = theme["border_color_end"]
         self.border_end_btn.update_color()
         self.border_width_spin.setValue(theme["border_width"])
-
         self.notif_start_btn.color = theme["notification_bg_start"]
         self.notif_start_btn.update_color()
         self.notif_end_btn.color = theme["notification_bg_end"]
         self.notif_end_btn.update_color()
-
         self.text_color_btn.color = theme["notification_text_color"]
         self.text_color_btn.update_color()
-
         self.icon_pause_edit.setText(theme["icon_pause"])
         self.icon_play_edit.setText(theme["icon_play"])
         self.icon_reset_edit.setText(theme["icon_reset"])
         self.icon_done_edit.setText(theme["icon_done"])
-
         self.font_family_edit.setText(theme["main_font_family"])
         self.font_size_spin.setValue(theme["main_font_size"])
 
@@ -428,6 +446,8 @@ class ConfigDialog(QDialog):
             if self.parent().pause_resume_btn:
                 self.parent().pause_resume_btn.setText(current_theme["icon_pause"])
             self.parent().update()
+        # Save config after apply
+        save_config()
 
     def accept_changes(self):
         self.apply_changes()
@@ -445,7 +465,6 @@ class ConfigDialog(QDialog):
             self.parent().remaining = self.original_timer_seconds
             if self.parent().pause_resume_btn:
                 self.parent().pause_resume_btn.setText(current_theme["icon_pause"])
-
         super().reject()
 
 
@@ -468,7 +487,6 @@ class BorderWidget(QWidget):
         # Create Cmd+, shortcut for preferences
         self.config_shortcut = QShortcut(QKeySequence("Ctrl+,"), self)
         self.config_shortcut.activated.connect(self.open_config)
-
         # Also support Cmd+, on macOS
         self.config_shortcut_mac = QShortcut(QKeySequence("Meta+,"), self)
         self.config_shortcut_mac.activated.connect(self.open_config)
@@ -482,27 +500,22 @@ class BorderWidget(QWidget):
         screen = QApplication.primaryScreen().geometry()
         logging.info(f"Screen geometry: {screen}")
         self.setGeometry(screen)
-
         # Make the window frameless and transparent
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
         # Set window to stay on top
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         logging.debug("Window flags set: Frameless and transparent")
-
         self.create_buttons()
 
     def create_buttons(self):
         # Remove existing control widget if it exists
         if self.control_widget is not None:
             self.control_widget.deleteLater()
-
         # Create new control widget for buttons
         self.control_widget = QWidget(self)
         self.control_widget.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.control_widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(current_theme["button_spacing"])
@@ -660,6 +673,7 @@ class BorderWidget(QWidget):
             )
             self.control_widget.move(control_x, control_y)
             self.control_widget.show()
+
         logging.info("Gradient border and notification bar drawn successfully")
 
 
@@ -676,4 +690,5 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args()
     setup_logging(args.verbose)
+    load_config()  # Load config at startup
     main(args)
