@@ -61,17 +61,17 @@ repos:
         entry: flake8
         language: system
         types: [ python ]
-      - id: pycco
-        name: pycco
-        entry: pycco -p
-        language: system
-        types: [ python ]
-      - id: readme-docs
-        name: Readme documentation
-        description: Using [python help], inserts into README.md.
-        entry: python3 readme_docs.py
-        language: system
-        pass_filenames: false
+#      - id: pycco
+#        name: pycco
+#        entry: pycco -p
+#        language: system
+#        types: [ python ]
+#      - id: readme-docs
+#        name: Readme documentation
+#        description: Using [python help], inserts into README.md.
+#        entry: python3 readme_docs.py
+#        language: system
+#        pass_filenames: false
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v2.35.0
     hooks:
