@@ -2,15 +2,16 @@
 # /// script
 # dependencies = [
 #   "PyQt6",
+#   "pyobjc",
+#   "pyremindkit@git+https://github.com/namuan/pyremindkit",
 # ]
 # ///
-"""A PyQt6 script to draw a gradient border around the edges of the current screen using cool colors, with a styled notification bar in the middle of the top border. The bar displays custom text plus an interactive countdown timer (default 25 minutes) and Pause/Resume and Reset buttons.
+"""A PyQt6 script to draw a gradient border around the edges of the current screen using cool colors, with a styled notification bar in the middle of the top border. The bar displays Apple Reminders data plus an interactive countdown timer (default 25 minutes) and Pause/Resume and Reset buttons.
 Usage:
 ./screen_borders.py -h
 ./screen_borders.py -v  # To log INFO messages.
 ./screen_borders.py -vv # To log DEBUG messages.
-./screen_borders.py "Your custom notification text"  # default 25 min countdown.
-./screen_borders.py "Focus time" 1800                # 30 min countdown (in seconds)
+./screen_borders.py     # default 25 min countdown (configurable in settings)
 """
 import json
 
@@ -47,6 +48,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QPushButton as DialogButton
 from PyQt6.QtWidgets import QSpinBox, QVBoxLayout, QWidget
+from pyremindkit import RemindKit
 
 # =============================================================================
 # THEME AND COLOR CONFIGURATION
@@ -199,19 +201,7 @@ def parse_args():
         dest="verbose",
         help="Increase verbosity of logging output",
     )
-    parser.add_argument(
-        "notification_text",
-        nargs="?",
-        default="Music give allow letter who none. Those again boy seven their fear argue. Quite field well key vote. Window result get allow source candidate.",
-        help="Custom text to display in the notification bar",
-    )
-    parser.add_argument(
-        "countdown_seconds",
-        nargs="?",
-        type=int,
-        default=25 * 60,
-        help="Countdown duration in seconds (default: 1500 = 25 minutes)",
-    )
+
     return parser.parse_args()
 
 
@@ -469,19 +459,74 @@ class ConfigDialog(QDialog):
 
 
 class BorderWidget(QWidget):
-    def __init__(self, notification_text, countdown_seconds):
+    def __init__(self, countdown_seconds=25 * 60):
         super().__init__()
-        self.notification_text = notification_text
         self.countdown_seconds = countdown_seconds
         self.remaining = countdown_seconds
         self.running = True  # auto-start
         self.control_widget = None
+        self.complete_reminder_btn = None
         self.pause_resume_btn = None
         self.reset_btn = None
+        self.remind_kit = None
         logging.debug("Initializing BorderWidget")
+        self.init_remindkit()
+        # Track the reminder currently shown in the notification bar
+        self.current_reminder_id = None
+        self.current_reminder_title = None
         self.init_ui()
         self.init_timer()
         self.setup_shortcuts()
+
+    def init_remindkit(self):
+        """Initialize RemindKit instance and test basic connection"""
+        try:
+            self.remind_kit = RemindKit()
+            # Test basic connection by getting default calendar
+            default_calendar = self.remind_kit.calendars.get_default()
+            logging.info(f"RemindKit initialized successfully. Default calendar: {default_calendar.name}")
+        except Exception as e:
+            logging.error(f"Failed to initialize RemindKit: {e}")
+            self.remind_kit = None
+
+    def get_incomplete_reminders_due_today(self):
+        """Get incomplete reminders due today or in the past"""
+        if self.remind_kit:
+            try:
+                from datetime import datetime, timedelta
+
+                tomorrow = datetime.now() + timedelta(days=1)
+                tomorrow = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+                reminders = list(self.remind_kit.get_reminders(due_before=tomorrow, is_completed=False))
+                logging.info(f"Found {len(reminders)} incomplete reminders due before tomorrow")
+                return reminders
+            except Exception as e:
+                logging.error(f"Failed to get incomplete reminders: {e}")
+                return []
+        return []
+
+    def get_next_reminder_text(self):
+        """Get text for the next due reminder and cache its identity for completion"""
+        reminders = self.get_incomplete_reminders_due_today()
+        if reminders:
+            # Sort reminders by due date (earliest first)
+            reminders.sort(key=lambda r: r.due_date if r.due_date else float("inf"))
+            for reminder in reminders:
+                logging.debug(f"Found {reminder} next due reminder")
+            # Get the first reminder (most urgent by due date)
+            next_reminder = reminders[0]
+            # Cache the currently displayed reminder id/title so we can complete exactly this one
+            try:
+                self.current_reminder_id = next_reminder.id
+            except Exception:
+                # Fallback to None if structure differs
+                self.current_reminder_id = None
+            self.current_reminder_title = getattr(next_reminder, "title", None)
+            return f"📋 {next_reminder.title}"
+        # No reminders to show; clear cache
+        self.current_reminder_id = None
+        self.current_reminder_title = None
+        return ""
 
     def setup_shortcuts(self):
         # Create Cmd+, shortcut for preferences
@@ -520,6 +565,18 @@ class BorderWidget(QWidget):
         button_layout.setContentsMargins(0, 0, 0, 0)
         button_layout.setSpacing(current_theme["button_spacing"])
 
+        # Complete Reminder button
+        self.complete_reminder_btn = QPushButton(current_theme["icon_done"], self.control_widget)
+        self.complete_reminder_btn.setFixedSize(current_theme["button_width"], current_theme["button_height"])
+        self.complete_reminder_btn.setFlat(True)
+        icon_font = QFont(current_theme["icon_font_family"], current_theme["icon_font_size"])
+        self.complete_reminder_btn.setFont(icon_font)
+        self.complete_reminder_btn.setStyleSheet(
+            f"QPushButton {{ background-color: {current_theme['button_bg_normal']}; color: {current_theme['button_text_color']}; border: none; padding: 0px; }}"
+            f"QPushButton:hover {{ background-color: {current_theme['button_bg_hover']}; border-radius: {current_theme['button_corner_radius']}px; }}"
+        )
+        self.complete_reminder_btn.clicked.connect(self.complete_current_reminder)
+
         # Pause/Resume button
         self.pause_resume_btn = QPushButton(current_theme["icon_pause"], self.control_widget)
         self.pause_resume_btn.setFixedSize(current_theme["button_width"], current_theme["button_height"])
@@ -543,6 +600,7 @@ class BorderWidget(QWidget):
         )
         self.reset_btn.clicked.connect(self.reset_timer)
 
+        button_layout.addWidget(self.complete_reminder_btn)
         button_layout.addWidget(self.pause_resume_btn)
         button_layout.addWidget(self.reset_btn)
         self.control_widget.setLayout(button_layout)
@@ -584,6 +642,25 @@ class BorderWidget(QWidget):
             self.pause_resume_btn.setText(current_theme["icon_done"])
         self.update()
 
+    def complete_current_reminder(self):
+        """Mark exactly the reminder currently displayed as completed, without re-fetching."""
+        if not self.remind_kit:
+            logging.warning("RemindKit is not initialized; cannot complete reminder.")
+            return
+        if not self.current_reminder_id:
+            logging.info("No current reminder cached/displayed to complete.")
+            return
+        try:
+            self.remind_kit.update_reminder(self.current_reminder_id, is_completed=True)
+            title = self.current_reminder_title or "<untitled>"
+            logging.info(f"Marked reminder '{title}' as completed")
+            # Clear cached reminder since it is now completed; UI will fetch next on repaint
+            self.current_reminder_id = None
+            self.current_reminder_title = None
+            self.update()
+        except Exception as e:
+            logging.error(f"Failed to complete reminder id={self.current_reminder_id}: {e}")
+
     def paintEvent(self, event):
         logging.debug("Painting border and notification bar")
         painter = QPainter(self)
@@ -607,12 +684,29 @@ class BorderWidget(QWidget):
         # Build text string
         mm, ss = divmod(self.remaining, 60)
         timer_str = f"{mm:02}:{ss:02}"
-        display_text = f"{self.notification_text}   {timer_str}"
+
+        # Get reminder text if available
+        reminder_text = self.get_next_reminder_text()
+        # Enable the 'complete' button only when a reminder is available
+        if getattr(self, "complete_reminder_btn", None) is not None:
+            try:
+                self.complete_reminder_btn.setVisible(bool(reminder_text))
+            except Exception:
+                pass
+        if reminder_text:
+            display_text = f"{timer_str}   {reminder_text}"
+        else:
+            display_text = timer_str
         text_width = font_metrics.horizontalAdvance(display_text)
         text_height = font_metrics.height()
 
         # Notification bar geometry
-        btn_total_width = self.pause_resume_btn.width() + self.reset_btn.width() + current_theme["button_spacing"]
+        btn_total_width = (
+            self.complete_reminder_btn.width()
+            + self.pause_resume_btn.width()
+            + self.reset_btn.width()
+            + (2 * current_theme["button_spacing"])  # Two spacings between three buttons
+        )
         text_area_width = (
             text_width
             + current_theme["notification_padding"]
@@ -681,7 +775,7 @@ def main(args):
     logging.debug(f"Starting main with verbosity: {args.verbose}")
     app = QApplication([])
     logging.info("QApplication initialized")
-    border_widget = BorderWidget(args.notification_text, args.countdown_seconds)
+    border_widget = BorderWidget()
     border_widget.showMaximized()
     logging.info("BorderWidget shown")
     app.exec()
