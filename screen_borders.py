@@ -125,11 +125,11 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
     QFormLayout,
-    QGridLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QFrame,
 )
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtWidgets import QPushButton as DialogButton
@@ -205,8 +205,16 @@ class ConfigDialog(QDialog):
 
         # Store original theme for cancel functionality
         self.original_theme = current_theme.copy()
+        # Store original timer for cancel functionality
+        self.original_timer_seconds = getattr(parent, "countdown_seconds", 25 * 60)
 
         self.init_ui()
+
+    def _separator(self):
+        frame = QFrame()
+        frame.setFrameShape(QFrame.Shape.HLine)
+        frame.setFrameShadow(QFrame.Shadow.Sunken)
+        return frame
 
     def init_ui(self):
         layout = QVBoxLayout()
@@ -238,14 +246,17 @@ class ConfigDialog(QDialog):
         border_layout.addWidget(self.border_start_btn)
         border_layout.addWidget(QLabel("End:"))
         border_layout.addWidget(self.border_end_btn)
-        border_layout.addStretch()
-        custom_layout.addRow(border_layout)
 
         # Border width
         self.border_width_spin = QSpinBox()
         self.border_width_spin.setRange(1, 50)
         self.border_width_spin.setValue(current_theme["border_width"])
-        custom_layout.addRow("Border Width:", self.border_width_spin)
+        border_layout.addWidget(QLabel("Border Width:"))
+        border_layout.addWidget(self.border_width_spin)
+
+        border_layout.addStretch()
+        custom_layout.addRow(border_layout)
+        custom_layout.addRow(self._separator())
 
         # Notification background colors
         notif_label = QLabel("Notification Background:")
@@ -254,39 +265,46 @@ class ConfigDialog(QDialog):
         notif_layout = QHBoxLayout()
         self.notif_start_btn = ColorButton(current_theme["notification_bg_start"])
         self.notif_end_btn = ColorButton(current_theme["notification_bg_end"])
+        self.text_color_btn = ColorButton(current_theme["notification_text_color"])
         notif_layout.addWidget(QLabel("Start:"))
         notif_layout.addWidget(self.notif_start_btn)
         notif_layout.addWidget(QLabel("End:"))
         notif_layout.addWidget(self.notif_end_btn)
+        notif_layout.addWidget(QLabel("Text Color:"))
+        notif_layout.addWidget(self.text_color_btn)
         notif_layout.addStretch()
         custom_layout.addRow(notif_layout)
 
-        # Text color
-        self.text_color_btn = ColorButton(current_theme["notification_text_color"])
-        text_layout = QHBoxLayout()
-        text_layout.addWidget(self.text_color_btn)
-        text_layout.addStretch()
-        custom_layout.addRow("Text Color:", text_layout)
+        custom_layout.addRow(self._separator())
 
-        # Icons
+        # Button Icons - Changed to use QFormLayout rows instead of QGridLayout
         self.icon_pause_edit = QLineEdit(current_theme["icon_pause"])
         self.icon_play_edit = QLineEdit(current_theme["icon_play"])
         self.icon_reset_edit = QLineEdit(current_theme["icon_reset"])
         self.icon_done_edit = QLineEdit(current_theme["icon_done"])
 
-        icons_layout = QGridLayout()
-        icons_layout.addWidget(QLabel("Pause:"), 0, 0)
-        icons_layout.addWidget(self.icon_pause_edit, 0, 1)
-        icons_layout.addWidget(QLabel("Play:"), 0, 2)
-        icons_layout.addWidget(self.icon_play_edit, 0, 3)
-        icons_layout.addWidget(QLabel("Reset:"), 1, 0)
-        icons_layout.addWidget(self.icon_reset_edit, 1, 1)
-        icons_layout.addWidget(QLabel("Done:"), 1, 2)
-        icons_layout.addWidget(self.icon_done_edit, 1, 3)
+        # Create horizontal layouts for each icon pair to maintain alignment
+        pause_play_layout = QHBoxLayout()
+        pause_play_layout.addWidget(QLabel("Pause:"))
+        pause_play_layout.addWidget(self.icon_pause_edit)
+        pause_play_layout.addWidget(QLabel("Play:"))
+        pause_play_layout.addWidget(self.icon_play_edit)
+        pause_play_layout.addStretch()
 
-        custom_layout.addRow("Button Icons:", icons_layout)
+        reset_done_layout = QHBoxLayout()
+        reset_done_layout.addWidget(QLabel("Reset:"))
+        reset_done_layout.addWidget(self.icon_reset_edit)
+        reset_done_layout.addWidget(QLabel("Done:"))
+        reset_done_layout.addWidget(self.icon_done_edit)
+        reset_done_layout.addStretch()
 
-        # Font settings
+        button_icons_label = QLabel("Button Icons:")
+        custom_layout.addRow(button_icons_label)
+        custom_layout.addRow("", pause_play_layout)
+        custom_layout.addRow("", reset_done_layout)
+        custom_layout.addRow(self._separator())
+
+        # Font settings - Changed to maintain left alignment
         self.font_family_edit = QLineEdit(current_theme["main_font_family"])
         self.font_size_spin = QSpinBox()
         self.font_size_spin.setRange(8, 72)
@@ -297,7 +315,21 @@ class ConfigDialog(QDialog):
         font_layout.addWidget(self.font_family_edit)
         font_layout.addWidget(QLabel("Size:"))
         font_layout.addWidget(self.font_size_spin)
-        custom_layout.addRow("Main Font:", font_layout)
+        font_layout.addStretch()
+
+        main_font_label = QLabel("Main Font:")
+        custom_layout.addRow(main_font_label)
+
+        custom_layout.addRow("", font_layout)
+        custom_layout.addRow(self._separator())
+
+        # Timer configuration (minutes)
+        self.timer_minutes_spin = QSpinBox()
+        self.timer_minutes_spin.setRange(1, 24 * 60)  # 1 minute to 24 hours
+        parent_widget = self.parent()
+        current_timer = getattr(parent_widget, "countdown_seconds", 25 * 60)
+        self.timer_minutes_spin.setValue(max(1, current_timer // 60))
+        custom_layout.addRow("Timer (minutes):", self.timer_minutes_spin)
 
         custom_group.setLayout(custom_layout)
         layout.addWidget(custom_group)
@@ -383,7 +415,19 @@ class ConfigDialog(QDialog):
         global current_theme
         current_theme.update(self.get_current_config())
         if self.parent():
+            # Apply theme
             self.parent().apply_theme()
+            # Apply timer value (entered in minutes) and restart timer similar to reset
+            new_timer = self.timer_minutes_spin.value() * 60
+            self.parent().countdown_seconds = new_timer
+            self.parent().remaining = new_timer
+            self.parent().running = True
+            if hasattr(self.parent(), "timer"):
+                self.parent().timer.start(1000)
+            # Ensure buttons reflect running state after reset
+            if self.parent().pause_resume_btn:
+                self.parent().pause_resume_btn.setText(current_theme["icon_pause"])
+            self.parent().update()
 
     def accept_changes(self):
         self.apply_changes()
@@ -394,7 +438,14 @@ class ConfigDialog(QDialog):
         current_theme.clear()
         current_theme.update(self.original_theme)
         if self.parent():
+            # Re-apply theme
             self.parent().apply_theme()
+            # Restore original timer value
+            self.parent().countdown_seconds = self.original_timer_seconds
+            self.parent().remaining = self.original_timer_seconds
+            if self.parent().pause_resume_btn:
+                self.parent().pause_resume_btn.setText(current_theme["icon_pause"])
+
         super().reject()
 
 
