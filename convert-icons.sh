@@ -24,6 +24,9 @@ magick "$1" -background none -gravity center -resize 16x16 "${BASENAME}-icon16.p
 magick "$1" -background none -gravity center -resize 32x32 "${BASENAME}-icon32.png"
 magick "$1" -background none -gravity center -resize 48x48 "${BASENAME}-icon48.png"
 magick "$1" -background none -gravity center -resize 128x128 "${BASENAME}-icon128.png"
+magick "$1" -background none -gravity center -resize 256x256 "${BASENAME}-icon256.png"
+magick "$1" -background none -gravity center -resize 512x512 "${BASENAME}-icon512.png"
+magick "$1" -background none -gravity center -resize 1024x1024 "${BASENAME}-icon1024.png"
 
 # Create a temporary iconset directory for ICNS generation
 mkdir "${BASENAME}.iconset"
@@ -46,6 +49,8 @@ magick "${BASENAME}.iconset/icon_16x16.png" \
        "${BASENAME}.iconset/icon_48x48.png" \
        "${BASENAME}.iconset/icon_128x128.png" \
        "${BASENAME}.iconset/icon_256x256.png" \
+       "${BASENAME}.iconset/icon_512x512.png" \
+       "${BASENAME}.iconset/icon_1024x1024.png" \
        -background none "${BASENAME}.ico"
 
 # Clean up the temporary iconset directory
