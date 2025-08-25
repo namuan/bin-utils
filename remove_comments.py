@@ -89,7 +89,7 @@ def remove_comments(content):
             if in_multiline_comment:
                 # End of multi-line comment
                 if (stripped_line.endswith('"""') and multiline_start == '"""') or (
-                        stripped_line.endswith("'''") and multiline_start == "'''"
+                    stripped_line.endswith("'''") and multiline_start == "'''"
                 ):
                     in_multiline_comment = False
                     multiline_start = None
@@ -103,7 +103,7 @@ def remove_comments(content):
                 logging.debug(f"Start of multi-line comment detected at line {i+1} with delimiter {multiline_start}")
                 # Check if it's a single-line docstring
                 if (multiline_start == '"""' and stripped_line.endswith('"""')) or (
-                        multiline_start == "'''" and stripped_line.endswith("'''")
+                    multiline_start == "'''" and stripped_line.endswith("'''")
                 ):
                     in_multiline_comment = False
                     multiline_start = None
@@ -164,7 +164,7 @@ def process_python_files(directory):
     for file_path in python_files:
         logging.info(f"Processing file: {file_path}")
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 logging.debug(f"Read {len(content.splitlines())} lines from {file_path}")
 
