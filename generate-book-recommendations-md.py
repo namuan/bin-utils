@@ -11,8 +11,8 @@ Usage:
 ./generate-book-recommendations-md.py -vv # To log DEBUG messages
 ./generate-book-recommendations-md.py tweets.json
 """
-import logging
 import json
+import logging
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from pathlib import Path
 
@@ -31,7 +31,7 @@ def generate_markdown(tweet_file):
     """
     logging.info(f"Processing file: {tweet_file}")
     try:
-        with open(tweet_file, "r", encoding="utf-8") as f:
+        with open(tweet_file, encoding="utf-8") as f:
             tweets = json.load(f)
     except FileNotFoundError:
         logging.error(f"Error: File '{tweet_file}' not found.")
@@ -63,7 +63,7 @@ def generate_markdown(tweet_file):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(markdown_content)
         logging.info(f"Markdown file generated: {output_file}")
-    except IOError as e:
+    except OSError as e:
         logging.error(f"Error writing to Markdown file: {e}")
 
 
