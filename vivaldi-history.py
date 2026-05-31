@@ -457,7 +457,8 @@ def build_dashboard_html(
 
     fig_drill_visits = go.Figure()
     for i, domain in enumerate(top_domains_drill):
-        s = drill_visits[drill_visits["domain"] == domain].set_index("date").reindex(all_dates, fill_value=0)["visits"]
+        subset = drill_visits[drill_visits["domain"] == domain][["date", "visits"]].set_index("date")
+        s = subset.reindex(all_dates, fill_value=0)["visits"]
         fig_drill_visits.add_trace(
             go.Scatter(x=all_dates, y=s.tolist(), name=domain, visible=(i == 0), mode="lines+markers")
         )
@@ -490,7 +491,8 @@ def build_dashboard_html(
 
     fig_drill_hours = go.Figure()
     for i, domain in enumerate(top_domains_drill):
-        s = drill_time[drill_time["domain"] == domain].set_index("date").reindex(all_dates, fill_value=0)["hours"]
+        subset = drill_time[drill_time["domain"] == domain][["date", "hours"]].set_index("date")
+        s = subset.reindex(all_dates, fill_value=0)["hours"]
         fig_drill_hours.add_trace(
             go.Scatter(x=all_dates, y=s.tolist(), name=domain, visible=(i == 0), mode="lines+markers")
         )
@@ -699,8 +701,8 @@ def build_dashboard_html(
             "    .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--muted); font-weight: 650; letter-spacing: 0.02em; }",
             "    .footer { margin-top: 12px; color: var(--muted); font-size: 12px; }",
             "  </style>",
-        "</head>",
-        "<body>",
+            "</head>",
+            "<body>",
             '  <div class="container">',
             '    <div class="top">',
             "      <div>",
