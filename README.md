@@ -7,6 +7,40 @@ Collection of helpful scripts and apps
  make setup
 ```
 
+### Fully local semantic search for Apple Notes
+
+`apple-notes-search.py` reads Notes through macOS Automation, creates local embeddings, and stores its index in
+`~/Library/Application Support/apple-notes-search/index.sqlite3`. Note text is never sent to a cloud service. The
+SQLite index contains unencrypted plaintext and local copies of searchable chunks; its default directory and files
+are restricted to your macOS user account.
+
+The only prerequisite is [`uv`](https://docs.astral.sh/uv/getting-started/installation/). The first command downloads
+the Python packages and the roughly 67 MB English embedding model; subsequent indexing and searching run locally.
+
+```bash
+chmod +x apple-notes-search.py
+./apple-notes-search.py sync
+./apple-notes-search.py search "ideas for improving sleep"
+./apple-notes-search.py status
+```
+
+The first sync asks for permission to control Notes. If access was denied, enable your terminal under **System
+Settings > Privacy & Security > Automation**. Later syncs only re-embed changed notes and remove deleted notes.
+Password-protected notes are excluded by default; pass `sync --include-locked` to opt in when Notes exposes them.
+Opting in also stores those notes as unencrypted plaintext in the local index.
+Attachments, handwriting, and text inside scans may not be present in Notes' plaintext and therefore may not be
+searchable.
+
+For operation with populated package and model caches and no network access at all:
+
+```bash
+UV_OFFLINE=1 uv run --offline --script apple-notes-search.py --offline search "query"
+```
+
+The default model is English. For multilingual notes, choose a FastEmbed-supported model on both sync and search,
+for example `--model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`. Changing models automatically
+rebuilds vectors on the next sync.
+
 ### Scripts
 
 <!-- START makefile-doc -->
