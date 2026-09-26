@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "playwright",
+#   "slug",
+# ]
+# ///
 """
 Generate PDF from a webpage (macOS / Apple Silicon).
 
